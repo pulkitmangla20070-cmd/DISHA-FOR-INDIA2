@@ -169,17 +169,6 @@ userSchema.index({ volunteerId: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 
-// Pre-save hook to generate volunteerId for volunteers if not present
-userSchema.pre('save', async function (next) {
-  if (this.role === ROLES.VOLUNTEER && !this.volunteerId) {
-    // Generate a unique volunteerId format DFI-YYYY-XXXX (e.g., DFI-2026-A1B2)
-    const year = new Date().getFullYear();
-    const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
-    this.volunteerId = `DFI-${year}-${randomStr}`;
-  }
-  next();
-});
-
 // Method to remove sensitive fields when converting to JSON
 userSchema.set('toJSON', {
   transform: function (doc, ret) {
