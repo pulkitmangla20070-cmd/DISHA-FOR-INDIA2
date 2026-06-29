@@ -1,0 +1,44 @@
+const TOKEN_TYPES = {
+  ACCESS: 'access',
+  REFRESH: 'refresh',
+  PASSWORD_RESET: 'password_reset',
+};
+
+const MESSAGES = {
+  REGISTER_SUCCESS: 'Registration successful. Welcome to Disha for India!',
+  LOGIN_SUCCESS: 'Logged in successfully.',
+  LOGOUT_SUCCESS: 'Logged out successfully.',
+  TOKEN_REFRESH_SUCCESS: 'Token refreshed successfully.',
+  PASSWORD_RESET_EMAIL_SENT: 'Password reset link has been sent to your email.',
+  PASSWORD_RESET_SUCCESS: 'Password has been reset successfully.',
+  INVALID_CREDENTIALS: 'Invalid email or password.',
+  UNAUTHORIZED: 'Unauthorized access. Please log in.',
+  FORBIDDEN: 'Access forbidden. You do not have the required permissions.',
+  EMAIL_ALREADY_EXISTS: 'Email is already registered.',
+  USERNAME_ALREADY_EXISTS: 'Username is already taken.',
+};
+
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  INTERNAL_SERVER_ERROR: 500,
+};
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matches refresh token expiry)
+};
+
+module.exports = {
+  TOKEN_TYPES,
+  MESSAGES,
+  HTTP_STATUS,
+  COOKIE_OPTIONS,
+};
