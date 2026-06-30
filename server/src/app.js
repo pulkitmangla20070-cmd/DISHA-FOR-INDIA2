@@ -4,12 +4,14 @@ const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
 const passport = require('passport');
+const swaggerUi = require('swagger-ui-express');
 
 require('./config/passport'); // Load Passport Google OAuth strategy
 const getCorsConfig = require('./config/cors.config');
 const helmetConfig = require('./config/helmet.config');
 const getMorganMiddleware = require('./config/morgan.config');
 const { globalLimiter } = require('./config/rateLimiter.config');
+const swaggerSpec = require('./config/swagger.config');
 const errorHandler = require('./middlewares/error.middleware');
 const notFoundHandler = require('./middlewares/notFound.middleware');
 const authRoutes = require('./modules/auth/auth.routes');
@@ -79,12 +81,17 @@ app.get('/api/v1/health', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 
 // ─────────────────────────────────────────────
-// 11. 404 Handler (must be after all routes)
+// 11. Swagger API Documentation
+// ─────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ─────────────────────────────────────────────
+// 12. 404 Handler (must be after all routes and docs)
 // ─────────────────────────────────────────────
 app.use(notFoundHandler);
 
 // ─────────────────────────────────────────────
-// 12. Global Error Handler (must be last)
+// 13. Global Error Handler (must be last)
 // ─────────────────────────────────────────────
 app.use(errorHandler);
 
