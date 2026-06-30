@@ -337,6 +337,10 @@ Most endpoints require a **JWT Bearer Token**.
         description: 'User Management & Profiles',
       },
       {
+        name: 'Admin',
+        description: 'Admin — User Management & Dashboard Statistics',
+      },
+      {
         name: 'Health',
         description: 'Server health monitoring',
       },
@@ -348,6 +352,7 @@ Most endpoints require a **JWT Bearer Token**.
     './src/docs/auth.docs.js',
     './src/docs/health.docs.js',
     './src/docs/user.docs.js',
+    './src/docs/admin.docs.js',
   ],
 };
 

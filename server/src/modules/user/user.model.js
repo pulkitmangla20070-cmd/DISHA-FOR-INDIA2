@@ -108,30 +108,10 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, 'About section cannot exceed 500 characters'],
     },
-    languages: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-    skills: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-    interests: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
-    availability: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
+    languages: [{ type: String, trim: true }],
+    skills: [{ type: String, trim: true }],
+    interests: [{ type: String, trim: true }],
+    availability: [{ type: String, trim: true }],
     resume: {
       type: String,
       trim: true,
@@ -200,6 +180,22 @@ const userSchema = new mongoose.Schema(
       default: 'Beginner',
     },
 
+    // ─── Soft Delete Fields ──────────────────────────────────────
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
     // ─── Integration & Token Fields ──────────────────────────────
     googleId: {
       type: String,
@@ -231,13 +227,15 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Additional indexes (email, username, volunteerId already indexed via unique: true)
+// ─── Indexes ─────────────────────────────────────────────────────
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ points: -1 });
+userSchema.index({ isDeleted: 1 });
+userSchema.index({ createdAt: -1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
 
-// Method to remove sensitive fields when converting to JSON
+// ─── JSON Transform ──────────────────────────────────────────────
 userSchema.set('toJSON', {
   transform: function (doc, ret) {
     delete ret.password;
