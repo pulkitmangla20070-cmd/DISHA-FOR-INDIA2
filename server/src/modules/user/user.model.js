@@ -3,11 +3,11 @@ const { ROLES, STATUS } = require('./user.constants');
 
 const userSchema = new mongoose.Schema(
   {
-    // Authentication & System Fields
+    // ─── Authentication & System Fields ─────────────────────────
     volunteerId: {
       type: String,
       unique: true,
-      sparse: true, // Allows null/missing for users who haven't completed registration or are admins
+      sparse: true,
       trim: true,
     },
     name: {
@@ -36,11 +36,10 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: function () {
-        // Password is only required if googleId is not present
         return !this.googleId;
       },
       minlength: [8, 'Password must be at least 8 characters'],
-      select: false, // Don't return password by default
+      select: false,
     },
     role: {
       type: String,
@@ -53,7 +52,7 @@ const userSchema = new mongoose.Schema(
       default: STATUS.PENDING,
     },
 
-    // Basic Information
+    // ─── Basic Information ───────────────────────────────────────
     phone: {
       type: String,
       trim: true,
@@ -67,7 +66,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
 
-    // Education
+    // ─── Education ───────────────────────────────────────────────
     college: {
       type: String,
       trim: true,
@@ -84,7 +83,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Location
+    // ─── Location ────────────────────────────────────────────────
     city: {
       type: String,
       trim: true,
@@ -99,7 +98,7 @@ const userSchema = new mongoose.Schema(
       default: 'India',
     },
 
-    // Volunteer Profile
+    // ─── Volunteer Profile ───────────────────────────────────────
     profilePhoto: {
       type: String,
       default: '',
@@ -146,7 +145,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Volunteer Statistics
+    // ─── Volunteer Statistics ────────────────────────────────────
     points: {
       type: Number,
       default: 0,
@@ -157,19 +156,51 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: [0, 'Hours completed cannot be negative'],
     },
+    programsJoined: {
+      type: Number,
+      default: 0,
+      min: [0, 'Programs joined cannot be negative'],
+    },
     programsCompleted: {
       type: Number,
       default: 0,
       min: [0, 'Programs completed cannot be negative'],
     },
+    certificatesEarned: {
+      type: Number,
+      default: 0,
+      min: [0, 'Certificates earned cannot be negative'],
+    },
+    referralCount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Referral count cannot be negative'],
+    },
+    impactScore: {
+      type: Number,
+      default: 0,
+      min: [0, 'Impact score cannot be negative'],
+    },
+
+    // ─── Profile Progress ────────────────────────────────────────
     profileCompletion: {
       type: Number,
       default: 0,
       min: 0,
       max: 100,
     },
+    profileStrength: {
+      type: String,
+      enum: ['Weak', 'Average', 'Good', 'Excellent'],
+      default: 'Weak',
+    },
+    volunteerLevel: {
+      type: String,
+      enum: ['Beginner', 'Contributor', 'Mentor', 'Leader', 'Ambassador'],
+      default: 'Beginner',
+    },
 
-    // Integration & Token Fields
+    // ─── Integration & Token Fields ──────────────────────────────
     googleId: {
       type: String,
       unique: true,
@@ -203,6 +234,7 @@ const userSchema = new mongoose.Schema(
 // Additional indexes (email, username, volunteerId already indexed via unique: true)
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
+userSchema.index({ points: -1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
 
 // Method to remove sensitive fields when converting to JSON

@@ -14,9 +14,15 @@ const ROLES = require('../../constants/roles.constants');
 
 const router = express.Router();
 
-// Protected profile routes
+// ─── Protected Profile Routes ────────────────────────────────────
 router.get('/me', authenticate, validateGetCurrentProfile, userController.getCurrentProfile);
 router.put('/me', authenticate, validateUpdateProfile, userController.updateProfile);
+
+// ─── Volunteer Progress Routes ───────────────────────────────────
+router.get('/profile-completion', authenticate, userController.getProfileCompletion);
+router.get('/statistics', authenticate, userController.getVolunteerStatistics);
+
+// ─── File Upload Routes (skeleton — implemented in Module 3.4) ───
 router.patch(
   '/profile-photo',
   authenticate,
@@ -25,10 +31,10 @@ router.patch(
 );
 router.patch('/resume', authenticate, validateUploadResume, userController.uploadResume);
 
-// Public profile route
+// ─── Public Profile Route ────────────────────────────────────────
 router.get('/public/:username', validatePublicProfile, userController.getPublicProfile);
 
-// Admin/Coordinator user search route
+// ─── Admin / Coordinator Search Route ───────────────────────────
 router.get(
   '/',
   authenticate,

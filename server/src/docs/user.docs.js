@@ -45,8 +45,8 @@
  *     summary: Update current user profile
  *     description: >
  *       Updates the profile details of the currently authenticated user.
- *       System-managed fields (email, role, status, points, etc.) cannot be updated here.
- *       Profile completion percentage is automatically recalculated on every update.
+ *       System-managed fields (email, role, status, points, etc.) are ignored.
+ *       Profile completion, strength, and volunteer level are automatically recalculated on every update.
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []
@@ -119,23 +119,105 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
- *             examples:
- *               invalidPhone:
- *                 summary: Invalid phone number
- *                 value:
- *                   success: false
- *                   message: Profile update validation failed
- *                   errors:
- *                     - field: phone
- *                       message: Please enter a valid phone number
- *               invalidUrl:
- *                 summary: Invalid LinkedIn URL
- *                 value:
- *                   success: false
- *                   message: Profile update validation failed
- *                   errors:
- *                     - field: linkedin
- *                       message: LinkedIn must be a valid URL
+ *       401:
+ *         description: Missing or invalid access token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthenticationError'
+ *       409:
+ *         description: Username already taken.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               success: false
+ *               message: Username is already taken
+ *
+ * /api/v1/users/profile-completion:
+ *   get:
+ *     summary: Get profile completion breakdown
+ *     description: >
+ *       Returns the current authenticated user's profile completion percentage,
+ *       profile strength label, volunteer level, and a field-by-field breakdown
+ *       showing exactly which profile sections are filled and which are missing.
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile completion retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Profile completion retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     profileCompletion:
+ *                       type: integer
+ *                       example: 64
+ *                     profileStrength:
+ *                       type: string
+ *                       enum: [Weak, Average, Good, Excellent]
+ *                       example: Good
+ *                     volunteerLevel:
+ *                       type: string
+ *                       enum: [Beginner, Contributor, Mentor, Leader, Ambassador]
+ *                       example: Beginner
+ *                     breakdown:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: boolean
+ *                           example: true
+ *                         phone:
+ *                           type: boolean
+ *                           example: true
+ *                         about:
+ *                           type: boolean
+ *                           example: false
+ *                         city:
+ *                           type: boolean
+ *                           example: true
+ *                         college:
+ *                           type: boolean
+ *                           example: true
+ *                         course:
+ *                           type: boolean
+ *                           example: true
+ *                         skills:
+ *                           type: boolean
+ *                           example: true
+ *                         languages:
+ *                           type: boolean
+ *                           example: false
+ *                         interests:
+ *                           type: boolean
+ *                           example: false
+ *                         availability:
+ *                           type: boolean
+ *                           example: false
+ *                         linkedin:
+ *                           type: boolean
+ *                           example: true
+ *                         portfolio:
+ *                           type: boolean
+ *                           example: false
+ *                         profilePhoto:
+ *                           type: boolean
+ *                           example: false
+ *                         resume:
+ *                           type: boolean
+ *                           example: false
  *       401:
  *         description: Missing or invalid access token.
  *         content:
@@ -148,20 +230,87 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       409:
- *         description: Username already taken.
+ *
+ * /api/v1/users/statistics:
+ *   get:
+ *     summary: Get volunteer statistics
+ *     description: >
+ *       Returns all volunteer statistics for the current authenticated user,
+ *       including points, hours completed, programs, certificates, referrals,
+ *       impact score, current level, and progress to the next level.
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Volunteer statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Volunteer statistics retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     points:
+ *                       type: integer
+ *                       example: 120
+ *                     hoursCompleted:
+ *                       type: number
+ *                       example: 34.5
+ *                     programsJoined:
+ *                       type: integer
+ *                       example: 5
+ *                     programsCompleted:
+ *                       type: integer
+ *                       example: 3
+ *                     certificatesEarned:
+ *                       type: integer
+ *                       example: 2
+ *                     referralCount:
+ *                       type: integer
+ *                       example: 4
+ *                     impactScore:
+ *                       type: integer
+ *                       example: 350
+ *                     volunteerLevel:
+ *                       type: string
+ *                       example: Contributor
+ *                     profileCompletion:
+ *                       type: integer
+ *                       example: 64
+ *                     profileStrength:
+ *                       type: string
+ *                       example: Good
+ *                     nextLevel:
+ *                       type: string
+ *                       example: Mentor
+ *                     pointsToNextLevel:
+ *                       type: integer
+ *                       example: 380
+ *       401:
+ *         description: Missing or invalid access token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthenticationError'
+ *       404:
+ *         description: User not found.
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               success: false
- *               message: Username is already taken
  *
  * /api/v1/users/profile-photo:
  *   patch:
  *     summary: Upload profile photo
- *     description: Uploads and sets the profile photo for the current authenticated user.
+ *     description: Uploads and sets the profile photo for the current authenticated user. Implemented in Module 3.4.
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []
@@ -174,7 +323,7 @@
  * /api/v1/users/resume:
  *   patch:
  *     summary: Upload resume
- *     description: Uploads and sets the resume URL for the current authenticated user.
+ *     description: Uploads and sets the resume URL for the current authenticated user. Implemented in Module 3.4.
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []
@@ -205,7 +354,7 @@
  * /api/v1/users:
  *   get:
  *     summary: Search users (Admin/Coordinator Only)
- *     description: Search and filter users by different fields. Restricted to admins, superadmins, and coordinators.
+ *     description: Search and filter users. Restricted to admins, superadmins, and coordinators.
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []

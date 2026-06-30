@@ -57,6 +57,34 @@ class UserRepository {
   }
 
   /**
+   * Update profile completion, strength, and volunteer level.
+   * @param {string} id - User ID.
+   * @param {number} profileCompletion - Completion percentage.
+   * @param {string} profileStrength - Strength label.
+   * @param {string} volunteerLevel - Level label.
+   * @returns {Promise<User|null>} The updated user document.
+   */
+  async updateProfileProgress(id, profileCompletion, profileStrength, volunteerLevel) {
+    return User.findByIdAndUpdate(
+      id,
+      { profileCompletion, profileStrength, volunteerLevel },
+      { new: true }
+    );
+  }
+
+  /**
+   * Get volunteer statistics for a user by ID.
+   * Only selects statistical fields for performance.
+   * @param {string} id - User ID.
+   * @returns {Promise<User|null>} User document with stats fields.
+   */
+  async getVolunteerStatistics(id) {
+    return User.findById(id).select(
+      'points hoursCompleted programsJoined programsCompleted certificatesEarned referralCount impactScore volunteerLevel profileCompletion profileStrength'
+    );
+  }
+
+  /**
    * Search users (with filter, pagination, sorting).
    * @param {object} query - Mongoose query object.
    * @param {object} options - Pagination options (page, limit, sort).
@@ -84,9 +112,8 @@ class UserRepository {
    * @returns {Promise<User|null>} The user document with only public fields.
    */
   async findPublicProfile(username) {
-    // Return only public information, exclude sensitive fields
     return User.findOne({ username }).select(
-      'name username profilePhoto about college course city state skills points hoursCompleted programsCompleted'
+      'name username profilePhoto about college course city state skills points hoursCompleted programsCompleted volunteerLevel profileCompletion profileStrength impactScore'
     );
   }
 }

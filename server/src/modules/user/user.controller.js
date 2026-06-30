@@ -75,6 +75,30 @@ class UserController {
       return next(error);
     }
   };
+
+  /**
+   * Get profile completion breakdown for current user.
+   */
+  getProfileCompletion = async (req, res, next) => {
+    try {
+      const result = await userService.getProfileCompletion(req.user.id);
+      return successResponse(res, 200, MESSAGES.PROFILE_COMPLETION_RETRIEVED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * Get volunteer statistics for current user.
+   */
+  getVolunteerStatistics = async (req, res, next) => {
+    try {
+      const result = await userService.getVolunteerStatistics(req.user.id);
+      return successResponse(res, 200, MESSAGES.STATISTICS_RETRIEVED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
 
 module.exports = new UserController();

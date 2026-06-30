@@ -1,66 +1,40 @@
 /**
  * Utility to calculate user profile completion percentage.
- * @param {object} user - The user object.
+ * Each completed field contributes an equal weight to the total score.
+ * @param {object} user - The user document.
  * @returns {number} Completion percentage (0 to 100).
  */
 const calculateProfileCompletion = (user) => {
-  if (!user) {
-    return 0;
-  }
+  if (!user) return 0;
 
-  let score = 0;
+  const fields = [
+    // Basic Info (4 fields = 4 points)
+    { value: user.name, check: (v) => typeof v === 'string' && v.trim() !== '' },
+    { value: user.phone, check: (v) => typeof v === 'string' && v.trim() !== '' },
+    { value: user.about, check: (v) => typeof v === 'string' && v.trim() !== '' },
+    { value: user.city, check: (v) => typeof v === 'string' && v.trim() !== '' },
 
-  // 1. Name (10%)
-  if (user.name && user.name.trim() !== '') {
-    score += 10;
-  }
+    // Education (2 fields = 2 points)
+    { value: user.college, check: (v) => typeof v === 'string' && v.trim() !== '' },
+    { value: user.course, check: (v) => typeof v === 'string' && v.trim() !== '' },
 
-  // 2. Phone (10%)
-  if (user.phone && user.phone.trim() !== '') {
-    score += 10;
-  }
+    // Volunteer Profile (6 fields = 6 points)
+    { value: user.skills, check: (v) => Array.isArray(v) && v.length > 0 },
+    { value: user.languages, check: (v) => Array.isArray(v) && v.length > 0 },
+    { value: user.interests, check: (v) => Array.isArray(v) && v.length > 0 },
+    { value: user.availability, check: (v) => Array.isArray(v) && v.length > 0 },
+    { value: user.linkedin, check: (v) => typeof v === 'string' && v.trim() !== '' },
+    { value: user.portfolio, check: (v) => typeof v === 'string' && v.trim() !== '' },
 
-  // 3. About (10%)
-  if (user.about && user.about.trim() !== '') {
-    score += 10;
-  }
+    // Assets (2 fields = 2 points)
+    { value: user.profilePhoto, check: (v) => typeof v === 'string' && v.trim() !== '' },
+    { value: user.resume, check: (v) => typeof v === 'string' && v.trim() !== '' },
+  ];
 
-  // 4. Skills (10%)
-  if (user.skills && user.skills.length > 0) {
-    score += 10;
-  }
+  const completed = fields.filter((f) => f.check(f.value)).length;
+  const total = fields.length;
 
-  // 5. Languages (10%)
-  if (user.languages && user.languages.length > 0) {
-    score += 10;
-  }
-
-  // 6. College (10%)
-  if (user.college && user.college.trim() !== '') {
-    score += 10;
-  }
-
-  // 7. Course (10%)
-  if (user.course && user.course.trim() !== '') {
-    score += 10;
-  }
-
-  // 8. Resume (10%)
-  if (user.resume && user.resume.trim() !== '') {
-    score += 10;
-  }
-
-  // 9. Profile Photo (10%)
-  if (user.profilePhoto && user.profilePhoto.trim() !== '') {
-    score += 10;
-  }
-
-  // 10. Availability (10%)
-  if (user.availability && user.availability.length > 0) {
-    score += 10;
-  }
-
-  return score;
+  return Math.round((completed / total) * 100);
 };
 
 module.exports = {

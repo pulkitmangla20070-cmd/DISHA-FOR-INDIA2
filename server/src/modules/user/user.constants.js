@@ -14,6 +14,8 @@ const MESSAGES = {
   RESUME_UPLOADED: 'Resume uploaded successfully',
   PUBLIC_PROFILE_RETRIEVED: 'Public profile retrieved successfully',
   USERS_FOUND: 'Users retrieved successfully',
+  PROFILE_COMPLETION_RETRIEVED: 'Profile completion retrieved successfully',
+  STATISTICS_RETRIEVED: 'Volunteer statistics retrieved successfully',
 };
 
 const DEFAULTS = {
@@ -37,14 +39,25 @@ const VALIDATION = {
   ABOUT_MAX_LENGTH: 500,
 };
 
+const VOLUNTEER_LEVELS = ['Beginner', 'Contributor', 'Mentor', 'Leader', 'Ambassador'];
+
+const PROFILE_STRENGTH_LABELS = ['Weak', 'Average', 'Good', 'Excellent'];
+
 const PROFILE_COMPLETION_FIELDS = [
+  'name',
   'phone',
+  'about',
+  'city',
   'college',
   'course',
-  'city',
-  'state',
-  'about',
   'skills',
+  'languages',
+  'interests',
+  'availability',
+  'linkedin',
+  'portfolio',
+  'profilePhoto',
+  'resume',
 ];
 
 module.exports = {
@@ -53,5 +66,7 @@ module.exports = {
   MESSAGES,
   DEFAULTS,
   VALIDATION,
+  VOLUNTEER_LEVELS,
+  PROFILE_STRENGTH_LABELS,
   PROFILE_COMPLETION_FIELDS,
 };
