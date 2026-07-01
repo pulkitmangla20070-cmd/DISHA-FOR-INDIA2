@@ -325,6 +325,137 @@ Most endpoints require a **JWT Bearer Token**.
             },
           },
         },
+        Notification: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              example: '665f1b2c3d4e5f6789abcdef',
+            },
+            notificationId: {
+              type: 'string',
+              example: 'NTF-MXQ3K7-RANDOM',
+            },
+            recipient: {
+              type: 'string',
+              example: '665f1b2c3d4e5f6789abcdeg',
+            },
+            sender: {
+              type: 'string',
+              nullable: true,
+              example: '665f1b2c3d4e5f6789abcdeh',
+            },
+            title: {
+              type: 'string',
+              example: 'New application received',
+            },
+            message: {
+              type: 'string',
+              example: 'Your application for Beach Cleanup Drive has been received.',
+            },
+            type: {
+              type: 'string',
+              enum: ['application', 'program', 'attendance', 'certificate', 'reward', 'leaderboard', 'system', 'announcement'],
+              example: 'application',
+            },
+            category: {
+              type: 'string',
+              example: 'general',
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'critical'],
+              example: 'medium',
+            },
+            channel: {
+              type: 'string',
+              enum: ['in-app', 'email', 'sms', 'push'],
+              example: 'in-app',
+            },
+            relatedEntityType: {
+              type: 'string',
+              nullable: true,
+              example: 'application',
+            },
+            relatedEntityId: {
+              type: 'string',
+              nullable: true,
+              example: '665f1b2c3d4e5f6789abcdei',
+            },
+            isRead: {
+              type: 'boolean',
+              example: false,
+            },
+            readAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-06-30T04:00:00.000Z',
+            },
+            scheduledFor: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-07-01T04:00:00.000Z',
+            },
+            sentAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-06-30T04:00:00.000Z',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-07-07T04:00:00.000Z',
+            },
+            metadata: {
+              type: 'object',
+              example: {},
+            },
+            status: {
+              type: 'string',
+              enum: ['pending', 'sent', 'failed', 'scheduled'],
+              example: 'pending',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-01T00:00:00.000Z',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-01T00:00:00.000Z',
+            },
+          },
+        },
+        NotificationsResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Notifications retrieved successfully' },
+            data: {
+              type: 'object',
+              properties: {
+                notifications: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Notification' },
+                },
+                pagination: {
+                  type: 'object',
+                  properties: {
+                    page: { type: 'integer', example: 1 },
+                    limit: { type: 'integer', example: 10 },
+                    total: { type: 'integer', example: 25 },
+                    totalPages: { type: 'integer', example: 3 },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     },
     tags: [
@@ -373,8 +504,8 @@ Most endpoints require a **JWT Bearer Token**.
         description: 'Volunteer Reward Profiles & Balances',
       },
       {
-        name: 'RewardTransactions',
-        description: 'Reward Transaction History',
+        name: 'Notifications',
+        description: 'Notification Foundation — In-App Notifications',
       },
     ],
   },
@@ -392,6 +523,7 @@ Most endpoints require a **JWT Bearer Token**.
       './src/docs/leaderboard.docs.js',
       './src/docs/gamification.docs.js',
       './src/docs/rewards.docs.js',
+      './src/docs/notification.docs.js',
     ],
 };
 
