@@ -24,6 +24,7 @@ const certificateRoutes = require('./modules/certificate/certificate.routes');
 const rewardRoutes = require('./modules/reward/reward.routes');
 const leaderboardRoutes = require('./modules/leaderboard/leaderboard.routes');
 const notificationRoutes = require('./modules/notification/notification.routes');
+const organizationRoutes = require('./modules/organization/organization.routes');
 const { successResponse } = require('./utils/response');
 
 const app = express();
@@ -97,6 +98,8 @@ app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/rewards', rewardRoutes);
 app.use('/api/v1/leaderboard', leaderboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+
+app.use('/api/v1/organizations', organizationRoutes);
 
 // ─────────────────────────────────────────────
 // 11. Swagger API Documentation

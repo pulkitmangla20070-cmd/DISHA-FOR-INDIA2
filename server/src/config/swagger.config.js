@@ -568,6 +568,119 @@ Most endpoints require a **JWT Bearer Token**.
             },
           },
         },
+
+        // ─── Organization ─────────────────────────────────────────
+        Organization: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              example: '665f1b2c3d4e5f6789abcdef0',
+            },
+            organizationId: {
+              type: 'string',
+              example: 'ORG000001',
+            },
+            name: {
+              type: 'string',
+              example: 'Disha for India',
+            },
+            slug: {
+              type: 'string',
+              example: 'disha-for-india',
+            },
+            shortName: {
+              type: 'string',
+              example: 'Disha',
+            },
+            description: {
+              type: 'string',
+              example: 'A volunteer management platform',
+            },
+            logo: {
+              type: 'string',
+              example: 'https://example.com/logo.png',
+            },
+            coverImage: {
+              type: 'string',
+              example: 'https://example.com/cover.png',
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'contact@dishaforindia.org',
+            },
+            phone: {
+              type: 'string',
+              example: '+919876543210',
+            },
+            website: {
+              type: 'string',
+              example: 'https://dishaforindia.org',
+            },
+            address: {
+              type: 'string',
+              example: '123 Main Street',
+            },
+            city: {
+              type: 'string',
+              example: 'New Delhi',
+            },
+            state: {
+              type: 'string',
+              example: 'Delhi',
+            },
+            country: {
+              type: 'string',
+              example: 'India',
+            },
+            pincode: {
+              type: 'string',
+              example: '110001',
+            },
+            socialLinks: {
+              type: 'object',
+              example: {},
+            },
+            foundedYear: {
+              type: 'integer',
+              example: 2023,
+            },
+            organizationType: {
+              type: 'string',
+              enum: ['ngo', 'trust', 'college', 'university', 'corporate', 'government', 'community'],
+              example: 'ngo',
+            },
+            verificationStatus: {
+              type: 'string',
+              enum: ['pending', 'verified', 'rejected'],
+              example: 'verified',
+            },
+            isActive: {
+              type: 'boolean',
+              example: true,
+            },
+            owner: {
+              type: 'string',
+              example: '665f1b2c3d4e5f6789abcdef1',
+            },
+            admins: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['665f1b2c3d4e5f6789abcdef1'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-01-01T00:00:00.000Z',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-01-01T00:00:00.000Z',
+            },
+          },
+        },
       },
     },
     tags: [
@@ -619,6 +732,10 @@ Most endpoints require a **JWT Bearer Token**.
         name: 'Notifications',
         description: 'Notification Foundation — In-App Notifications',
       },
+      {
+        name: 'Organization',
+        description: 'Organization Management — Multi-tenancy Foundation',
+      },
     ],
   },
     // Paths to files containing JSDoc swagger annotations
@@ -636,6 +753,7 @@ Most endpoints require a **JWT Bearer Token**.
       './src/docs/gamification.docs.js',
       './src/docs/rewards.docs.js',
       './src/docs/notification.docs.js',
+      './src/docs/organization.docs.js',
     ],
 };
 
