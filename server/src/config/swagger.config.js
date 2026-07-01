@@ -356,6 +356,18 @@ Most endpoints require a **JWT Bearer Token**.
         name: 'Applications',
         description: 'Volunteer Applications Management',
       },
+      {
+        name: 'Certificates',
+        description: 'Volunteer Certificate Management',
+      },
+      {
+        name: 'Rewards',
+        description: 'Volunteer Reward Profiles & Balances',
+      },
+      {
+        name: 'RewardTransactions',
+        description: 'Reward Transaction History',
+      },
     ],
   },
   // Paths to files containing JSDoc swagger annotations
@@ -368,6 +380,7 @@ Most endpoints require a **JWT Bearer Token**.
     './src/docs/program.docs.js',
     './src/docs/application.docs.js',
     './src/docs/attendance.docs.js',
+    './src/docs/rewards.docs.js',
   ],
 };
 

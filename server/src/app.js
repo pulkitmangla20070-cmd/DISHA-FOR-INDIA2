@@ -20,6 +20,8 @@ const adminRoutes = require('./modules/admin/admin.routes');
 const programRoutes = require('./modules/program/program.routes');
 const applicationRoutes = require('./modules/application/application.routes');
 const attendanceRoutes = require('./modules/attendance/attendance.routes');
+const certificateRoutes = require('./modules/certificate/certificate.routes');
+const rewardRoutes = require('./modules/reward/reward.routes');
 const { successResponse } = require('./utils/response');
 
 const app = express();
@@ -89,6 +91,8 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/programs', programRoutes);
 app.use('/api/v1/applications', applicationRoutes);
 app.use('/api/v1/attendance', attendanceRoutes);
+app.use('/api/v1/certificates', certificateRoutes);
+app.use('/api/v1/rewards', rewardRoutes);
 
 // ─────────────────────────────────────────────
 // 11. Swagger API Documentation
