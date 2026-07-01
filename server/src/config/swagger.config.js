@@ -533,151 +533,119 @@ Most endpoints require a **JWT Bearer Token**.
             },
           },
         },
-        NotificationPreferenceUpdate: {
-          type: 'object',
-          properties: {
-            inAppEnabled: { type: 'boolean', example: true },
-            emailEnabled: { type: 'boolean', example: false },
-            pushEnabled: { type: 'boolean', example: false },
-            smsEnabled: { type: 'boolean', example: false },
-            types: {
-              type: 'object',
-              example: {
-                application: true,
-                program: true,
-                attendance: false,
-                certificate: true,
-                reward: true,
-                leaderboard: true,
-                system: true,
-                announcement: true,
-              },
-            },
-            quietHours: {
-              type: 'object',
-              properties: {
-                enabled: { type: 'boolean', example: false },
-                startTime: { type: 'string', example: '22:00' },
-                endTime: { type: 'string', example: '08:00' },
-              },
-            },
-            digestFrequency: {
-              type: 'string',
-              enum: ['instant', 'daily', 'weekly'],
-              example: 'instant',
-            },
-          },
-        },
+NotificationPreferenceUpdate: {
+           type: 'object',
+           properties: {
+             inAppEnabled: { type: 'boolean', example: true },
+             emailEnabled: { type: 'boolean', example: false },
+             pushEnabled: { type: 'boolean', example: false },
+             smsEnabled: { type: 'boolean', example: false },
+             types: {
+               type: 'object',
+               example: {
+                 application: true,
+                 program: true,
+                 attendance: false,
+                 certificate: true,
+                 reward: true,
+                 leaderboard: true,
+                 system: true,
+                 announcement: true,
+               },
+             },
+             quietHours: {
+               type: 'object',
+               properties: {
+                 enabled: { type: 'boolean', example: false },
+                 startTime: { type: 'string', example: '22:00' },
+                 endTime: { type: 'string', example: '08:00' },
+               },
+             },
+             digestFrequency: {
+               type: 'string',
+               enum: ['instant', 'daily', 'weekly'],
+               example: 'instant',
+             },
+           },
+         },
 
-        // ─── Organization ─────────────────────────────────────────
-        Organization: {
+        // ─── Role ─────────────────────────────────────────────
+        Role: {
           type: 'object',
           properties: {
             _id: {
               type: 'string',
-              example: '665f1b2c3d4e5f6789abcdef0',
+              example: '665f1b2c3d4e5f6789abcdef',
             },
-            organizationId: {
+            roleId: {
               type: 'string',
-              example: 'ORG000001',
+              example: 'ROLE0001',
             },
             name: {
               type: 'string',
-              example: 'Disha for India',
+              example: 'Admin',
             },
             slug: {
               type: 'string',
-              example: 'disha-for-india',
-            },
-            shortName: {
-              type: 'string',
-              example: 'Disha',
+              example: 'admin',
             },
             description: {
               type: 'string',
-              example: 'A volunteer management platform',
+              example: 'System administrator role',
             },
-            logo: {
-              type: 'string',
-              example: 'https://example.com/logo.png',
+            permissions: {
+              type: 'array',
+              items: {
+                type: 'string',
+                example: 'users:read',
+              },
             },
-            coverImage: {
-              type: 'string',
-              example: 'https://example.com/cover.png',
-            },
-            email: {
-              type: 'string',
-              format: 'email',
-              example: 'contact@dishaforindia.org',
-            },
-            phone: {
-              type: 'string',
-              example: '+919876543210',
-            },
-            website: {
-              type: 'string',
-              example: 'https://dishaforindia.org',
-            },
-            address: {
-              type: 'string',
-              example: '123 Main Street',
-            },
-            city: {
-              type: 'string',
-              example: 'New Delhi',
-            },
-            state: {
-              type: 'string',
-              example: 'Delhi',
-            },
-            country: {
-              type: 'string',
-              example: 'India',
-            },
-            pincode: {
-              type: 'string',
-              example: '110001',
-            },
-            socialLinks: {
-              type: 'object',
-              example: {},
-            },
-            foundedYear: {
-              type: 'integer',
-              example: 2023,
-            },
-            organizationType: {
-              type: 'string',
-              enum: ['ngo', 'trust', 'college', 'university', 'corporate', 'government', 'community'],
-              example: 'ngo',
-            },
-            verificationStatus: {
-              type: 'string',
-              enum: ['pending', 'verified', 'rejected'],
-              example: 'verified',
+            isSystemRole: {
+              type: 'boolean',
+              example: true,
             },
             isActive: {
               type: 'boolean',
               example: true,
             },
-            owner: {
+          },
+        },
+
+        // ─── Permission ─────────────────────────────────────
+        Permission: {
+          type: 'object',
+          properties: {
+            _id: {
               type: 'string',
-              example: '665f1b2c3d4e5f6789abcdef1',
+              example: '665f1b2c3d4e5f6789abcdef',
             },
-            admins: {
-              type: 'array',
-              items: { type: 'string' },
-              example: ['665f1b2c3d4e5f6789abcdef1'],
-            },
-            createdAt: {
+            permissionId: {
               type: 'string',
-              format: 'date-time',
-              example: '2026-01-01T00:00:00.000Z',
+              example: 'PERM0001',
             },
-            updatedAt: {
+            module: {
               type: 'string',
-              format: 'date-time',
-              example: '2026-01-01T00:00:00.000Z',
+              example: 'users',
+            },
+            action: {
+              type: 'string',
+              example: 'read',
+            },
+            code: {
+              type: 'string',
+              example: 'users:read',
+            },
+            description: {
+              type: 'string',
+              example: 'Read user information',
+            },
+            category: {
+              type: 'string',
+              example: 'crud',
+            },
+            isSystemPermission: {
+              type: 'boolean',
+              example: true,
             },
           },
         },
@@ -736,6 +704,14 @@ Most endpoints require a **JWT Bearer Token**.
         name: 'Organization',
         description: 'Organization Management — Multi-tenancy Foundation',
       },
+      {
+        name: 'Roles',
+        description: 'Role Management',
+      },
+      {
+        name: 'Permissions',
+        description: 'Permission Management',
+      },
     ],
   },
     // Paths to files containing JSDoc swagger annotations
@@ -754,6 +730,8 @@ Most endpoints require a **JWT Bearer Token**.
       './src/docs/rewards.docs.js',
       './src/docs/notification.docs.js',
       './src/docs/organization.docs.js',
+      './src/docs/roles.docs.js',
+      './src/docs/permission.docs.js',
     ],
 };
 

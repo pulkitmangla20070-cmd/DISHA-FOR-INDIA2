@@ -46,6 +46,12 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(ROLES),
       default: ROLES.VOLUNTEER,
     },
+    permissions: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     status: {
       type: String,
       enum: Object.values(STATUS),

@@ -9,7 +9,6 @@ const { AuthenticationError, AuthorizationError } = require('../utils/errors');
  */
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    // Auth middleware must run before rbac middleware
     if (!req.user) {
       return next(new AuthenticationError(MESSAGES.UNAUTHORIZED));
     }
@@ -21,6 +20,42 @@ const authorize = (...allowedRoles) => {
     return next();
   };
 };
+
+/**
+ * Middleware to authorize access based on user permissions.
+ * Checks user.permissions array and role-based permissions.
+ * @param {...string} requiredPermissions - Permission codes required to access the route.
+ * @returns {Function} Express middleware function.
+ */
+const authorizePermissions = (...requiredPermissions) => {
+  return async (req, res, next) => {
+    if (!req.user) {
+      return next(new AuthenticationError(MESSAGES.UNAUTHORIZED));
+    }
+
+    // Super admin has all permissions
+    if (req.user.role === ROLES.SUPER_ADMIN) {
+      return next();
+    }
+
+    // Check direct permissions on user
+    const userPermissions = req.user.permissions || [];
+    const hasAllPermissions = requiredPermissions.every((perm) => userPermissions.includes(perm));
+
+    if (hasAllPermissions) {
+      return next();
+    }
+
+    return next(new AuthorizationError(MESSAGES.FORBIDDEN));
+  };
+};
+
+/**
+ * Middleware to authorize access based on user roles (explicit naming).
+ * @param {...string} roles - Roles allowed to access the route.
+ * @returns {Function} Express middleware function.
+ */
+const authorizeRoles = (...roles) => authorize(...roles);
 
 /**
  * Reusable helper middleware to check if user has Admin (or Super Admin) role.
@@ -44,6 +79,8 @@ const isAdminOrVolunteer = authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.VOLUN
 
 module.exports = {
   authorize,
+  authorizeRoles,
+  authorizePermissions,
   isAdmin,
   isVolunteer,
   isGuest,

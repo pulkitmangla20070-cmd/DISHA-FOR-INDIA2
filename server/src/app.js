@@ -25,6 +25,8 @@ const rewardRoutes = require('./modules/reward/reward.routes');
 const leaderboardRoutes = require('./modules/leaderboard/leaderboard.routes');
 const notificationRoutes = require('./modules/notification/notification.routes');
 const organizationRoutes = require('./modules/organization/organization.routes');
+const permissionRoutes = require('./modules/permission/permission.routes');
+const roleRoutes = require('./modules/role/role.routes');
 const { successResponse } = require('./utils/response');
 
 const app = express();
@@ -100,6 +102,9 @@ app.use('/api/v1/leaderboard', leaderboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 
 app.use('/api/v1/organizations', organizationRoutes);
+
+app.use('/api/v1/permissions', permissionRoutes);
+app.use('/api/v1/roles', roleRoutes);
 
 // ─────────────────────────────────────────────
 // 11. Swagger API Documentation
