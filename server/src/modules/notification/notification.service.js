@@ -1,4 +1,5 @@
 const notificationRepository = require('./notification.repository');
+const notificationPreferenceRepository = require('./notificationPreference.repository');
 const { generateNotificationId, notificationFormatter } = require('./notification.utils');
 const { NOTIFICATION_TYPES, PRIORITY, CHANNEL, STATUS, MESSAGES, DEFAULTS } = require('./notification.constants');
 const templates = require('./notification.templates');
@@ -48,14 +49,41 @@ class NotificationService {
   }
 
   /**
-   * Create and persist an in-app notification using a template.
+   * Check if a notification type is enabled for a user based on their preferences.
+   * @param {string} userId - User ID.
+   * @param {string} type - Notification type.
+   * @returns {Promise<boolean>} Whether the notification is enabled.
+   */
+  async isNotificationEnabled(userId, type) {
+    const preferences = await notificationPreferenceRepository.getPreferences(userId);
+
+    if (!preferences) {
+      return true;
+    }
+
+    if (!preferences.inAppEnabled) {
+      return false;
+    }
+
+    const typeEnabled = preferences.types?.get(type);
+    return typeEnabled !== false;
+  }
+
+  /**
+   * Create and persist an in-app notification using a template, respecting user preferences.
    * @param {string} templateKey - Template key from notification.templates.
    * @param {object} templateData - Data required by the template.
    * @param {object} overrides - Optional field overrides.
-   * @returns {Promise<object>} Created notification.
+   * @returns {Promise<object>} Created notification or null if disabled.
    */
   async sendInAppNotification(templateKey, templateData = {}, overrides = {}) {
     const payload = this.buildNotification(templateKey, templateData);
+
+    const enabled = await this.isNotificationEnabled(payload.recipient, payload.type);
+
+    if (!enabled) {
+      return null;
+    }
 
     const notification = await notificationRepository.create({
       ...payload,
@@ -77,7 +105,7 @@ class NotificationService {
    * @param {string} templateKey - Template key from notification.templates.
    * @param {object} templateData - Data required by the template.
    * @param {object} overrides - Optional field overrides.
-   * @returns {Promise<object>} Created notification.
+   * @returns {Promise<object>} Created notification or null if disabled.
    */
   async triggerNotification(templateKey, templateData = {}, overrides = {}) {
     return this.sendInAppNotification(templateKey, templateData, overrides);
@@ -96,18 +124,29 @@ class NotificationService {
       throw new ValidationError('At least one recipient is required');
     }
 
-    const notifications = recipientIds.map((recipientId) => {
+    const validRecipients = [];
+    for (const recipientId of recipientIds) {
       const payload = templates[templateKey]({ ...templateData, recipientId });
-      return {
-        ...payload,
-        ...overrides,
-        notificationId: generateNotificationId(),
-        status: STATUS.SENT,
-        sentAt: new Date(),
-      };
-    });
+      const enabled = await this.isNotificationEnabled(recipientId, payload.type);
+      if (enabled) {
+        validRecipients.push({
+          ...payload,
+          ...overrides,
+          notificationId: generateNotificationId(),
+          status: STATUS.SENT,
+          sentAt: new Date(),
+        });
+      }
+    }
 
-    const createdNotifications = await notificationRepository.bulkCreate(notifications);
+    if (validRecipients.length === 0) {
+      return {
+        notifications: [],
+        message: 'No notifications created (all recipients have disabled this type)',
+      };
+    }
+
+    const createdNotifications = await notificationRepository.bulkCreate(validRecipients);
 
     return {
       notifications: createdNotifications.map(notificationFormatter),
@@ -116,35 +155,87 @@ class NotificationService {
   }
 
   /**
-   * Get notifications for a user with pagination.
+   * Get notifications for a user with advanced filters.
    * @param {string} userId - User ID.
    * @param {object} query - Query parameters.
    * @returns {Promise<object>} Notifications list.
    */
   async getNotifications(userId, query = {}) {
-    const { type, isRead, page = DEFAULTS.PAGINATION.PAGE, limit = DEFAULTS.PAGINATION.LIMIT } = query;
+    const {
+      type,
+      category,
+      priority,
+      isRead,
+      startDate,
+      endDate,
+      page = DEFAULTS.PAGINATION.PAGE,
+      limit = DEFAULTS.PAGINATION.LIMIT,
+    } = query;
 
-    const filter = { recipient: userId, isDeleted: false };
-
-    if (type) {
-      filter.type = type;
-    }
-
-    if (isRead !== undefined && isRead !== '') {
-      filter.isRead = isRead === 'true';
-    }
-
-    const { notifications, total } = await notificationRepository.findByUser(userId, {
+    const { notifications, total } = await notificationRepository.findNotifications(userId, {
       page: Number(page),
       limit: Number(limit),
       sortBy: query.sortBy || DEFAULTS.PAGINATION.SORT_BY,
       order: query.order || DEFAULTS.PAGINATION.ORDER,
+      type,
+      category,
+      priority,
+      isRead,
+      startDate,
+      endDate,
     });
 
     return {
       notifications: notifications.map(notificationFormatter),
       total,
       message: MESSAGES.NOTIFICATIONS_FETCHED,
+    };
+  }
+
+  /**
+   * Search notifications by keyword for a user.
+   * @param {string} userId - User ID.
+   * @param {object} query - Query parameters.
+   * @returns {Promise<object>} Search results.
+   */
+  async searchNotifications(userId, query = {}) {
+    const { search, page = DEFAULTS.PAGINATION.PAGE, limit = DEFAULTS.PAGINATION.LIMIT } = query;
+
+    if (!search || search.trim() === '') {
+      throw new ValidationError('Search query is required');
+    }
+
+    const { notifications, total } = await notificationRepository.findNotifications(userId, {
+      page: Number(page),
+      limit: Number(limit),
+      sortBy: query.sortBy || DEFAULTS.PAGINATION.SORT_BY,
+      order: query.order || DEFAULTS.PAGINATION.ORDER,
+      search: search.trim(),
+    });
+
+    return {
+      notifications: notifications.map(notificationFormatter),
+      total,
+      message: MESSAGES.NOTIFICATIONS_FETCHED,
+    };
+  }
+
+  /**
+   * Get a single notification by ID.
+   * @param {string} userId - User ID.
+   * @param {string} notificationId - Notification ID.
+   * @returns {Promise<object>} Notification data.
+   */
+  async getNotification(userId, notificationId) {
+    const notification = await notificationRepository.findById(notificationId);
+
+    if (!notification || notification.recipient.toString() !== userId.toString()) {
+      throw new NotFoundError(MESSAGES.NOTIFICATION_NOT_FOUND);
+    }
+
+    return {
+      notification: notificationFormatter(notification),
+      message: MESSAGES.NOTIFICATION_FETCHED,
     };
   }
 
@@ -169,6 +260,16 @@ class NotificationService {
       total,
       message: MESSAGES.NOTIFICATIONS_FETCHED,
     };
+  }
+
+  /**
+   * Count unread notifications for a user.
+   * @param {string} userId - User ID.
+   * @returns {Promise<object>} Count object.
+   */
+  async getUnreadCount(userId) {
+    const count = await notificationRepository.countUnread(userId);
+    return { count };
   }
 
   /**
@@ -230,6 +331,38 @@ class NotificationService {
 
     return {
       message: MESSAGES.NOTIFICATION_DELETED,
+    };
+  }
+
+  /**
+   * Restore a soft-deleted notification.
+   * @param {string} userId - User ID.
+   * @param {string} notificationId - Notification ID.
+   * @returns {Promise<object>} Restored notification.
+   */
+  async restoreNotification(userId, notificationId) {
+    const notification = await notificationRepository.findById(notificationId);
+
+    if (!notification) {
+      throw new NotFoundError(MESSAGES.NOTIFICATION_NOT_FOUND);
+    }
+
+    if (notification.recipient.toString() !== userId.toString()) {
+      throw new NotFoundError(MESSAGES.NOTIFICATION_NOT_FOUND);
+    }
+
+    if (!notification.isDeleted) {
+      return {
+        notification: notificationFormatter(notification),
+        message: 'Notification is not deleted',
+      };
+    }
+
+    const restored = await notificationRepository.restore(notificationId);
+
+    return {
+      notification: notificationFormatter(restored),
+      message: 'Notification restored successfully',
     };
   }
 

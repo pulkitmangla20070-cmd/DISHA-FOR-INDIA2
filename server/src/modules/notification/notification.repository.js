@@ -29,25 +29,88 @@ class NotificationRepository {
   }
 
   /**
-   * Find notifications for a specific user.
+   * Find notifications for a specific user with advanced filters.
+   * @param {string} userId - User ID.
+   * @param {object} options - Query options.
+   * @returns {Promise<object>} Notifications with pagination.
+   */
+  async findNotifications(userId, options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      order = 'desc',
+      type,
+      category,
+      priority,
+      isRead,
+      startDate,
+      endDate,
+      search,
+      includeDeleted = false,
+    } = options;
+
+    const skip = (page - 1) * limit;
+    const sortOrder = order === 'desc' ? -1 : 1;
+
+    const filter = { recipient: userId };
+
+    if (!includeDeleted) {
+      filter.isDeleted = false;
+    }
+
+    if (type) {
+      filter.type = type;
+    }
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (priority) {
+      filter.priority = priority;
+    }
+
+    if (isRead !== undefined && isRead !== '') {
+      filter.isRead = isRead === 'true';
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { message: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [notifications, total] = await Promise.all([
+      Notification.find(filter)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limit),
+      Notification.countDocuments(filter),
+    ]);
+
+    return { notifications, total };
+  }
+
+  /**
+   * Find notifications for a specific user (legacy method).
    * @param {string} userId - User ID.
    * @param {object} options - Pagination options.
    * @returns {Promise<object>} Notifications with pagination.
    */
   async findByUser(userId, options = {}) {
-    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc' } = options;
-    const skip = (page - 1) * limit;
-    const sortOrder = order === 'desc' ? -1 : 1;
-
-    const [notifications, total] = await Promise.all([
-      Notification.find({ recipient: userId, isDeleted: false })
-        .sort({ [sortBy]: sortOrder })
-        .skip(skip)
-        .limit(limit),
-      Notification.countDocuments({ recipient: userId, isDeleted: false }),
-    ]);
-
-    return { notifications, total };
+    return this.findNotifications(userId, options);
   }
 
   /**
@@ -70,6 +133,15 @@ class NotificationRepository {
     ]);
 
     return { notifications, total };
+  }
+
+  /**
+   * Count unread notifications for a user.
+   * @param {string} userId - User ID.
+   * @returns {Promise<number>} Unread count.
+   */
+  async countUnread(userId) {
+    return Notification.countDocuments({ recipient: userId, isRead: false, isDeleted: false });
   }
 
   /**
@@ -159,6 +231,19 @@ class NotificationRepository {
     return Notification.findByIdAndUpdate(
       id,
       { isDeleted: true, deletedAt: new Date(), deletedBy },
+      { new: true }
+    );
+  }
+
+  /**
+   * Restore a soft-deleted notification.
+   * @param {string} id - Notification ID.
+   * @returns {Promise<Notification|null>} The restored notification.
+   */
+  async restore(id) {
+    return Notification.findByIdAndUpdate(
+      id,
+      { isDeleted: false, deletedAt: null, deletedBy: null },
       { new: true }
     );
   }

@@ -1,8 +1,5 @@
 const { NOTIFICATION_TYPES, PRIORITY, CHANNEL, STATUS, MESSAGES, DEFAULTS } = require('./notification.constants');
-
-/**
- * Swagger documentation for Notification module.
- */
+const { NotificationPreferenceSchema } = require('./notificationPreference.swagger');
 
 const NotificationSchema = {
   type: 'object',
@@ -137,9 +134,25 @@ const PaginatedNotificationsResponse = {
   },
 };
 
+const UnreadCountResponse = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', example: true },
+    message: { type: 'string', example: 'Unread count retrieved successfully' },
+    data: {
+      type: 'object',
+      properties: {
+        count: { type: 'integer', example: 5 },
+      },
+    },
+  },
+};
+
 module.exports = {
   NotificationSchema,
   PaginatedNotificationsResponse,
+  UnreadCountResponse,
+  NotificationPreferenceSchema,
   NOTIFICATION_TYPES,
   PRIORITY,
   CHANNEL,

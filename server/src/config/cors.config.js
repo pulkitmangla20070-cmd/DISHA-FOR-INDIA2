@@ -1,4 +1,12 @@
-const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+const ALLOWED_METHODS = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'OPTIONS',
+];
+
 const ALLOWED_HEADERS = [
   'Origin',
   'X-Requested-With',
@@ -9,31 +17,60 @@ const ALLOWED_HEADERS = [
 ];
 
 /**
- * CORS configuration factory.
- * Reads allowed origins from environment and enforces method/header allow-lists.
+ * Production-ready CORS Configuration
+ *
+ * Supports:
+ * - Local React (Vite)
+ * - Local React (CRA)
+ * - Render Frontend
+ * - Future Production Frontend
  */
 const getCorsConfig = () => {
-  const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  const defaultOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ];
 
-  // Support multiple comma-separated origins (e.g., for staging + prod)
-  const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
+  const envOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+    : [];
+
+  const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
   return {
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g., mobile apps, Postman, curl)
+    origin(origin, callback) {
+      // Allow Postman, curl, server-to-server requests
       if (!origin) {
         return callback(null, true);
       }
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`CORS policy: origin '${origin}' is not allowed.`), false);
+
+      console.error(`❌ CORS Blocked Origin: ${origin}`);
+
+      return callback(
+        new Error(`CORS policy: origin '${origin}' is not allowed.`),
+        false
+      );
     },
-    credentials: true, // Allow cookies (refreshToken)
+
+    credentials: true,
+
     methods: ALLOWED_METHODS,
+
     allowedHeaders: ALLOWED_HEADERS,
-    exposedHeaders: ['Content-Length', 'X-Request-Id'],
-    optionsSuccessStatus: 200, // Legacy browser support for OPTIONS pre-flight
+
+    exposedHeaders: [
+      'Content-Length',
+      'X-Request-Id',
+      'Set-Cookie',
+    ],
+
+    optionsSuccessStatus: 200,
+
+    preflightContinue: false,
   };
 };
 
