@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Clock, Users, CalendarCheck, Search, Download, Upload } from 'lucide-react';
-import { adminGetAttendance, bulkUploadAttendance } from "../../services/attendanceService";
+import { adminGetAttendance } from "../../services/attendanceService";
 import toast from 'react-hot-toast';
 import StatusBadge from "../../components/volunteer/StatusBadge";
 import SkeletonLoader from "../../components/volunteer/SkeletonLoader";
@@ -24,25 +24,7 @@ const AdminAttendance = () => {
     fetch();
   }, []);
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await bulkUploadAttendance(formData);
-      if (res.success) {
-        toast.success(res.message || 'Attendance uploaded successfully');
-        // Refresh data
-        const refresh = await adminGetAttendance();
-        if (refresh.success) setData(refresh.data);
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to upload attendance');
-    }
-  };
 
   return (
     <div className="page-container" style={{ padding: '2rem' }}>
@@ -56,10 +38,7 @@ const AdminAttendance = () => {
           <p style={{ color: 'var(--color-body)', marginTop: '0.5rem' }}>Monitor real-time check-ins and volunteer hours.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <label className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-            <Upload size={16} /> Bulk Upload CSV
-            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
-          </label>
+
           <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Download size={16} /> Export Report
           </button>
