@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Medal, ShieldAlert } from 'lucide-react';
 import { leaderboardApi } from '../services/api';
 
 const Leaderboard = () => {

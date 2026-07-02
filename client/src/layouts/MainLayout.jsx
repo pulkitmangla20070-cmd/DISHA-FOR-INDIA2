@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, LogOut, Menu } from 'lucide-react';
+import { Shield, LogOut } from 'lucide-react';
 
 const MainLayout = () => {
   const { user, logout } = useAuth();

@@ -16,7 +16,8 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
       }
-    } catch (error) {
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
       // Auth check failed - user is not logged in
       setUser(null);
     } finally {
@@ -108,6 +109,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
