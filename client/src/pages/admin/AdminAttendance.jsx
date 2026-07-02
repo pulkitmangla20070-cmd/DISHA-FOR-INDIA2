@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Clock, Users, CalendarCheck, Search, Download } from 'lucide-react';
 import { adminGetAttendance } from '../../../services/attendanceService';
-import StatusBadge from '../../../components/volunteer/StatusBadge';
-import SkeletonLoader from '../../../components/volunteer/SkeletonLoader';
+import StatusBadge from '../../../components/volunteer/StatusBadge.jsx';
+import SkeletonLoader from '../../../components/volunteer/SkeletonLoader.jsx';
 
 const AdminAttendance = () => {
   const [data, setData] = useState(null);
