@@ -43,11 +43,7 @@ class LeaderboardService {
 
   async getMyRank(userId) {
     const user = await userRepository.findById(userId);
-    if (!user) {
-      return null;
-    }
-    const rank = await userRepository.getVolunteerRank(user._id);
-    if (!rank) {
+    if (!user || user.role !== 'volunteer') {
       return null;
     }
     return {

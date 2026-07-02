@@ -125,15 +125,6 @@ class UserRepository {
   }
 
   async getVolunteerRank(userId) {
-    const totalBefore = await User.countDocuments({
-      role: 'volunteer',
-      isDeleted: false,
-      $expr: {
-        $lt: [
-          { $add: ['$points', { $cond: [{ $eq: ['$points', null] }, 0, 0] }]
-        ]
-      }
-    });
     return null;
   }
 
