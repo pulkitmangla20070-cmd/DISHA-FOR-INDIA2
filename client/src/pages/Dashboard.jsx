@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Award, Clock, Briefcase, Award as CertIcon, Sparkles, BookOpen, AlertCircle, ArrowUpRight } from 'lucide-react';
+import { Award, Clock, Briefcase, AlertCircle, Sparkles, ArrowUpRight } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -86,7 +86,7 @@ const Dashboard = () => {
 
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-accent)' }}>
-            <CertIcon size={24} />
+            <Award size={24} />
           </div>
           <div>
             <span style={{ fontSize: '0.8rem', color: 'var(--color-body)', fontWeight: 600 }}>Certificates</span>
