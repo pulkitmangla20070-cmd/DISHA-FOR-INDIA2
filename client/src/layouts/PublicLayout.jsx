@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Shield, LogOut } from 'lucide-react';
 
-const MainLayout = () => {
+const PublicLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
