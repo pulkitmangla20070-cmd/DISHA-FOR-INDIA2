@@ -30,6 +30,10 @@ import CheckOut from './pages/attendance/CheckOut';
 import AttendanceHistory from './pages/attendance/AttendanceHistory';
 import VolunteerHours from './pages/attendance/VolunteerHours';
 
+// Admin Pages
+import AdminApplications from './pages/admin/AdminApplications';
+import AdminAttendance from './pages/admin/AdminAttendance';
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -124,6 +128,17 @@ function App() {
               <Route path="attendance/checkout" element={<CheckOut />} />
               <Route path="attendance/history" element={<AttendanceHistory />} />
               <Route path="attendance/hours" element={<VolunteerHours />} />
+            </Route>
+            {/* Protected Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<div className="p-8"><h1>Admin Dashboard</h1><p>Coming soon...</p></div>} />
+              <Route path="programs" element={<div className="p-8"><h1>Admin Programs</h1><p>Coming soon...</p></div>} />
+              <Route path="applications" element={<AdminApplications />} />
+              <Route path="attendance" element={<AdminAttendance />} />
             </Route>
           </Routes>
         </BrowserRouter>

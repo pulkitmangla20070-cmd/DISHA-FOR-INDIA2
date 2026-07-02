@@ -76,7 +76,7 @@ const MainLayout = () => {
 
       {/* Footer */}
       <footer style={{
-        backgroundColor: '#0F172A',
+        backgroundColor: 'var(--color-heading)', // Muted charcoal instead of stark dark
         color: '#ffffff',
         padding: '3rem 1.5rem',
         marginTop: 'auto'
