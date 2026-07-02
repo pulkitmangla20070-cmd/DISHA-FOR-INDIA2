@@ -79,6 +79,10 @@ const RedirectIfAuthenticated = ({ children }) => {
   if (loading) return null;
 
   if (user) {
+    const adminRoles = ['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'];
+    if (adminRoles.includes(user?.role?.toUpperCase())) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
