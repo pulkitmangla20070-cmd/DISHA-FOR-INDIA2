@@ -58,14 +58,14 @@ const AttendanceDashboard = () => {
         />
         <StatCard 
           icon={<CalendarCheck size={24} />} 
-          value={attendanceDashboard.monthlyStats?.present || 0} 
-          label="Sessions This Month" 
+          value={attendanceDashboard.summary?.presentCount || 0} 
+          label="Sessions Attended" 
           color="secondary"
         />
         <StatCard 
           icon={<Flame size={24} />} 
-          value={attendanceDashboard.currentStreak || 0} 
-          label="Day Streak" 
+          value={`${attendanceDashboard.summary?.attendanceRate || 0}%`} 
+          label="Attendance Rate" 
           color="accent"
         />
         <StatCard 
@@ -125,32 +125,32 @@ const AttendanceDashboard = () => {
             )}
           </motion.div>
 
-          {/* Upcoming Sessions */}
+          {/* Recent Sessions */}
           <div className="card">
             <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <CalendarCheck size={18} className="text-primary" /> Upcoming Sessions
+              <CalendarCheck size={18} className="text-primary" /> Recent Sessions
             </h3>
             
-            {attendanceDashboard.upcomingSessions?.length > 0 ? (
+            {attendanceDashboard.recentAttendance?.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {attendanceDashboard.upcomingSessions.map(session => (
-                  <div key={session.id} style={{ display: 'flex', gap: '1rem', padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
+                {attendanceDashboard.recentAttendance.slice(0, 3).map(session => (
+                  <div key={session._id} style={{ display: 'flex', gap: '1rem', padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ 
                       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                       backgroundColor: 'rgba(37, 99, 235, 0.1)', color: 'var(--color-primary)',
                       padding: '0.5rem', borderRadius: 'var(--radius-sm)', minWidth: '55px'
                     }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                        {new Date(session.date).toLocaleDateString('en-US', { month: 'short' })}
+                        {new Date(session.attendanceDate).toLocaleDateString('en-US', { month: 'short' })}
                       </span>
                       <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-                        {new Date(session.date).getDate()}
+                        {new Date(session.attendanceDate).getDate()}
                       </span>
                     </div>
                     <div>
-                      <h4 style={{ fontSize: '0.95rem', margin: '0 0 0.25rem 0' }}>{session.programTitle}</h4>
+                      <h4 style={{ fontSize: '0.95rem', margin: '0 0 0.25rem 0' }}>{session.program?.title || 'Program Session'}</h4>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-body)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={12} /> {session.time}
+                        <Clock size={12} /> {session.totalHours ? `${session.totalHours} hours` : session.status}
                       </div>
                     </div>
                   </div>
@@ -158,7 +158,7 @@ const AttendanceDashboard = () => {
               </div>
             ) : (
               <p style={{ color: 'var(--color-body)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>
-                No upcoming sessions scheduled.
+                No recent sessions found.
               </p>
             )}
           </div>
@@ -167,7 +167,7 @@ const AttendanceDashboard = () => {
         {/* Right Col - Calendar */}
         <div style={{ gridColumn: 'span 2' }}>
           <AttendanceCalendar 
-            records={attendanceDashboard.recentRecords || []} 
+            records={attendanceDashboard.recentAttendance || []} 
             selectedMonth={new Date()}
           />
         </div>

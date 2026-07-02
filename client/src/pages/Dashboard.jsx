@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { getMyLevel, getMyBadges, getMyRewards } from '../services/gamificationService';
+import { getMyCertificates } from '../services/certificateService';
 import {
   Award,
   Clock,
@@ -36,23 +38,53 @@ const Dashboard = () => {
     applicationsLoading
   } = useVolunteer();
 
+  const [gamification, setGamification] = useState({
+    points: 0,
+    level: 'Beginner',
+    badges: [],
+    certsCount: 0,
+    loading: true
+  });
+
   useEffect(() => {
     fetchVolunteerHours();
     fetchApplications();
     fetchJoinedPrograms();
     fetchAttendanceDashboard();
+
+    const fetchGamification = async () => {
+      try {
+        const [levelRes, badgesRes, pointsRes, certsRes] = await Promise.all([
+          getMyLevel(),
+          getMyBadges(),
+          getMyRewards(),
+          getMyCertificates()
+        ]);
+        
+        setGamification({
+          points: pointsRes.success ? pointsRes.data?.totalPoints || 0 : 0,
+          level: levelRes.success ? levelRes.data?.currentLevel?.name || 'Beginner' : 'Beginner',
+          badges: badgesRes.success ? badgesRes.data?.badges || [] : [],
+          certsCount: certsRes.success ? certsRes.data?.certificates?.length || 0 : 0,
+          loading: false
+        });
+      } catch (err) {
+        console.error('Error fetching gamification stats:', err);
+        setGamification(prev => ({ ...prev, loading: false }));
+      }
+    };
+    fetchGamification();
   }, [fetchVolunteerHours, fetchApplications, fetchJoinedPrograms, fetchAttendanceDashboard]);
 
-  // Handle fallback details for testing if the user details are empty
   const displayName = user?.name || 'Volunteer';
-  const points = user?.points ?? 120;
-  const level = user?.volunteerLevel || 'Beginner';
+  const points = gamification.points;
+  const level = gamification.level;
   const profileCompletion = user?.profileCompletion ?? 65;
 
   const hours = volunteerHours?.lifetime || user?.hoursCompleted || 0;
   const activePrograms = joinedPrograms.filter(p => p.status === 'active');
   const programsCount = joinedPrograms.length || user?.programsJoined || 0;
-  const certsCount = user?.certificatesEarned || 0;
+  const certsCount = gamification.certsCount;
 
   const pendingApps = applications.filter(a => a.status === 'pending' || a.status === 'under_review');
 

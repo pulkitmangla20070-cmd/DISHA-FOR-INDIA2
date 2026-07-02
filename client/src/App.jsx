@@ -18,6 +18,7 @@ import Certificates from './pages/Certificates';
 import ProfileSetup from './pages/ProfileSetup';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
+import VerifyCertificate from './pages/VerifyCertificate';
 
 // Volunteer Pages
 import ApplicationForm from './pages/applications/ApplicationForm';
@@ -113,6 +114,7 @@ function App() {
                 </RedirectIfAuthenticated>
               } />
               <Route path="unauthorized" element={<Unauthorized />} />
+              <Route path="verify/:id" element={<VerifyCertificate />} />
               <Route path="*" element={<NotFound />} />
             </Route>
 

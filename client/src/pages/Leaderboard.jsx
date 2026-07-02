@@ -1,17 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Award, Medal, ShieldAlert } from 'lucide-react';
+import { getTopVolunteers, getMyRank } from '../services/gamificationService';
+import SkeletonLoader from '../components/volunteer/SkeletonLoader';
 
 const Leaderboard = () => {
-  const topVolunteers = [
-    { rank: 1, name: 'Ananya Iyer', points: 1420, level: 'Legend', color: '#FBBF24', badge: '🥇' },
-    { rank: 2, name: 'Rohan Sharma', points: 1210, level: 'Diamond', color: '#CBD5E1', badge: '🥈' },
-    { rank: 3, name: 'Kabir Mehta', points: 1100, level: 'Platinum', color: '#B45309', badge: '🥉' },
-    { rank: 4, name: 'Priya Nair', points: 950, level: 'Gold', color: 'transparent', badge: '4' },
-    { rank: 5, name: 'Aarav Gupta', points: 880, level: 'Silver', color: 'transparent', badge: '5' },
-  ];
+  const [topVolunteers, setTopVolunteers] = useState([]);
+  const [myRank, setMyRank] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      setLoading(true);
+      try {
+        const [topRes, myRes] = await Promise.all([
+          getTopVolunteers(),
+          getMyRank()
+        ]);
+        
+        if (topRes.success) {
+          setTopVolunteers(topRes.data);
+        }
+        if (myRes.success && myRes.data) {
+          setMyRank(myRes.data);
+        }
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
+
+  const getRankStyle = (index) => {
+    switch (index) {
+      case 0: return { color: '#FBBF24', badge: '🥇' };
+      case 1: return { color: '#CBD5E1', badge: '🥈' };
+      case 2: return { color: '#B45309', badge: '🥉' };
+      default: return { color: 'transparent', badge: (index + 1).toString() };
+    }
+  };
+
+  if (loading) return <div className="page-container" style={{ padding: '2rem' }}><SkeletonLoader type="dashboard" /></div>;
 
   return (
-    <div style={{ padding: '1.5rem 0' }}>
+    <div className="page-container" style={{ padding: '1.5rem 2rem' }}>
       <div style={{
         background: '#FEFCE8',
         border: '1px solid #FEF08A',
@@ -30,48 +63,66 @@ const Leaderboard = () => {
       <div className="card">
         <h4 style={{ marginBottom: '1.25rem' }}>Top Contributors</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {topVolunteers.map((vol) => (
-            <div
-              key={vol.rank}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '1rem',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: vol.rank <= 3 ? 'rgba(254, 252, 232, 0.5)' : 'var(--color-card)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    backgroundColor: vol.color !== 'transparent' ? vol.color : 'var(--color-border)',
-                    color: vol.rank <= 3 ? '#ffffff' : 'var(--color-body)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                  }}
-                >
-                  {vol.badge}
+          {topVolunteers.map((vol, index) => {
+            const rankStyle = getRankStyle(index);
+            return (
+              <div
+                key={vol._id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '1rem',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: index <= 2 ? 'rgba(254, 252, 232, 0.5)' : 'var(--color-card)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      backgroundColor: rankStyle.color !== 'transparent' ? rankStyle.color : 'var(--color-border)',
+                      color: index <= 2 ? '#ffffff' : 'var(--color-body)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {rankStyle.badge}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '1rem', margin: 0 }}>{vol.name}</h4>
+                    <span className="badge badge-blue" style={{ fontSize: '0.7rem', marginTop: '0.2rem' }}>{vol.volunteerLevel}</span>
+                  </div>
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '1rem', margin: 0 }}>{vol.name}</h4>
-                  <span className="badge badge-blue" style={{ fontSize: '0.7rem', marginTop: '0.2rem' }}>{vol.level}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <strong style={{ fontSize: '1.15rem', color: 'var(--color-primary)' }}>{vol.points}</strong>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-body)' }}>points</div>
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <strong style={{ fontSize: '1.15rem', color: 'var(--color-primary)' }}>{vol.points}</strong>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-body)' }}>points</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
+      
+      {myRank && (
+        <div className="card" style={{ marginTop: '1.5rem', backgroundColor: 'var(--color-primary)', color: 'white' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h4 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>Your Current Rank</h4>
+              <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>Keep volunteering to climb the leaderboard!</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{myRank.points} pts</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>{myRank.volunteerLevel}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
