@@ -128,11 +128,16 @@ class UserRepository {
     return null;
   }
 
-  async findTopVolunteers(limit = 10) {
-    return User.find({ role: 'volunteer', isDeleted: false })
-      .sort({ points: -1, createdAt: 1 })
-      .limit(limit);
-  }
+ async findTopVolunteers(limit = 10) {
+  return User.find({ role: 'volunteer', isDeleted: false })
+    .sort({ points: -1, createdAt: 1 })
+    .limit(limit);
 }
+
+async countDocuments(query = {}) {
+  return User.countDocuments(query);
+}
+
+} // <-- You are missing this closing brace
 
 module.exports = new UserRepository();
