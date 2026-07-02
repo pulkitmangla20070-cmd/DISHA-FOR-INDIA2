@@ -22,8 +22,14 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      await login(email, password);
-      navigate('/dashboard');
+      const response = await login(email, password);
+      const userRole = response?.user?.role?.toUpperCase();
+      
+      if (['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'].includes(userRole)) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setLocalError(err.message || 'Login failed. Check your credentials.');
     } finally {
