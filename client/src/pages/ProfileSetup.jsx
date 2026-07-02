@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Phone, GraduationCap, MapPin, CheckCircle } from 'lucide-react';
+import { User, Phone, BookOpen, GraduationCap, MapPin, Award, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 
 const ProfileSetup = () => {

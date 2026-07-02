@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, TrendingUp, Users, Award, Calendar, ChevronRight } from 'lucide-react';
+import { Shield, TrendingUp, Users, Award, Calendar, ChevronRight, BookOpen, MessageSquare } from 'lucide-react';
 
 const Home = () => {
   return (

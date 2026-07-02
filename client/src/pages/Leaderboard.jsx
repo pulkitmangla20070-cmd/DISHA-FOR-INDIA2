@@ -1,232 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { leaderboardApi } from '../services/api';
+import React from 'react';
+import { Award, Medal, ShieldAlert } from 'lucide-react';
 
 const Leaderboard = () => {
-  const [volunteers, setVolunteers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const { user } = useAuth();
-
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await leaderboardApi.getAll();
-
-        console.log('Leaderboard Response:', response);
-
-        const leaderboardData = Array.isArray(response?.data?.leaderboard)
-          ? response.data.leaderboard
-          : [];
-
-        setVolunteers(leaderboardData);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Failed to fetch leaderboard');
-        setVolunteers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeaderboard();
-  }, [user]);
-
-  if (loading) {
-    return (
-      <div
-        className="flex-center"
-        style={{ minHeight: '60vh' }}
-      >
-        <div
-          className="loader"
-          style={{
-            width: '48px',
-            height: '48px',
-            border: '4px solid var(--color-border)',
-            borderTopColor: 'var(--color-primary)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-          }}
-        />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: '1.5rem 0' }}>
-        <div
-          className="card"
-          style={{
-            textAlign: 'center',
-            padding: '2rem',
-          }}
-        >
-          <h3 style={{ color: 'var(--color-error)' }}>
-            {error}
-          </h3>
-        </div>
-      </div>
-    );
-  }
+  const topVolunteers = [
+    { rank: 1, name: 'Ananya Iyer', points: 1420, level: 'Legend', color: '#FBBF24', badge: '🥇' },
+    { rank: 2, name: 'Rohan Sharma', points: 1210, level: 'Diamond', color: '#CBD5E1', badge: '🥈' },
+    { rank: 3, name: 'Kabir Mehta', points: 1100, level: 'Platinum', color: '#B45309', badge: '🥉' },
+    { rank: 4, name: 'Priya Nair', points: 950, level: 'Gold', color: 'transparent', badge: '4' },
+    { rank: 5, name: 'Aarav Gupta', points: 880, level: 'Silver', color: 'transparent', badge: '5' },
+  ];
 
   return (
     <div style={{ padding: '1.5rem 0' }}>
-      {/* Header */}
-      <div
-        style={{
-          background: '#FEFCE8',
-          border: '1px solid #FEF08A',
-          borderRadius: 'var(--radius-xl)',
-          padding: '2rem',
-          marginBottom: '2rem',
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            fontSize: '3rem',
-            marginBottom: '0.5rem',
-          }}
-        >
-          🏆
-        </div>
-
-        <h2
-          style={{
-            color: '#713F12',
-            marginBottom: '0.5rem',
-          }}
-        >
-          Volunteer Leaderboard
-        </h2>
-
-        <p
-          style={{
-            color: '#713F12',
-            opacity: 0.8,
-            maxWidth: '600px',
-            margin: '0 auto',
-          }}
-        >
-          Celebrate our top volunteers who are creating impact across India.
+      <div style={{
+        background: '#FEFCE8',
+        border: '1px solid #FEF08A',
+        borderRadius: 'var(--radius-xl)',
+        padding: '2rem',
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{ color: '#FBBF24', fontSize: '3rem', marginBottom: '0.5rem' }}>🏆</div>
+        <h2 style={{ color: '#713F12', marginBottom: '0.5rem' }}>Volunteer Leaderboard</h2>
+        <p style={{ color: '#713F12', opacity: 0.8, maxWidth: '600px', margin: '0 auto' }}>
+          Celebrate our community leaders who are dedicating their time and effort to bring social impact across India.
         </p>
       </div>
 
-      {volunteers.length === 0 ? (
-        <div
-          className="card"
-          style={{
-            textAlign: 'center',
-            padding: '3rem',
-          }}
-        >
-          <h3>No volunteers on the leaderboard yet.</h3>
+      <div className="card">
+        <h4 style={{ marginBottom: '1.25rem' }}>Top Contributors</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {topVolunteers.map((vol) => (
+            <div
+              key={vol.rank}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1rem',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: vol.rank <= 3 ? 'rgba(254, 252, 232, 0.5)' : 'var(--color-card)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    backgroundColor: vol.color !== 'transparent' ? vol.color : 'var(--color-border)',
+                    color: vol.rank <= 3 ? '#ffffff' : 'var(--color-body)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                  }}
+                >
+                  {vol.badge}
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', margin: 0 }}>{vol.name}</h4>
+                  <span className="badge badge-blue" style={{ fontSize: '0.7rem', marginTop: '0.2rem' }}>{vol.level}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <strong style={{ fontSize: '1.15rem', color: 'var(--color-primary)' }}>{vol.points}</strong>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-body)' }}>points</div>
+              </div>
+            </div>
+          ))}
         </div>
-      ) : (
-        <div className="card">
-          <h3 style={{ marginBottom: '1.5rem' }}>
-            Top Contributors
-          </h3>
-
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-            }}
-          >
-            {Array.isArray(volunteers) &&
-              volunteers.map((vol, index) => {
-                const rank = index + 1;
-
-                const badge =
-                  rank === 1
-                    ? '🥇'
-                    : rank === 2
-                    ? '🥈'
-                    : rank === 3
-                    ? '🥉'
-                    : rank;
-
-                return (
-                  <div
-                    key={vol._id || rank}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '1rem',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--radius-md)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '1rem',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '50%',
-                          background: '#F3F4F6',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          fontWeight: 'bold',
-                          fontSize: '1.1rem',
-                        }}
-                      >
-                        {badge}
-                      </div>
-
-                      <div>
-                        <h4
-                          style={{
-                            margin: 0,
-                          }}
-                        >
-                          {vol.name || 'Anonymous'}
-                        </h4>
-
-                        <small>
-                          {vol.volunteerLevel || 'Volunteer'}
-                        </small>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        textAlign: 'right',
-                      }}
-                    >
-                      <h3
-                        style={{
-                          margin: 0,
-                          color: 'var(--color-primary)',
-                        }}
-                      >
-                        {vol.points || 0}
-                      </h3>
-
-                      <small>Points</small>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

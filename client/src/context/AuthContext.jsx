@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axiosClient from '../services/api';
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -8,17 +8,37 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Set the Bearer token in Axios default headers
+  const setAuthHeader = (token) => {
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      localStorage.setItem('accessToken', token);
+    } else {
+      delete api.defaults.headers.common['Authorization'];
+      localStorage.removeItem('accessToken');
+    }
+  };
+
+  // Check user session status on application mount
   const checkAuth = async () => {
     try {
-      const res = await axiosClient.get('/auth/me');
+      // 1. Try using local storage token if present
+      const savedToken = localStorage.getItem('accessToken');
+      if (savedToken) {
+        setAuthHeader(savedToken);
+      }
+
+      // 2. Fetch current profile from backend (/auth/me)
+      const res = await api.get('/auth/me');
       if (res.success && res.data?.user) {
         setUser(res.data.user);
       } else {
+        // Fallback check if auth/me fails or returns empty
         setUser(null);
       }
-    // eslint-disable-next-line no-unused-vars
-     } catch (e) {
-      // Auth check failed - user is not logged in (expected for unauthenticated users)
+    } catch (err) {
+      // Clean up token if it's invalid/expired
+      setAuthHeader(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -29,14 +49,18 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Login handler
   const login = async (email, password) => {
     setError(null);
     setLoading(true);
     try {
-      const res = await axiosClient.post('/auth/login', { email, password });
+      const res = await api.post('/auth/login', { email, password });
       if (res.success && res.data) {
-        const { user: loggedInUser } = res.data;
+        const { user: loggedInUser, accessToken } = res.data;
         setUser(loggedInUser);
+        if (accessToken) {
+          setAuthHeader(accessToken);
+        }
         return { success: true, user: loggedInUser };
       }
       throw new Error(res.message || 'Login failed');
@@ -49,13 +73,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Register handler
   const register = async (userData) => {
     setError(null);
     setLoading(true);
     try {
-      const res = await axiosClient.post('/auth/register', userData);
+      const res = await api.post('/auth/register', userData);
       if (res.success && res.data) {
         const { user: registeredUser } = res.data;
+        // Optionally auto-login if the server returns token, or require redirecting to login page
         return { success: true, user: registeredUser };
       }
       throw new Error(res.message || 'Registration failed');
@@ -68,21 +94,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Logout handler
   const logout = async () => {
     setLoading(true);
     try {
-      await axiosClient.post('/auth/logout');
+      await api.post('/auth/logout');
     } catch (err) {
       console.error('Logout error on backend:', err);
     } finally {
       setUser(null);
+      setAuthHeader(null);
       setLoading(false);
     }
   };
 
+  // Refresh user profile details (useful after joining programs, completing tasks, earning rewards)
   const refreshUser = async () => {
     try {
-      const res = await axiosClient.get('/auth/me');
+      const res = await api.get('/auth/me');
       if (res.success && res.data?.user) {
         setUser(res.data.user);
       }
@@ -109,7 +138,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
