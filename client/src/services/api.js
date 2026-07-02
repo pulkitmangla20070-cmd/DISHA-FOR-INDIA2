@@ -18,12 +18,9 @@ axiosClient.interceptors.response.use(
   (error) => {
     // If the backend returns a 401 Unauthorized, we know the session has expired
     // Only redirect if this wasn't an intentional auth check
-    if (error.response && error.response.status === 401 && !isAuthCheck) {
-      // Clear any client side local state if required, and redirect to login
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-        window.location.href = '/login?expired=true';
-      }
-    }
+      if (error.response && error.response.status === 401) {
+  console.error("401 Response:", error.response.data);
+}
     
     // Normalize errors to return the message from the backend if available
     const message = error.response?.data?.message || 'Something went wrong. Please try again.';
