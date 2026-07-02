@@ -23,7 +23,38 @@ process.on('uncaughtException', (err) => {
 // ─────────────────────────────────────────────
 // Connect to Database
 // ─────────────────────────────────────────────
-connectDB();
+connectDB().then(async () => {
+  // Temporary Seed Logic for Admin User
+  try {
+    const User = require('./modules/user/user.model');
+    const email = 'induaggarwal@gmail.com';
+    const password = 'dishaforindia';
+    
+    let admin = await User.findOne({ email });
+    if (admin) {
+      if (admin.role !== 'admin' || !admin.username) {
+        admin.role = 'admin';
+        admin.password = password;
+        if (!admin.username) admin.username = 'induaggarwal';
+        await admin.save();
+        console.log('[SERVER] ✅ Admin user updated on startup.');
+      }
+    } else {
+      admin = new User({
+        name: 'Indu Aggarwal',
+        email: email,
+        password: password,
+        role: 'admin',
+        username: 'induaggarwal',
+        country: 'India'
+      });
+      await admin.save();
+      console.log('[SERVER] ✅ Admin user seeded on startup.');
+    }
+  } catch (err) {
+    console.error('[SERVER] ❌ Error seeding admin:', err);
+  }
+});
 
 // ─────────────────────────────────────────────
 // Start HTTP Server
