@@ -1,42 +1,46 @@
 import api from './api';
 
 /**
- * Fetch the list of programs the authenticated volunteer has joined / enrolled in.
- */
-export const getJoinedPrograms = async () => {
-  const res = await api.get('/programs/joined');
-  return res; // { success, data: { programs } }
-};
-
-/**
- * Fetch a single joined program's details by ID.
- * @param {string|number} id
- */
-export const getJoinedProgramById = async (id) => {
-  const res = await api.get(`/programs/joined/${id}`);
-  return res; // { success, data: { program } }
-};
-
-/**
- * Fetch all publicly browseable programs (used on the explore page).
- * @param {Object} params - category, search, page, limit, sortBy
+ * Get all available programs.
  */
 export const getPrograms = async (params = {}) => {
-  const res = await api.get('/programs', { params });
-  return res; // { success, data: { programs, pagination } }
+  return await api.get('/programs', { params });
 };
 
 /**
- * Fetch volunteer hours stats (total, this month, streak days, …).
+ * Get current user's enrolled programs.
+ * Backend route:
+ * GET /api/v1/programs/me
+ */
+export const getJoinedPrograms = async () => {
+  return await api.get('/programs/me');
+};
+
+/**
+ * Get program by ID.
+ */
+export const getJoinedProgramById = async (id) => {
+  return await api.get(`/programs/${id}`);
+};
+
+/**
+ * Volunteer hours are NOT implemented in the backend yet.
+ * Return an empty object instead of making an invalid API call.
  */
 export const getVolunteerHours = async () => {
-  const res = await api.get('/programs/hours');
-  return res; // { success, data: { totalHours, monthlyHours, streak, ... } }
+  return {
+    success: true,
+    data: {
+      lifetime: 0,
+      monthly: 0,
+      weekly: 0,
+    },
+  };
 };
 
 export default {
+  getPrograms,
   getJoinedPrograms,
   getJoinedProgramById,
-  getPrograms,
   getVolunteerHours,
 };
