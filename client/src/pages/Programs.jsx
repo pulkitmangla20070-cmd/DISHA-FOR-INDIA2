@@ -9,10 +9,12 @@ const Programs = () => {
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
-        const data = await api.get('/programs'); // backend returns array of program objects
-        setPrograms(data);
+        const res = await api.get('/programs');
+        // API returns { success, message, data: { programs: [...], pagination: {...} } }
+        setPrograms(res?.data?.programs ?? []);
       } catch (err) {
         console.error('Failed to fetch programs', err);
+        setPrograms([]);
       } finally {
         setLoading(false);
       }
