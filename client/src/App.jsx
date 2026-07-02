@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerProvider } from './context/VolunteerContext';
 
 // Layouts
-import MainLayout from './layouts/MainLayout';
+import PublicLayout from './layouts/PublicLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 
 // Pages
@@ -96,7 +96,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<PublicLayout />}>
               <Route index element={<Home />} />
               <Route path="programs" element={<Programs />} />
               <Route path="leaderboard" element={<Leaderboard />} />
