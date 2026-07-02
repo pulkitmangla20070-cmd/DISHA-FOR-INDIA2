@@ -1,7 +1,19 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Award, Clock, Briefcase, Award as CertIcon, Sparkles, AlertCircle, ArrowUpRight, PlayCircle, ShieldCheck } from 'lucide-react';
+import {
+  Award,
+  Clock,
+  Briefcase,
+  Award as CertIcon,
+  Sparkles,
+  AlertCircle,
+  ArrowUpRight,
+  PlayCircle,
+  ShieldCheck,
+  FileText,
+  Trophy,
+} from "lucide-react";
 import { useVolunteer } from '../context/VolunteerContext';
 import SkeletonLoader from '../components/volunteer/SkeletonLoader';
 import CheckInButton from '../components/volunteer/CheckInButton';
