@@ -45,10 +45,40 @@ export const getApplicationStats = async () => {
   return res; // { success, data: { pending, approved, rejected, waitlisted } }
 };
 
+/**
+ * Admin: Fetch paginated applications for review.
+ * @param {Object} params - status, search, programId, page, limit
+ */
+export const getAdminApplications = async (params = {}) => {
+  const res = await api.get('/admin/applications', { params });
+  return res;
+};
+
+/**
+ * Admin: Fetch system-wide application stats.
+ */
+export const getAdminApplicationStats = async () => {
+  const res = await api.get('/admin/applications/statistics');
+  return res;
+};
+
+/**
+ * Admin: Bulk approve/reject applications.
+ * @param {Array<string>} applicationIds
+ * @param {string} status - e.g., 'APPROVED', 'REJECTED'
+ */
+export const bulkUpdateApplications = async (applicationIds, status) => {
+  const res = await api.post('/admin/applications/bulk', { applicationIds, status });
+  return res;
+};
+
 export default {
   getApplications,
   getApplicationById,
   submitApplication,
   withdrawApplication,
   getApplicationStats,
+  getAdminApplications,
+  getAdminApplicationStats,
+  bulkUpdateApplications,
 };

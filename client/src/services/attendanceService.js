@@ -40,7 +40,31 @@ export const checkOut = async (attendanceId) => {
  * Admin: Get attendance list for admin dashboard.
  */
 export const adminGetAttendance = async () => {
-  const res = await api.get('/attendance');
+  const res = await api.get('/admin/attendance');
+  return res;
+};
+
+/**
+ * Admin: Bulk upload attendance via CSV.
+ * @param {FormData} formData - containing the CSV file
+ */
+export const bulkUploadAttendance = async (formData) => {
+  const res = await api.post('/admin/attendance/bulk-upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res;
+};
+
+/**
+ * Admin: Manually mark attendance for a user.
+ * @param {string} userId
+ * @param {string} programId
+ * @param {string} status - e.g., 'PRESENT', 'ABSENT'
+ */
+export const manualMarkAttendance = async (userId, programId, status) => {
+  const res = await api.post('/admin/attendance/manual', { userId, programId, status });
   return res;
 };
 
@@ -50,4 +74,6 @@ export default {
   checkIn,
   checkOut,
   adminGetAttendance,
+  bulkUploadAttendance,
+  manualMarkAttendance,
 };

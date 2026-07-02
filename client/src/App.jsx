@@ -31,6 +31,8 @@ import AttendanceHistory from './pages/attendance/AttendanceHistory';
 import VolunteerHours from './pages/attendance/VolunteerHours';
 
 // Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPrograms from './pages/admin/AdminPrograms';
 import AdminApplications from './pages/admin/AdminApplications';
 import AdminAttendance from './pages/admin/AdminAttendance';
 
@@ -139,8 +141,8 @@ function App() {
                 <DashboardLayout />
               </ProtectedRoute>
             }>
-              <Route path="dashboard" element={<div className="p-8"><h1>Admin Dashboard</h1><p>Coming soon...</p></div>} />
-              <Route path="programs" element={<div className="p-8"><h1>Admin Programs</h1><p>Coming soon...</p></div>} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="programs" element={<AdminPrograms />} />
               <Route path="applications" element={<AdminApplications />} />
               <Route path="attendance" element={<AdminAttendance />} />
             </Route>

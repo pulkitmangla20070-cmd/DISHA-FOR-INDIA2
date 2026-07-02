@@ -1,8 +1,8 @@
 import { Users, FileCheck, Search, Filter, Shield } from "lucide-react";
 
 import {
-  getApplicationStats,
-  getApplications,
+  getAdminApplicationStats,
+  getAdminApplications,
 } from "../../services/applicationsService";
 
 import StatusBadge from "../../components/volunteer/StatusBadge";
@@ -18,8 +18,8 @@ const AdminApplications = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-         const statsRes = await getApplicationStats();
-        const appsRes = await getApplications();
+        const statsRes = await getAdminApplicationStats();
+        const appsRes = await getAdminApplications();
         if (statsRes.success) setStats(statsRes.data);
         if (appsRes.success) setApplications(appsRes.data);
       } catch (err) {
