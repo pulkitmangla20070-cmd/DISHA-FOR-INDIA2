@@ -6,7 +6,16 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Crucial to allow HTTP-only cookies to be sent/received
+  withCredentials: true,
+});
+
+// Fallback auth: attach JWT from localStorage if present
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // Interceptor to handle responses globally (e.g. logouts on 401s)

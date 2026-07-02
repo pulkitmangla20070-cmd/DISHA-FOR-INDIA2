@@ -36,7 +36,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.success && res.data) {
-        const { user: loggedInUser } = res.data;
+        const { user: loggedInUser, token } = res.data;
+        // Save token for fallback auth (useful when HttpOnly cookie is not set)
+        if (token) {
+          import('../services/authToken').then(m => m.setAuthToken(token));
+        }
         setUser(loggedInUser);
         return { success: true, user: loggedInUser };
       }
