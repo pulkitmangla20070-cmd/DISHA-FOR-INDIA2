@@ -102,4 +102,4 @@ const PublicLayout = () => {
   );
 };
 
-export default MainLayout;
+export default PublicLayout;
