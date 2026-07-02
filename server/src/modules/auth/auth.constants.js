@@ -34,7 +34,7 @@ const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
 };
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true' || (process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('https'));
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
