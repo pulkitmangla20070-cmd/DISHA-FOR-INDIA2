@@ -22,6 +22,9 @@ const VALIDATION = {
   LEADERBOARD_ID_PREFIX: 'LB',
   MIN_RANK: 1,
   DEFAULT_TOP_LIMIT: 10,
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
 };
 
 module.exports = {

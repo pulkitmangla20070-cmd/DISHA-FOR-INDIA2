@@ -116,6 +116,32 @@ class UserRepository {
       'name username profilePhoto about college course city state skills points hoursCompleted programsCompleted volunteerLevel profileCompletion profileStrength impactScore'
     );
   }
+
+  async findVolunteersForLeaderboard(skip = 0, limit = 20) {
+    return User.find({ role: 'volunteer', isDeleted: false })
+      .sort({ points: -1, createdAt: 1 })
+      .skip(skip)
+      .limit(limit);
+  }
+
+  async getVolunteerRank(userId) {
+    const totalBefore = await User.countDocuments({
+      role: 'volunteer',
+      isDeleted: false,
+      $expr: {
+        $lt: [
+          { $add: ['$points', { $cond: [{ $eq: ['$points', null] }, 0, 0] }]
+        ]
+      }
+    });
+    return null;
+  }
+
+  async findTopVolunteers(limit = 10) {
+    return User.find({ role: 'volunteer', isDeleted: false })
+      .sort({ points: -1, createdAt: 1 })
+      .limit(limit);
+  }
 }
 
 module.exports = new UserRepository();

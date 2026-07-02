@@ -15,6 +15,9 @@ class LeaderboardController {
   getMyRank = async (req, res, next) => {
     try {
       const result = await leaderboardService.getMyRank(req.user.id);
+      if (!result) {
+        return successResponse(res, 200, MESSAGES.MY_RANK_FETCHED, null);
+      }
       return successResponse(res, 200, MESSAGES.MY_RANK_FETCHED, result);
     } catch (error) {
       return next(error);
