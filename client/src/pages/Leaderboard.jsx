@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { leaderboardApi } from '../services/api';
 
 const Leaderboard = () => {
   const [volunteers, setVolunteers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       try {
         const response = await leaderboardApi.getAll();
         setVolunteers(response.data?.users || response.users || response || []);
@@ -18,7 +24,7 @@ const Leaderboard = () => {
       }
     };
     fetchLeaderboard();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

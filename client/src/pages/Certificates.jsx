@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Award, Download, CheckCircle2 } from 'lucide-react';
 import { certificateApi } from '../services/api';
 
@@ -6,9 +7,14 @@ const Certificates = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchCertificates = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       try {
         const response = await certificateApi.getMyCertificates();
         setCertificates(response.data?.certificates || response.certificates || response || []);
@@ -19,7 +25,7 @@ const Certificates = () => {
       }
     };
     fetchCertificates();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

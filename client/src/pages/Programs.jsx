@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { programApi } from '../services/api';
 import { ProgramCard } from '../components/ProgramCard';
 
@@ -6,9 +7,14 @@ const Programs = () => {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchPrograms = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       try {
         const response = await programApi.getAll();
         setPrograms(response.data?.programs || response.programs || []);
@@ -19,7 +25,7 @@ const Programs = () => {
       }
     };
     fetchPrograms();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
