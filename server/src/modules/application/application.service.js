@@ -167,7 +167,15 @@ class ApplicationService {
       limit,
     });
 
-    const programs = result.applications.map((app) => app.program);
+    const programs = result.applications.map((app) => {
+      const progObj = app.program.toObject ? app.program.toObject() : app.program;
+      return {
+        ...progObj,
+        id: progObj._id,
+        applicationId: app._id,
+        programTitle: progObj.title
+      };
+    });
     const totalPages = Math.ceil(result.total / limit);
 
     return {

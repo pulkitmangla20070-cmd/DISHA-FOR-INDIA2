@@ -1,4 +1,5 @@
 const adminRepository = require('./admin.repository');
+const attendanceRepository = require('../attendance/attendance.repository');
 const { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } = require('./admin.constants');
 const NotFoundError = require('../../utils/errors/NotFoundError');
 const { AuthorizationError } = require('../../utils/errors');
@@ -207,6 +208,12 @@ class AdminService {
    */
   async getDashboardStatistics() {
     const stats = await adminRepository.getUserStatistics();
+    try {
+      const attendanceStats = await attendanceRepository.getAttendanceStatistics();
+      stats.totalHoursLogged = attendanceStats.totalVolunteerHours || 0;
+    } catch (error) {
+      stats.totalHoursLogged = 0;
+    }
     return stats;
   }
 }

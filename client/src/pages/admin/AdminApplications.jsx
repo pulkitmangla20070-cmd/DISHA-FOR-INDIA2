@@ -38,7 +38,7 @@ const AdminApplications = () => {
     try {
       const res = await bulkUpdateApplications([id], status);
       if (res.success) {
-        toast.success(`Application ${status.toLowerCase()} successfully`);
+        toast.success(`Application ${status === 'joined' ? 'approved' : 'rejected'} successfully`);
         setApplications(apps => apps.map(app => (app.id === id || app._id === id) ? { ...app, status } : app));
         
         // Refresh stats
@@ -141,16 +141,16 @@ const AdminApplications = () => {
                               <button 
                                 className="btn btn-secondary" 
                                 style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', borderColor: 'var(--color-success)', color: 'var(--color-success)' }}
-                                onClick={() => handleStatusUpdate(app.id || app._id, 'APPROVED')}
-                                disabled={app.status === 'APPROVED'}
+                                onClick={() => handleStatusUpdate(app.id || app._id, 'joined')}
+                                disabled={app.status === 'joined'}
                               >
                                 Approve
                               </button>
                               <button 
                                 className="btn btn-secondary" 
                                 style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', borderColor: 'var(--color-error)', color: 'var(--color-error)' }}
-                                onClick={() => handleStatusUpdate(app.id || app._id, 'REJECTED')}
-                                disabled={app.status === 'REJECTED'}
+                                onClick={() => handleStatusUpdate(app.id || app._id, 'cancelled')}
+                                disabled={app.status === 'cancelled'}
                               >
                                 Reject
                               </button>

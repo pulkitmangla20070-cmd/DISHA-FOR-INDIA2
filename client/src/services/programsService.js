@@ -11,28 +11,28 @@ export const getPrograms = async (params = {}) => {
  * Get all programs for admin (requires admin role).
  */
 export const getAllPrograms = async () => {
-  return await api.get('/admin/programs');
+  return await api.get('/programs');
 };
 
 /**
  * Create a new program (admin only).
  */
 export const createProgram = async (data) => {
-  return await api.post('/admin/programs', data);
+  return await api.post('/programs', data);
 };
 
 /**
  * Update an existing program (admin only).
  */
 export const updateProgram = async (id, data) => {
-  return await api.put(`/admin/programs/${id}`, data);
+  return await api.put(`/programs/${id}`, data);
 };
 
 /**
  * Delete a program (admin only).
  */
 export const deleteProgram = async (id) => {
-  return await api.delete(`/admin/programs/${id}`);
+  return await api.delete(`/programs/${id}`);
 };
 
 /**

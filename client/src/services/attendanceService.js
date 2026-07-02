@@ -20,10 +20,10 @@ export const getAttendanceHistory = async (params = {}) => {
 
 /**
  * Check in to a program session.
- * @param {string|number} programId
+ * @param {string|number} applicationId
  */
-export const checkIn = async (programId) => {
-  const res = await api.post('/attendance/check-in', { programId });
+export const checkIn = async (applicationId) => {
+  const res = await api.post('/attendance/check-in', { applicationId });
   return res; // { success, data: { attendanceId, checkInTime } }
 };
 
@@ -45,26 +45,23 @@ export const adminGetAttendance = async () => {
 };
 
 /**
- * Admin: Bulk upload attendance via CSV.
- * @param {FormData} formData - containing the CSV file
+ * Admin: Bulk update attendance records (mark present/absent in bulk).
+ * @param {Array<string>} ids - attendance record IDs
+ * @param {string} status - e.g., 'present', 'absent'
+ * @param {string} [remarks]
  */
-export const bulkUploadAttendance = async (formData) => {
-  const res = await api.post('/admin/attendance/bulk-upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+export const bulkUpdateAttendance = async (ids, status, remarks) => {
+  const res = await api.post('/admin/attendance/bulk', { ids, status, remarks });
   return res;
 };
 
 /**
- * Admin: Manually mark attendance for a user.
- * @param {string} userId
- * @param {string} programId
- * @param {string} status - e.g., 'PRESENT', 'ABSENT'
+ * Admin: Edit a single attendance record manually.
+ * @param {string} attendanceId - the attendance record _id
+ * @param {Object} updateData - { status, checkInTime, checkOutTime, remarks }
  */
-export const manualMarkAttendance = async (userId, programId, status) => {
-  const res = await api.post('/admin/attendance/manual', { userId, programId, status });
+export const editAttendance = async (attendanceId, updateData) => {
+  const res = await api.patch(`/admin/attendance/${attendanceId}`, updateData);
   return res;
 };
 
@@ -74,6 +71,6 @@ export default {
   checkIn,
   checkOut,
   adminGetAttendance,
-  bulkUploadAttendance,
-  manualMarkAttendance,
+  bulkUpdateAttendance,
+  editAttendance,
 };

@@ -109,7 +109,7 @@ const CheckIn = () => {
             >
               <option value="">-- Choose an active program --</option>
               {activePrograms.map(p => (
-                <option key={p.id} value={p.id}>{p.programTitle}</option>
+                <option key={p.id || p._id} value={p.applicationId || p.id}>{p.programTitle}</option>
               ))}
             </select>
           </div>
