@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-const checkAuth = async () => {
+  const checkAuth = async () => {
     try {
       const res = await axiosClient.get('/auth/me');
       if (res.success && res.data?.user) {
@@ -16,8 +16,8 @@ const checkAuth = async () => {
       } else {
         setUser(null);
       }
-    } catch (err) {
-      // Auth check failed - user is not logged in
+    } catch () {
+      // Auth check failed - user is not logged in (expected for unauthenticated users)
       setUser(null);
     } finally {
       setLoading(false);
@@ -82,72 +82,6 @@ const checkAuth = async () => {
   const refreshUser = async () => {
     try {
       const res = await axiosClient.get('/auth/me');
-      if (res.success && res.data?.user) {
-        setUser(res.data.user);
-      }
-    } catch (err) {
-      console.error('Error refreshing user details:', err);
-    }
-  };
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const login = async (email, password) => {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await api.post('/auth/login', { email, password });
-      if (res.success && res.data) {
-        const { user: loggedInUser } = res.data;
-        setUser(loggedInUser);
-        return { success: true, user: loggedInUser };
-      }
-      throw new Error(res.message || 'Login failed');
-    } catch (err) {
-      const errMsg = err.message || 'Invalid email or password';
-      setError(errMsg);
-      throw new Error(errMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (userData) => {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await api.post('/auth/register', userData);
-      if (res.success && res.data) {
-        const { user: registeredUser } = res.data;
-        return { success: true, user: registeredUser };
-      }
-      throw new Error(res.message || 'Registration failed');
-    } catch (err) {
-      const errMsg = err.message || 'Could not complete registration';
-      setError(errMsg);
-      throw new Error(errMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    setLoading(true);
-    try {
-      await api.post('/auth/logout');
-    } catch (err) {
-      console.error('Logout error on backend:', err);
-    } finally {
-      setUser(null);
-      setLoading(false);
-    }
-  };
-
-  const refreshUser = async () => {
-    try {
-      const res = await api.get('/auth/me');
       if (res.success && res.data?.user) {
         setUser(res.data.user);
       }

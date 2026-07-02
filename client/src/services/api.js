@@ -9,12 +9,16 @@ const axiosClient = axios.create({
   withCredentials: true, // Crucial to allow HTTP-only cookies to be sent/received
 });
 
+// Track if we're in the middle of an auth check
+let isAuthCheck = false;
+
 // Interceptor to handle responses globally (e.g. logouts on 401s)
 axiosClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
     // If the backend returns a 401 Unauthorized, we know the session has expired
-    if (error.response && error.response.status === 401) {
+    // Only redirect if this wasn't an intentional auth check
+    if (error.response && error.response.status === 401 && !isAuthCheck) {
       // Clear any client side local state if required, and redirect to login
       if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
         window.location.href = '/login?expired=true';
@@ -33,6 +37,17 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
+
+// Auth check wrapper that prevents redirect
+export const authCheck = async () => {
+  isAuthCheck = true;
+  try {
+    const res = await axiosClient.get('/auth/me');
+    return res;
+  } finally {
+    isAuthCheck = false;
+  }
+};
 
 export const programApi = {
   getAll: (params) => axiosClient.get('/programs', { params }),
