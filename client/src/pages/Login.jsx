@@ -26,9 +26,9 @@ const Login = () => {
       const userRole = response?.user?.role?.toUpperCase();
       
       if (['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'].includes(userRole)) {
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       } else {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       }
     } catch (err) {
       setLocalError(err.message || 'Login failed. Check your credentials.');
