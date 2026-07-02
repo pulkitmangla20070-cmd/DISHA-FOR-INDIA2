@@ -2,7 +2,7 @@ const passport = require('passport');
 
 const authService = require('./auth.service');
 const { MESSAGES } = require('./auth.constants');
-const { setRefreshTokenCookie, clearRefreshTokenCookie } = require('../../utils/cookie');
+const { setRefreshTokenCookie, clearAllAuthCookies } = require('../../utils/cookie');
 const { successResponse } = require('../../utils/response');
 
 class AuthController {
@@ -29,7 +29,7 @@ class AuthController {
     try {
       const userId = req.user.id;
       await authService.logout(userId);
-      clearRefreshTokenCookie(res);
+      clearAllAuthCookies(res);
       return successResponse(res, 200, MESSAGES.LOGOUT_SUCCESS);
     } catch (error) {
       return next(error);

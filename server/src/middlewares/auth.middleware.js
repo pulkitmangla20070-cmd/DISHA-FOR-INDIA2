@@ -6,7 +6,7 @@ const jwtUtils = require('../utils/jwt');
 
 /**
  * Authentication middleware.
- * Verifies the JWT Access Token in the Authorization header.
+ * Verifies the JWT Access Token in Authorization header or HTTP-only cookie.
  */
 const authenticate = async (req, res, next) => {
   try {
@@ -16,6 +16,11 @@ const authenticate = async (req, res, next) => {
     const authHeader = req.headers[HEADERS.AUTH_HEADER];
     if (authHeader && authHeader.startsWith(HEADERS.BEARER_PREFIX)) {
       token = authHeader.split(' ')[1];
+    }
+
+    // Check for token in HTTP-only cookie
+    if (!token && req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
     }
 
     if (!token) {
