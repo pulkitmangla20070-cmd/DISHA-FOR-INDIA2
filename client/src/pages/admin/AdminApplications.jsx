@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Users, FileCheck, Search, Filter, Shield } from 'lucide-react';
-import { getApplicationStats, getApplications } from '../../../services/applicationsService.js';
-import StatusBadge from '../../../components/volunteer/StatusBadge.jsx';
-import Pagination from '../../../components/volunteer/Pagination.jsx';
-import SkeletonLoader from '../../../components/volunteer/SkeletonLoader.jsx';
+import { Users, FileCheck, Search, Filter, Shield } from "lucide-react";
+
+import {
+  getApplicationStats,
+  getApplications,
+} from "../../services/applicationsService";
+
+import StatusBadge from "../../components/volunteer/StatusBadge";
+import Pagination from "../../components/volunteer/Pagination";
+import SkeletonLoader from "../../components/volunteer/SkeletonLoader";
 
 const AdminApplications = () => {
   const [stats, setStats] = useState(null);
@@ -15,7 +18,7 @@ const AdminApplications = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const statsRes = await getApplicationsStats();
+         const statsRes = await getApplicationStats();
         const appsRes = await getApplications();
         if (statsRes.success) setStats(statsRes.data);
         if (appsRes.success) setApplications(appsRes.data);
