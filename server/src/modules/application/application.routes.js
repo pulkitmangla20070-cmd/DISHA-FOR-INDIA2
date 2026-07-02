@@ -5,7 +5,6 @@ const {
   validateWithdrawApplication,
   validateGetApplication,
   validateMyApplications,
-  validateMyPrograms,
   validateAdminApplications,
   validateBulkUpdate,
 } = require('./application.validation');
@@ -15,29 +14,22 @@ const ROLES = require('../../constants/roles.constants');
 
 const router = express.Router();
 
-// ─── Static routes MUST come before /:id ───────────────────────────
+// ─── STATIC routes MUST come before /:id ────────────────────────────
 
-// Volunteer: get my applications
+// All authenticated users: my applications
 router.get('/me', authenticate, validateMyApplications, applicationController.getMyApplications);
 
-// Admin/Coordinator: get statistics (static path – must be before /:id)
-router.get(
-  '/stats',
-  authenticate,
-  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
-  applicationController.getApplicationStatistics
-);
+// All authenticated users: stats
+//   - Admin/Coordinator → global aggregate stats
+//   - Volunteer         → their own application counts
+router.get('/stats', authenticate, applicationController.getApplicationStatistics);
 
-// Admin/Coordinator: get all applications with filters (GET /)
-router.get(
-  '/',
-  authenticate,
-  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
-  validateAdminApplications,
-  applicationController.getAdminApplications
-);
+// All authenticated users: list applications
+//   - Admin/Coordinator → all applications with filters
+//   - Volunteer         → their own applications (same as /me)
+router.get('/', authenticate, applicationController.getApplications);
 
-// Admin/Coordinator: bulk status update
+// Admin/Coordinator only: bulk status update
 router.patch(
   '/bulk',
   authenticate,
@@ -46,7 +38,7 @@ router.patch(
   applicationController.bulkUpdateApplications
 );
 
-// Volunteer: apply to a program
+// All authenticated users: create a new application
 router.post(
   '/',
   authenticate,
@@ -55,7 +47,7 @@ router.post(
   applicationController.applyToProgram
 );
 
-// Volunteer: withdraw an application
+// Any authenticated user: withdraw their own application
 router.patch(
   '/:id/withdraw',
   authenticate,

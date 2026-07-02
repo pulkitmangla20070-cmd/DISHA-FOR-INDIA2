@@ -253,6 +253,24 @@ class ApplicationService {
   async getApplicationStatistics() {
     return applicationRepository.getStatistics();
   }
+
+  /**
+   * Returns a volunteer's own application counts (used when volunteer hits /stats).
+   */
+  async getMyApplicationStats(userId) {
+    const Application = require('./application.model');
+    const { APPLICATION_STATUS } = require('./application.constants');
+
+    const [total, joined, withdrawn, completed, cancelled] = await Promise.all([
+      Application.countDocuments({ user: userId, isDeleted: false }),
+      Application.countDocuments({ user: userId, status: APPLICATION_STATUS.JOINED, isDeleted: false }),
+      Application.countDocuments({ user: userId, status: APPLICATION_STATUS.WITHDRAWN, isDeleted: false }),
+      Application.countDocuments({ user: userId, status: APPLICATION_STATUS.COMPLETED, isDeleted: false }),
+      Application.countDocuments({ user: userId, status: APPLICATION_STATUS.CANCELLED, isDeleted: false }),
+    ]);
+
+    return { total, joined, withdrawn, completed, cancelled };
+  }
 }
 
 module.exports = new ApplicationService();

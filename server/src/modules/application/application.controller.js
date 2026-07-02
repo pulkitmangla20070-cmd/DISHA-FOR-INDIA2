@@ -1,6 +1,9 @@
 const applicationService = require('./application.service');
 const { MESSAGES } = require('./application.constants');
 const { successResponse } = require('../../utils/response');
+const ROLES = require('../../constants/roles.constants');
+
+const ADMIN_ROLES = [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR];
 
 class ApplicationController {
   applyToProgram = async (req, res, next) => {
@@ -56,6 +59,25 @@ class ApplicationController {
     }
   };
 
+  /**
+   * GET /api/v1/applications
+   * Admins/Coordinators → all applications with filters.
+   * Volunteers → their own applications (same as /me).
+   */
+  getApplications = async (req, res, next) => {
+    try {
+      if (ADMIN_ROLES.includes(req.user.role)) {
+        const result = await applicationService.getAdminApplications(req.query);
+        return successResponse(res, 200, 'Applications retrieved successfully', result);
+      }
+      // Volunteer: return their own applications
+      const result = await applicationService.getMyApplications(req.user.id, req.query);
+      return successResponse(res, 200, 'My applications retrieved successfully', result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAdminApplications = async (req, res, next) => {
     try {
       const result = await applicationService.getAdminApplications(req.query);
@@ -75,9 +97,19 @@ class ApplicationController {
     }
   };
 
+  /**
+   * GET /api/v1/applications/stats
+   * Admins/Coordinators → aggregate statistics.
+   * Volunteers → their own application counts.
+   */
   getApplicationStatistics = async (req, res, next) => {
     try {
-      const result = await applicationService.getApplicationStatistics();
+      if (ADMIN_ROLES.includes(req.user.role)) {
+        const result = await applicationService.getApplicationStatistics();
+        return successResponse(res, 200, 'Application statistics retrieved successfully', result);
+      }
+      // Volunteer: return their own stats
+      const result = await applicationService.getMyApplicationStats(req.user.id);
       return successResponse(res, 200, 'Application statistics retrieved successfully', result);
     } catch (error) {
       return next(error);
