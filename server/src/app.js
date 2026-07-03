@@ -27,6 +27,7 @@ const notificationRoutes = require('./modules/notification/notification.routes')
 const organizationRoutes = require('./modules/organization/organization.routes');
 const permissionRoutes = require('./modules/permission/permission.routes');
 const roleRoutes = require('./modules/role/role.routes');
+const analyticsRoutes = require('./modules/analytics/analytics.routes');
 const { successResponse } = require('./utils/response');
 
 const app = express();
@@ -110,6 +111,7 @@ app.get('/', (req, res) => {
       rewards: '/api/v1/rewards',
       leaderboard: '/api/v1/leaderboard',
       notifications: '/api/v1/notifications',
+      analytics: '/api/v1/analytics',
     },
   });
 });
@@ -127,11 +129,10 @@ app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/rewards', rewardRoutes);
 app.use('/api/v1/leaderboard', leaderboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
-
 app.use('/api/v1/organizations', organizationRoutes);
-
 app.use('/api/v1/permissions', permissionRoutes);
 app.use('/api/v1/roles', roleRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // ─────────────────────────────────────────────
 // 11. Swagger API Documentation
