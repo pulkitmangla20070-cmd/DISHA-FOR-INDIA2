@@ -9,14 +9,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Fallback auth: attach JWT from localStorage if present
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  // No token injection needed – authentication relies on HTTP‑only cookies.
 
 // Interceptor to handle responses globally (e.g. logouts on 401s)
 api.interceptors.response.use(
