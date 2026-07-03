@@ -25,12 +25,12 @@ router.get(
 /**
  * @route GET /api/v1/analytics/dashboard/admin
  * @desc Get admin dashboard statistics
- * @access Private - Admins, Super Admins
+ * @access Private - Admins, Super Admins, Coordinators
  */
 router.get(
   '/dashboard/admin',
   authenticate,
-  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
+  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
   analyticsController.getAdminDashboard
 );
 
