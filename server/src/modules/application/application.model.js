@@ -23,6 +23,11 @@ const applicationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       default: {},
     },
+    // Optional notes from admins/reviewers regarding the application
+    reviewNotes: {
+      type: String,
+      default: '',
+    },
     status: {
       type: String,
       enum: Object.values(APPLICATION_STATUS),

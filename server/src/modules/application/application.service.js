@@ -7,6 +7,9 @@ const NotFoundError = require('../../utils/errors/NotFoundError');
 const ValidationError = require('../../utils/errors/ValidationError');
 const ConflictError = require('../../utils/errors/ConflictError');
 const notificationService = require('../notification/notification.service');
+// Import Application model for capacity check
+const Application = require('./application.model');
+
 
 class ApplicationService {
   async applyToProgram(userId, programId, answers) {
@@ -26,6 +29,18 @@ class ApplicationService {
 
     if (program.registrationDeadline && new Date() > new Date(program.registrationDeadline)) {
       throw new ValidationError('Registration deadline has passed');
+    }
+
+    // Capacity validation: ensure program has available slots
+    if (program.maxVolunteers) {
+      const existingCount = await Application.countDocuments({
+        program: programId,
+        status: { $in: [APPLICATION_STATUS.APPLIED, APPLICATION_STATUS.JOINED] },
+        isDeleted: false,
+      });
+      if (existingCount >= program.maxVolunteers) {
+        throw new ValidationError('Program has reached its maximum volunteer capacity');
+      }
     }
 
     const existingApplication = await applicationRepository.findExistingApplication(

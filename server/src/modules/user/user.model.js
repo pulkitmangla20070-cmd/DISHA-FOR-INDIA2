@@ -167,6 +167,12 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: [0, 'Impact score cannot be negative'],
     },
+    // ─── Coins ───────────────────────────────────────────────────────
+    coins: {
+      type: Number,
+      default: 0,
+      min: [0, 'Coins cannot be negative'],
+    },
 
     // ─── Profile Progress ────────────────────────────────────────
     profileCompletion: {
@@ -240,6 +246,9 @@ userSchema.index({ points: -1 });
 userSchema.index({ isDeleted: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
+// Indexes for location fields
+userSchema.index({ state: 1 });
+userSchema.index({ city: 1 });
 
 // ─── JSON Transform ──────────────────────────────────────────────
 userSchema.set('toJSON', {

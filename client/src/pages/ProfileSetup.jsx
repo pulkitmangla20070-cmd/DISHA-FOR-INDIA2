@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { User, Phone, BookOpen, GraduationCap, MapPin, Award, CheckCircle } from 'lucide-react';
 import api from '../services/api';
+import LanguagesInput from '../components/profile/LanguagesInput';
+import InterestsInput from '../components/profile/InterestsInput';
+import AvailabilitySelect from '../components/profile/AvailabilitySelect';
+import SocialLinks from '../components/profile/SocialLinks';
+import VolunteerInfo from '../components/profile/VolunteerInfo';
 
 const ProfileSetup = () => {
   const { user, refreshUser } = useAuth();
@@ -15,6 +20,12 @@ const ProfileSetup = () => {
     city: user?.city || '',
     state: user?.state || '',
     skills: user?.skills?.join(', ') || '',
+    languages: user?.languages?.join(', ') || '',
+    interests: user?.interests?.join(', ') || '',
+    availability: user?.availability || '',
+    linkedin: user?.linkedin || '',
+    portfolio: user?.portfolio || '',
+    volunteerInfo: user?.volunteerInfo || '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,6 +46,12 @@ const ProfileSetup = () => {
       ...formData,
       graduationYear: Number(formData.graduationYear) || undefined,
       skills: formData.skills ? formData.skills.split(',').map(s => s.trim()) : [],
+      languages: formData.languages ? formData.languages.split(',').map(s => s.trim()) : [],
+      interests: formData.interests ? formData.interests.split(',').map(s => s.trim()) : [],
+      availability: formData.availability || undefined,
+      linkedin: formData.linkedin || undefined,
+      portfolio: formData.portfolio || undefined,
+      volunteerInfo: formData.volunteerInfo || undefined,
     };
 
     try {
@@ -168,6 +185,16 @@ const ProfileSetup = () => {
               onChange={handleChange}
             />
           </div>
+          <LanguagesInput id="languages" value={formData.languages} onChange={(val) => setFormData(prev => ({ ...prev, languages: val }))} />
+          <InterestsInput id="interests" value={formData.interests} onChange={(val) => setFormData(prev => ({ ...prev, interests: val }))} />
+          <AvailabilitySelect id="availability" value={formData.availability} onChange={(val) => setFormData(prev => ({ ...prev, availability: val }))} />
+          <SocialLinks
+            linkedin={formData.linkedin}
+            portfolio={formData.portfolio}
+            onLinkedInChange={(val) => setFormData(prev => ({ ...prev, linkedin: val }))}
+            onPortfolioChange={(val) => setFormData(prev => ({ ...prev, portfolio: val }))}
+          />
+          <VolunteerInfo value={formData.volunteerInfo} onChange={(val) => setFormData(prev => ({ ...prev, volunteerInfo: val }))} />
 
           <button
             type="submit"
