@@ -50,6 +50,10 @@ const PublicLayout = () => {
   // Transparent on home page until scrolled
   const solidNav = !isHomePage || isScrolled;
 
+  // Roles are stored in lowercase on server, normalize for comparison
+  const adminRoles = ['admin', 'superadmin', 'coordinator'];
+  const dashboardPath = user && adminRoles.includes(user?.role?.toLowerCase()) ? '/admin/dashboard' : '/dashboard';
+
   return (
     <div className="flex flex-col min-h-screen" style={{ fontFamily: 'var(--font-primary)', backgroundColor: 'var(--color-bg)' }}>
 
@@ -164,7 +168,7 @@ const PublicLayout = () => {
             {user ? (
               <>
                 <Link
-                  to="/dashboard"
+                  to={dashboardPath}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, color: solidNav ? 'var(--color-heading)' : 'white', textDecoration: 'none', transition: 'background 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background = solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.12)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -241,7 +245,7 @@ const PublicLayout = () => {
                   </Link>
                 ))}
                 {user && (
-                  <Link to="/dashboard" style={{ padding: '0.875rem 1rem', borderRadius: 10, fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-heading)', textDecoration: 'none', fontFamily: 'var(--font-heading)' }}>
+                  <Link to={dashboardPath} style={{ padding: '0.875rem 1rem', borderRadius: 10, fontSize: '1.1rem', fontWeight: 700, color: location.pathname === dashboardPath ? 'var(--color-primary)' : 'var(--color-heading)', textDecoration: 'none', background: location.pathname === dashboardPath ? 'rgba(211,84,0,0.08)' : 'transparent', fontFamily: 'var(--font-heading)' }}>
                     Dashboard
                   </Link>
                 )}
@@ -279,11 +283,7 @@ const PublicLayout = () => {
       {/* ─────────────── FOOTER ─────────────── */}
       <footer style={{ background: '#111827', color: '#9CA3AF', fontFamily: 'var(--font-primary)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '4rem 1.5rem 0' }}>
-
-          {/* Top Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '3rem', paddingBottom: '3rem', borderBottom: '1px solid #1F2937' }}>
-
-            {/* Brand */}
             <div style={{ gridColumn: 'span 1' }}>
               <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: '1rem' }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -294,7 +294,6 @@ const PublicLayout = () => {
               <p style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#6B7280', marginBottom: '1.5rem', maxWidth: 260 }}>
                 Empowering communities through verifiable volunteering. Connecting passionate individuals with grassroot NGOs across India.
               </p>
-              {/* Social */}
               <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap' }}>
                 {[
                   { Icon: Link2, label: 'LinkedIn' },
@@ -313,7 +312,6 @@ const PublicLayout = () => {
               </div>
             </div>
 
-            {/* Company */}
             <div>
               <h5 style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Company</h5>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -326,7 +324,6 @@ const PublicLayout = () => {
               </ul>
             </div>
 
-            {/* Programs */}
             <div>
               <h5 style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Programs</h5>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -339,7 +336,6 @@ const PublicLayout = () => {
               </ul>
             </div>
 
-            {/* Resources */}
             <div>
               <h5 style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Resources</h5>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -352,7 +348,6 @@ const PublicLayout = () => {
               </ul>
             </div>
 
-            {/* Legal */}
             <div>
               <h5 style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Legal</h5>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -365,7 +360,6 @@ const PublicLayout = () => {
               </ul>
             </div>
 
-            {/* Newsletter */}
             <div>
               <h5 style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Stay Updated</h5>
               <p style={{ fontSize: '0.8rem', color: '#6B7280', marginBottom: '1rem', lineHeight: 1.6 }}>
@@ -390,7 +384,6 @@ const PublicLayout = () => {
             </div>
           </div>
 
-          {/* Bottom Bar */}
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', padding: '1.5rem 0', fontSize: '0.8rem', color: '#4B5563' }}>
             <span>© {new Date().getFullYear()} Disha for India Foundation. All rights reserved.</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>

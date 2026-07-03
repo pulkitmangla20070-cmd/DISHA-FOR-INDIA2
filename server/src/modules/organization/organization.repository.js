@@ -29,6 +29,14 @@ class OrganizationRepository {
       .populate('admins', 'name email');
   }
 
+  async existsByOrganizationId(organizationId, excludeId = null) {
+    const query = { organizationId, isDeleted: false };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+    return Organization.findOne(query);
+  }
+
   async findAll(query = {}, options = {}) {
     const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = options;
     const skip = (page - 1) * limit;

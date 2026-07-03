@@ -8,27 +8,62 @@ const MESSAGES = {
   ROLE_ALREADY_EXISTS: 'Role with this slug already exists',
 };
 
-const SYSTEM_ROLES = {
-  SUPER_ADMIN: 'super_admin',
-  ADMIN: 'admin',
-  PROGRAM_MANAGER: 'program_manager',
-  VOLUNTEER_COORDINATOR: 'volunteer_coordinator',
-  ATTENDANCE_MANAGER: 'attendance_manager',
-  REVIEWER: 'reviewer',
-  VOLUNTEER: 'volunteer',
-  GUEST: 'guest',
+// ROLE_PERMISSIONS maps role slugs (used in Role model) to permission codes
+const ROLE_PERMISSIONS = {
+  superadmin: [], // Super admins have all permissions via middleware
+  admin: [
+    'users:read',
+    'users:update',
+    'programs:create',
+    'programs:read',
+    'programs:update',
+    'programs:delete',
+    'programs:publish',
+    'applications:read',
+    'applications:approve',
+    'attendance:read',
+    'attendance:mark',
+    'certificates:read',
+    'certificates:generate',
+    'rewards:read',
+    'leaderboard:read',
+    'notifications:read',
+    'organizations:read',
+  ],
+  coordinator: [
+    'programs:read',
+    'applications:read',
+    'attendance:mark',
+    'attendance:read',
+    'leaderboard:read',
+  ],
+  volunteer_coordinator: [
+    'programs:read',
+    'applications:read',
+    'attendance:mark',
+    'attendance:read',
+    'leaderboard:read',
+  ],
+  attendance_manager: ['attendance:mark', 'attendance:read', 'users:read'],
+  reviewer: ['applications:read', 'users:read'],
+  volunteer: ['applications:create', 'attendance:read', 'certificates:read', 'programs:read'],
+  guest: ['programs:read'],
 };
 
+// Maps role slug strings to canonical values
 const ROLE_SLUG_MAP = {
-  superadmin: SYSTEM_ROLES.SUPER_ADMIN,
-  admin: SYSTEM_ROLES.ADMIN,
-  coordinator: SYSTEM_ROLES.VOLUNTEER_COORDINATOR,
-  volunteer: SYSTEM_ROLES.VOLUNTEER,
-  guest: SYSTEM_ROLES.GUEST,
+  superadmin: 'superadmin',
+  admin: 'admin',
+  coordinator: 'coordinator',
+  volunteer_coordinator: 'volunteer_coordinator',
+  attendance_manager: 'attendance_manager',
+  reviewer: 'reviewer',
+  volunteer: 'volunteer',
+  guest: 'guest',
 };
 
 module.exports = {
   MESSAGES,
-  SYSTEM_ROLES,
+  ROLE_PERMISSIONS,
   ROLE_SLUG_MAP,
 };

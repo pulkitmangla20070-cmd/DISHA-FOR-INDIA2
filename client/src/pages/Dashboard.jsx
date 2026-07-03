@@ -44,6 +44,17 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Redirect admins to their proper dashboard
+  // Note: Roles are stored in lowercase on the server
+  const adminRoles = ['admin', 'superadmin', 'coordinator'];
+  const isAdmin = adminRoles.includes(user?.role?.toLowerCase());
+
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAdmin, navigate]);
+
   const {
     volunteerHours,
     fetchVolunteerHours,
@@ -262,7 +273,7 @@ const Dashboard = () => {
             <div style={{ background: 'white', borderRadius: 16, padding: '1.5rem', border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: 'var(--color-heading)', fontWeight: 700, margin: 0 }}>Current Activity</h3>
-                <Link to="/applications" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Link to="/applications" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
                   View All <ChevronRight size={14} />
                 </Link>
               </div>
@@ -288,7 +299,7 @@ const Dashboard = () => {
                         <h4 style={{ fontSize: '0.9rem', color: 'var(--color-heading)', fontWeight: 700, margin: 0, marginBottom: '0.3rem' }}>{app.programTitle}</h4>
                         <StatusBadge status={app.status} />
                       </div>
-                      <Link to={`/applications/${app.id}`} style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>
+                      <Link to={`/applications/${app.id}`} style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 2, fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>
                         Details <ArrowUpRight size={14} />
                       </Link>
                     </div>
@@ -321,7 +332,7 @@ const Dashboard = () => {
                 <div style={{ height: 6, background: '#FEF3C7', borderRadius: 99, overflow: 'hidden', marginBottom: '1.125rem' }}>
                   <div style={{ width: `${profileCompletion}%`, height: '100%', background: '#D97706', borderRadius: 99, transition: 'width 0.5s ease' }} />
                 </div>
-                <Link to="/profile/setup" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.5rem 1rem', borderRadius: 8, border: '1.5px solid #D97706', color: '#D97706', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s' }}>
+                <Link to="/profile/setup" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '0.5rem 1rem', borderRadius: 8, border: '1.5px solid #D97706', color: '#D97706', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s' }}>
                   Complete Setup <ChevronRight size={14} />
                 </Link>
               </div>
