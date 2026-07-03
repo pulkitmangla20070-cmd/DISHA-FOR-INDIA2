@@ -1,4 +1,7 @@
+import React, { useState, useEffect } from 'react';
 import { Users, FileCheck, Search, Filter, Shield } from "lucide-react";
+import ConfirmModal from "../../components/admin/ConfirmModal";
+import { softDeleteUser } from "../../services/adminService";
 
 import {
   getAdminApplicationStats,
@@ -15,6 +18,9 @@ const AdminApplications = () => {
   const [stats, setStats] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -154,6 +160,13 @@ const AdminApplications = () => {
                               >
                                 Reject
                               </button>
+                              <button 
+                                className="btn btn-danger" 
+                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginLeft: '0.5rem' }}
+                                onClick={() => { setDeleteTargetId(app.id || app._id); setShowConfirm(true); }}
+                              >
+                                Delete
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -161,6 +174,33 @@ const AdminApplications = () => {
                     })
                   )}
                 </tbody>
+                <ConfirmModal
+                  isOpen={showConfirm}
+                  title="Confirm Delete"
+                  message="Are you sure you want to permanently delete this user? This action cannot be undone."
+                  onCancel={() => setShowConfirm(false)}
+                  onConfirm={async () => {
+                    if (!deleteTargetId) return;
+                    setDeleting(true);
+                    try {
+                      const res = await softDeleteUser(deleteTargetId);
+                      if (res.success) {
+                        toast.success('User deleted successfully');
+                        // Refresh applications list
+                        const appsRes = await getAdminApplications();
+                        if (appsRes.success) setApplications(appsRes.data);
+                      } else {
+                        toast.error('Failed to delete user');
+                      }
+                    } catch (err) {
+                      toast.error(err.message || 'Error deleting user');
+                    } finally {
+                      setDeleting(false);
+                      setShowConfirm(false);
+                      setDeleteTargetId(null);
+                    }
+                  }}
+                />
               </table>
             </div>
             <div style={{ padding: '1rem 1.5rem' }}>
