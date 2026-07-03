@@ -10,8 +10,8 @@ const Programs = () => {
     const fetchPrograms = async () => {
       try {
         const res = await api.get('/programs');
-        // API returns { success, message, data: { programs: [...], pagination: {...} } }
-        setPrograms(res?.data?.programs ?? []);
+        const programsArray = res?.success && Array.isArray(res.data) ? res.data : [];
+        setPrograms(programsArray);
       } catch (err) {
         console.error('Failed to fetch programs', err);
         setPrograms([]);
@@ -46,6 +46,3 @@ const Programs = () => {
 };
 
 export default Programs;
-
-
-

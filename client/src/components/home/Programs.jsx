@@ -37,11 +37,15 @@ const Programs = () => {
       setLoading(true);
       setError(null);
       const response = await getAllPrograms({ limit: 4, status: 'active' });
-      if (response.success) {
-        setPrograms(response.data?.programs || response.data || []);
-      } else {
-        setError('Could not load programs.');
-      }
+      // Handle both { programs: [...] } and [...] formats
+      const programsArray = response?.success
+        ? (Array.isArray(response.data?.programs)
+          ? response.data.programs
+          : Array.isArray(response.data)
+            ? response.data
+            : [])
+        : [];
+      setPrograms(programsArray);
     } catch {
       setError('Could not connect to server.');
     } finally {
