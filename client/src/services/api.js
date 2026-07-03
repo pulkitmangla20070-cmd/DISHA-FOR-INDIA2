@@ -32,8 +32,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    // If the backend returns a 401 Unauthorized or 403 Forbidden, we know the session has expired
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    // If the backend returns a 401 Unauthorized, we know the session has expired
+    if (error.response && error.response.status === 401) {
       // Clear token from storage and axios headers
       localStorage.removeItem('authToken');
       delete api.defaults.headers.common['Authorization'];

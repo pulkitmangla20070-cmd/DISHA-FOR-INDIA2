@@ -512,7 +512,8 @@ export const VolunteerProvider = ({ children }) => {
   // ── Initialise when authenticated ──────────────────────────────
   useEffect(() => {
     const boot = async () => {
-      if (!user) return;
+      // Only fetch volunteer data if they are actually a volunteer!
+      if (!user || (user.role !== 'VOLUNTEER' && user.role !== 'volunteer')) return;
       // Kick off all non-dependent init fetches in parallel for speed
       await Promise.allSettled([
         fetchAttendanceDashboard(),
