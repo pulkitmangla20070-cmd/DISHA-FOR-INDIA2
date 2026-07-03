@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { safeSlice } from '../../utils/safeSlice';
 import { UploadCloud, File, X, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,7 +36,7 @@ const FileUploadZone = ({ onFilesSelected, maxFiles = 5, acceptedTypes = '.pdf,.
   };
 
   const handleFiles = (newFiles) => {
-    const totalFiles = [...files, ...newFiles].slice(0, maxFiles);
+    const totalFiles = safeSlice([...files, ...newFiles], 0, maxFiles);
     setFiles(totalFiles);
     if (onFilesSelected) onFilesSelected(totalFiles);
   };

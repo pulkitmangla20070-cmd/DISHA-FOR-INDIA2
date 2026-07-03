@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeSlice } from '../../utils/safeSlice';
 import { Link } from 'react-router-dom';
 import { Trophy, ArrowRight, Medal, Award, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -51,7 +52,7 @@ setLeaders(data);
     { ...leaders[2], rank: 3, height: 'h-40', color: 'bg-orange-200', text: 'text-orange-800', icon: <Award size={24} className="text-orange-700" /> }
   ];
 
-  const remainingLeaders = leaders.slice(3);
+  const remainingLeaders = safeSlice(leaders, 3);
 
   return (
     <section className="py-24 bg-white relative overflow-hidden">

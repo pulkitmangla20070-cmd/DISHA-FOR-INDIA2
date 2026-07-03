@@ -1,5 +1,6 @@
 // client/src/components/FileUploader.jsx
 import React, { useCallback } from 'react';
+import { safeSlice } from '../../utils/safeSlice';
 import { useDropzone } from 'react-dropzone';
 
 const MAX_FILES = 5;
@@ -8,7 +9,7 @@ const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 const FileUploader = ({ files, setFiles }) => {
   const onDrop = useCallback(
     (acceptedFiles) => {
-      const newFiles = [...files, ...acceptedFiles].slice(0, MAX_FILES);
+      const newFiles = safeSlice([...files, ...acceptedFiles], 0, MAX_FILES);
       setFiles(newFiles);
     },
     [files, setFiles]
