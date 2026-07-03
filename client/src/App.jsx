@@ -36,6 +36,10 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPrograms from './pages/admin/AdminPrograms';
 import AdminApplications from './pages/admin/AdminApplications';
 import AdminAttendance from './pages/admin/AdminAttendance';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+
+// Volunteer Pages
+import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -155,9 +159,19 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="programs" element={<AdminPrograms />} />
               <Route path="applications" element={<AdminApplications />} />
               <Route path="attendance" element={<AdminAttendance />} />
+            </Route>
+
+            {/* Protected Volunteer Analytics */}
+            <Route path="/volunteer" element={
+              <ProtectedRoute allowedRoles={['VOLUNTEER', 'COORDINATOR', 'ADMIN', 'SUPER_ADMIN']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="analytics" element={<VolunteerAnalytics />} />
             </Route>
           </Routes>
         </BrowserRouter>
