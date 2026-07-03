@@ -4,6 +4,9 @@ const APPLICATION_STATUS = {
   COMPLETED: 'completed',
   WITHDRAWN: 'withdrawn',
   CANCELLED: 'cancelled',
+  // New statuses for explicit admin approval/rejection workflows
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
 };
 
 const MESSAGES = {
