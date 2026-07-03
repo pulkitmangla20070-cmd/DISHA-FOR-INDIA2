@@ -172,7 +172,7 @@ const PublicLayout = () => {
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <User size={14} color="white" />
                   </div>
-                  Hi, {user.name?.split(' ')[0]}
+                  Hi, {(user?.name || 'User').split(' ')[0]}
                   <ChevronDown size={14} />
                 </Link>
                 <button
