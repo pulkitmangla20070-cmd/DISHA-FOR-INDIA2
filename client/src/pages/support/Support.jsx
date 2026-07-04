@@ -12,7 +12,7 @@ const Support = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user?.role?.toUpperCase());
 
@@ -24,6 +24,7 @@ const Support = () => {
         : await getUserTickets({ page: 1, limit: 50, status: filter === 'all' ? null : filter });
       return res.data || {};
     },
+    enabled: !loading && !!user,
   });
 
   const tickets = data?.tickets || [];

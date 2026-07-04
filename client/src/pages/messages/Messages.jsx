@@ -12,7 +12,7 @@ const Messages = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ['conversations'],
@@ -20,6 +20,7 @@ const Messages = () => {
       const res = await getConversations({ page: 1, limit: 50 });
       return res.data || [];
     },
+    enabled: !loading && !!user,
   });
 
   const createMutation = useMutation({
