@@ -37,6 +37,7 @@ import AdminPrograms from './pages/admin/AdminPrograms';
 import AdminApplications from './pages/admin/AdminApplications';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import Reports from './pages/admin/Reports';
 import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 
 // Volunteer Pages
@@ -161,6 +162,7 @@ function App() {
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="reports" element={<Reports />} />
               <Route path="programs" element={<AdminPrograms />} />
               <Route path="applications" element={<AdminApplications />} />
               <Route path="attendance" element={<AdminAttendance />} />
