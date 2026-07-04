@@ -22,6 +22,11 @@
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.18.1",
     "recharts": "^3.9.1",
+    "date-fns": "^4.1.0",
+    "json-2-csv": "^5.5.11",
+    "xlsx": "^0.18.5",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

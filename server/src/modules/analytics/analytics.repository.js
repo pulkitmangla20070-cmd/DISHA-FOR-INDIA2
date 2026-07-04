@@ -10,7 +10,7 @@ const Permission = require('../permission/permission.model');
 const UserBadge = require('../leaderboard/user-badge.model');
 const UserAchievement = require('../leaderboard/user-achievement.model');
 const Notification = require('../notification/notification.model');
-const { DATE_RANGES, calculatePercentage, calculateGrowthRate } = require('./analytics.utils');
+const { calculatePercentage, calculateGrowthRate } = require('./analytics.utils');
 
 class AnalyticsRepository {
   /**
@@ -20,12 +20,12 @@ class AnalyticsRepository {
    * @param {object} query - Existing query object to merge with
    * @returns {object} Updated query with date filter
    */
-_buildDateFilter(dateRange, dateField, query = {}) {
+  _buildDateFilter(dateRange, dateField, query = {}) {
     const now = new Date();
     const filter = { ...query, isDeleted: false };
 
     switch (dateRange) {
-      case DATE_RANGES.TODAY: {
+      case 'today': {
         const todayStart = new Date(now);
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date(now);
@@ -34,7 +34,7 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         break;
       }
 
-      case DATE_RANGES.THIS_WEEK: {
+      case 'this_week': {
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
@@ -45,7 +45,7 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         break;
       }
 
-      case DATE_RANGES.THIS_MONTH: {
+      case 'this_month': {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         endOfMonth.setHours(23, 59, 59, 999);
@@ -53,7 +53,7 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         break;
       }
 
-      case DATE_RANGES.LAST_MONTH: {
+      case 'last_month': {
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
         lastMonthEnd.setHours(23, 59, 59, 999);
@@ -61,7 +61,7 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         break;
       }
 
-      case DATE_RANGES.LAST_3_MONTHS: {
+      case 'last_3_months': {
         const threeMonthsAgo = new Date(now);
         threeMonthsAgo.setMonth(now.getMonth() - 3);
         threeMonthsAgo.setHours(0, 0, 0, 0);
@@ -69,7 +69,7 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         break;
       }
 
-      case DATE_RANGES.LAST_6_MONTHS: {
+      case 'last_6_months': {
         const sixMonthsAgo = new Date(now);
         sixMonthsAgo.setMonth(now.getMonth() - 6);
         sixMonthsAgo.setHours(0, 0, 0, 0);
@@ -77,7 +77,7 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         break;
       }
 
-      case DATE_RANGES.LAST_YEAR: {
+      case 'last_year': {
         const oneYearAgo = new Date(now);
         oneYearAgo.setFullYear(now.getFullYear() - 1);
         oneYearAgo.setHours(0, 0, 0, 0);
@@ -122,6 +122,25 @@ _buildDateFilter(dateRange, dateField, query = {}) {
           _id: 0,
           year: '$_id.year',
           month: '$_id.month',
+          monthName: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id.month', 1] }, then: 'Jan' },
+                { case: { $eq: ['$_id.month', 2] }, then: 'Feb' },
+                { case: { $eq: ['$_id.month', 3] }, then: 'Mar' },
+                { case: { $eq: ['$_id.month', 4] }, then: 'Apr' },
+                { case: { $eq: ['$_id.month', 5] }, then: 'May' },
+                { case: { $eq: ['$_id.month', 6] }, then: 'Jun' },
+                { case: { $eq: ['$_id.month', 7] }, then: 'Jul' },
+                { case: { $eq: ['$_id.month', 8] }, then: 'Aug' },
+                { case: { $eq: ['$_id.month', 9] }, then: 'Sep' },
+                { case: { $eq: ['$_id.month', 10] }, then: 'Oct' },
+                { case: { $eq: ['$_id.month', 11] }, then: 'Nov' },
+                { case: { $eq: ['$_id.month', 12] }, then: 'Dec' },
+              ],
+              default: '',
+            },
+          },
           count: 1,
         },
       },
@@ -326,6 +345,8 @@ _buildDateFilter(dateRange, dateField, query = {}) {
       Object.assign(matchStage, this._buildDateFilter(dateRange, 'createdAt', {}));
     }
 
+    const MONTH_NAMES = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
     const pipeline = [
       { $match: matchStage },
       {
@@ -342,6 +363,12 @@ _buildDateFilter(dateRange, dateField, query = {}) {
           _id: 0,
           year: '$_id.year',
           month: '$_id.month',
+          monthName: {
+            $switch: {
+              branches: MONTH_NAMES.slice(1).map((name, i) => ({ case: { $eq: ['$_id.month', i + 1] }, then: name })),
+              default: '',
+            },
+          },
           count: 1,
         },
       },
@@ -509,6 +536,25 @@ _buildDateFilter(dateRange, dateField, query = {}) {
           _id: 0,
           year: '$_id.year',
           month: '$_id.month',
+          monthName: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id.month', 1] }, then: 'Jan' },
+                { case: { $eq: ['$_id.month', 2] }, then: 'Feb' },
+                { case: { $eq: ['$_id.month', 3] }, then: 'Mar' },
+                { case: { $eq: ['$_id.month', 4] }, then: 'Apr' },
+                { case: { $eq: ['$_id.month', 5] }, then: 'May' },
+                { case: { $eq: ['$_id.month', 6] }, then: 'Jun' },
+                { case: { $eq: ['$_id.month', 7] }, then: 'Jul' },
+                { case: { $eq: ['$_id.month', 8] }, then: 'Aug' },
+                { case: { $eq: ['$_id.month', 9] }, then: 'Sep' },
+                { case: { $eq: ['$_id.month', 10] }, then: 'Oct' },
+                { case: { $eq: ['$_id.month', 11] }, then: 'Nov' },
+                { case: { $eq: ['$_id.month', 12] }, then: 'Dec' },
+              ],
+              default: '',
+            },
+          },
           count: 1,
         },
       },
@@ -705,6 +751,25 @@ _buildDateFilter(dateRange, dateField, query = {}) {
           _id: 0,
           year: '$_id.year',
           month: '$_id.month',
+          monthName: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id.month', 1] }, then: 'Jan' },
+                { case: { $eq: ['$_id.month', 2] }, then: 'Feb' },
+                { case: { $eq: ['$_id.month', 3] }, then: 'Mar' },
+                { case: { $eq: ['$_id.month', 4] }, then: 'Apr' },
+                { case: { $eq: ['$_id.month', 5] }, then: 'May' },
+                { case: { $eq: ['$_id.month', 6] }, then: 'Jun' },
+                { case: { $eq: ['$_id.month', 7] }, then: 'Jul' },
+                { case: { $eq: ['$_id.month', 8] }, then: 'Aug' },
+                { case: { $eq: ['$_id.month', 9] }, then: 'Sep' },
+                { case: { $eq: ['$_id.month', 10] }, then: 'Oct' },
+                { case: { $eq: ['$_id.month', 11] }, then: 'Nov' },
+                { case: { $eq: ['$_id.month', 12] }, then: 'Dec' },
+              ],
+              default: '',
+            },
+          },
           count: 1,
           totalHours: 1,
         },
@@ -864,6 +929,25 @@ _buildDateFilter(dateRange, dateField, query = {}) {
           _id: 0,
           year: '$_id.year',
           month: '$_id.month',
+          monthName: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id.month', 1] }, then: 'Jan' },
+                { case: { $eq: ['$_id.month', 2] }, then: 'Feb' },
+                { case: { $eq: ['$_id.month', 3] }, then: 'Mar' },
+                { case: { $eq: ['$_id.month', 4] }, then: 'Apr' },
+                { case: { $eq: ['$_id.month', 5] }, then: 'May' },
+                { case: { $eq: ['$_id.month', 6] }, then: 'Jun' },
+                { case: { $eq: ['$_id.month', 7] }, then: 'Jul' },
+                { case: { $eq: ['$_id.month', 8] }, then: 'Aug' },
+                { case: { $eq: ['$_id.month', 9] }, then: 'Sep' },
+                { case: { $eq: ['$_id.month', 10] }, then: 'Oct' },
+                { case: { $eq: ['$_id.month', 11] }, then: 'Nov' },
+                { case: { $eq: ['$_id.month', 12] }, then: 'Dec' },
+              ],
+              default: '',
+            },
+          },
           count: 1,
         },
       },
@@ -938,6 +1022,25 @@ _buildDateFilter(dateRange, dateField, query = {}) {
           _id: 0,
           year: '$_id.year',
           month: '$_id.month',
+          monthName: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$_id.month', 1] }, then: 'Jan' },
+                { case: { $eq: ['$_id.month', 2] }, then: 'Feb' },
+                { case: { $eq: ['$_id.month', 3] }, then: 'Mar' },
+                { case: { $eq: ['$_id.month', 4] }, then: 'Apr' },
+                { case: { $eq: ['$_id.month', 5] }, then: 'May' },
+                { case: { $eq: ['$_id.month', 6] }, then: 'Jun' },
+                { case: { $eq: ['$_id.month', 7] }, then: 'Jul' },
+                { case: { $eq: ['$_id.month', 8] }, then: 'Aug' },
+                { case: { $eq: ['$_id.month', 9] }, then: 'Sep' },
+                { case: { $eq: ['$_id.month', 10] }, then: 'Oct' },
+                { case: { $eq: ['$_id.month', 11] }, then: 'Nov' },
+                { case: { $eq: ['$_id.month', 12] }, then: 'Dec' },
+              ],
+              default: '',
+            },
+          },
           coins: 1,
         },
       },

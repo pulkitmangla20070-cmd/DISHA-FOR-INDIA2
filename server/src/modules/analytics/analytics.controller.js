@@ -185,6 +185,76 @@ class AnalyticsController {
       return next(error);
     }
   };
+
+  // ============================================================
+  // EXPORT ENDPOINTS
+  // ============================================================
+
+  /**
+   * GET /api/v1/analytics/export/:type
+   * Export analytics data in CSV format
+   */
+  exportAnalytics = async (req, res, next) => {
+    try {
+      const { type } = req.params;
+      const { dateRange } = req.query;
+      let data;
+
+      switch (type) {
+        case 'volunteers':
+          data = await analyticsService.getVolunteerAnalytics(dateRange);
+          break;
+        case 'programs':
+          data = await analyticsService.getProgramAnalytics(dateRange);
+          break;
+        case 'applications':
+          data = await analyticsService.getApplicationAnalytics(dateRange);
+          break;
+        case 'attendance':
+          data = await analyticsService.getAttendanceAnalytics(dateRange);
+          break;
+        case 'certificates':
+          data = await analyticsService.getCertificateAnalytics(dateRange);
+          break;
+        case 'rewards':
+          data = await analyticsService.getRewardAnalytics(dateRange);
+          break;
+        case 'leaderboard':
+          data = await analyticsService.getLeaderboardAnalytics(100);
+          break;
+        case 'organizations':
+          data = await analyticsService.getOrganizationAnalytics(dateRange);
+          break;
+        default:
+          return res.status(400).json({ success: false, message: 'Invalid export type' });
+      }
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${type}_analytics.csv`);
+      return res.send(this.convertToCSV(data[`${type}Analytics`]));
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  convertToCSV = (data) => {
+    if (!data || typeof data !== 'object') return '';
+    const flattenObject = (obj, prefix = '') => {
+      return Object.keys(obj).reduce((acc, key) => {
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+          Object.assign(acc, flattenObject(obj[key], newKey));
+        } else {
+          acc[newKey] = obj[key];
+        }
+        return acc;
+      }, {});
+    };
+    const flat = Array.isArray(data) ? data.map(flattenObject) : [flattenObject(data)];
+    const headers = Object.keys(flat[0] || {});
+    const rows = flat.map(row => headers.map(h => `"${row[h] || ''}"`).join(','));
+    return [headers.join(','), ...rows].join('\n');
+  };
 }
 
 module.exports = new AnalyticsController();

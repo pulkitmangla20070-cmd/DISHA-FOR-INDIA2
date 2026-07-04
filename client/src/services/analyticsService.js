@@ -1,21 +1,10 @@
 import api from './api';
 
-/**
- * Get month name from month number (1-12)
- * @param {number} month - Month number (1-12)
- * @returns {string} Month name abbreviation
- */
 export const getMonthName = (month) => {
   const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return months[month] || '';
 };
 
-/**
- * Analytics Service
- * Provides functions to fetch analytics data from the backend
- */
-
-// Dashboard Statistics
 export const getVolunteerDashboard = async () => {
   return api.get('/analytics/dashboard/volunteer');
 };
@@ -28,7 +17,6 @@ export const getSuperAdminDashboard = async () => {
   return api.get('/analytics/dashboard/super-admin');
 };
 
-// Notifications
 export const getNotifications = async (params = {}) => {
   return api.get('/notifications', { params });
 };
@@ -37,7 +25,6 @@ export const getUnreadNotificationCount = async () => {
   return api.get('/notifications/unread/count');
 };
 
-// Leaderboard
 export const getLeaderboard = async (params = { limit: 10 }) => {
   return api.get('/leaderboard', { params });
 };
@@ -46,7 +33,6 @@ export const getMyRank = async () => {
   return api.get('/leaderboard/me');
 };
 
-// Analytics Reports
 export const getVolunteerAnalytics = async (dateRange = null) => {
   const params = dateRange ? { dateRange } : {};
   return api.get('/analytics/volunteers', { params });
@@ -86,5 +72,9 @@ export const getOrganizationAnalytics = async (dateRange = null) => {
   return api.get('/analytics/organizations', { params });
 };
 
-// Legacy compatibility
+export const exportAnalytics = async (type, dateRange = null) => {
+  const params = dateRange ? { dateRange } : {};
+  return api.get(`/analytics/export/${type}`, { params, responseType: 'blob' });
+};
+
 export const getDashboardStatistics = getAdminDashboard;

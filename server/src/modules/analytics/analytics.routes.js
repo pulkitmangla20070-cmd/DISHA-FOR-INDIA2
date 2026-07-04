@@ -2,6 +2,16 @@ const express = require('express');
 const analyticsController = require('./analytics.controller');
 const { authenticate } = require('../../middlewares/auth.middleware');
 const { authorize } = require('../../middlewares/rbac.middleware');
+const {
+  validateVolunteerAnalytics,
+  validateProgramAnalytics,
+  validateApplicationAnalytics,
+  validateAttendanceAnalytics,
+  validateCertificateAnalytics,
+  validateRewardAnalytics,
+  validateLeaderboardAnalytics,
+  validateOrganizationAnalytics,
+} = require('./analytics.validation');
 const ROLES = require('../../constants/roles.constants');
 
 const router = express.Router();
@@ -59,6 +69,7 @@ router.get(
   '/volunteers',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateVolunteerAnalytics,
   analyticsController.getVolunteerAnalytics
 );
 
@@ -75,6 +86,7 @@ router.get(
   '/programs',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateProgramAnalytics,
   analyticsController.getProgramAnalytics
 );
 
@@ -91,6 +103,7 @@ router.get(
   '/applications',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateApplicationAnalytics,
   analyticsController.getApplicationAnalytics
 );
 
@@ -107,6 +120,7 @@ router.get(
   '/attendance',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateAttendanceAnalytics,
   analyticsController.getAttendanceAnalytics
 );
 
@@ -123,6 +137,7 @@ router.get(
   '/certificates',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateCertificateAnalytics,
   analyticsController.getCertificateAnalytics
 );
 
@@ -139,6 +154,7 @@ router.get(
   '/rewards',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateRewardAnalytics,
   analyticsController.getRewardAnalytics
 );
 
@@ -155,6 +171,7 @@ router.get(
   '/leaderboard',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateLeaderboardAnalytics,
   analyticsController.getLeaderboardAnalytics
 );
 
@@ -171,7 +188,24 @@ router.get(
   '/organizations',
   authenticate,
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  validateOrganizationAnalytics,
   analyticsController.getOrganizationAnalytics
+);
+
+// ============================================================
+// EXPORT ENDPOINT (Module 11.2)
+// ============================================================
+
+/**
+ * @route GET /api/v1/analytics/export/:type
+ * @desc Export analytics data as CSV
+ * @access Private - Admins, Super Admins, Coordinators
+ */
+router.get(
+  '/export/:type',
+  authenticate,
+  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.COORDINATOR),
+  analyticsController.exportAnalytics
 );
 
 module.exports = router;
