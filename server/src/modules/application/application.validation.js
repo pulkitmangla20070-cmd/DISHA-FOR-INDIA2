@@ -53,7 +53,7 @@ const validateGetApplication = (req, res, next) => {
 };
 
 const validateMyApplications = (req, res, next) => {
-  const { page, limit, sortBy, sortOrder, status } = req.query;
+  const { page, limit, status } = req.query;
   const errors = [];
 
   if (page !== undefined) {
@@ -107,7 +107,7 @@ const validateMyPrograms = (req, res, next) => {
 };
 
 const validateAdminApplications = (req, res, next) => {
-  const { page, limit, status, program, user } = req.query;
+  const { page, limit, status } = req.query;
   const errors = [];
 
   if (page !== undefined) {

@@ -1,6 +1,7 @@
 const permissionRepository = require('./permission.repository');
 const Permission = require('./permission.model');
 const { MESSAGES } = require('./permission.constants');
+const { DEFAULT_PERMISSIONS } = require('../../database/seeders/permission.seeder');
 const ValidationError = require('../../utils/errors/ValidationError');
 const ConflictError = require('../../utils/errors/ConflictError');
 

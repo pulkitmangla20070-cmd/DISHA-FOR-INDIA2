@@ -207,7 +207,7 @@ class ApplicationService {
   }
 
   async getAdminApplications(queryParams) {
-    let { page, limit, sortBy, sortOrder, status, program, user, city, state, search } = queryParams;
+    let { page, limit, sortBy, sortOrder, status, program, user, city, state } = queryParams;
 
     // Normalize combined sortBy values like 'date_desc', 'date_asc', 'name_asc'
     const SORT_MAP = {

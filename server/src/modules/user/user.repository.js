@@ -124,7 +124,7 @@ class UserRepository {
       .limit(limit);
   }
 
-async getVolunteerRank(userId) {
+async getVolunteerRank() {
     return null;
   }
 

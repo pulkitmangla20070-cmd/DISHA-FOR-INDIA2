@@ -1,7 +1,6 @@
 const Application = require('./application.model');
 const { APPLICATION_STATUS } = require('./application.constants');
 
-const ALLOWED_SORT_FIELDS = ['createdAt', 'appliedAt', 'status'];
 const ALLOWED_SORT_ORDERS = ['asc', 'desc'];
 
 class ApplicationRepository {

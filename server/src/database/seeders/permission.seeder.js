@@ -85,4 +85,4 @@ const seedPermissions = async () => {
   }
 };
 
-module.exports = { seedPermissions };
+module.exports = { seedPermissions, DEFAULT_PERMISSIONS };

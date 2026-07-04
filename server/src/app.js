@@ -155,10 +155,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const clientBuildPath = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientBuildPath));
 
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api') || req.path === '/api-docs') {
-    return res.status(404).json({ success: false, message: 'API endpoint not found' });
-  }
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/api') || req.path.startsWith('/api-docs')) return next();
   return res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 

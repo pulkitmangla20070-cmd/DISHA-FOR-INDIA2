@@ -5,7 +5,6 @@ const {
   validateWithdrawApplication,
   validateGetApplication,
   validateMyApplications,
-  validateAdminApplications,
   validateBulkUpdate,
 } = require('./application.validation');
 const { authenticate } = require('../../middlewares/auth.middleware');

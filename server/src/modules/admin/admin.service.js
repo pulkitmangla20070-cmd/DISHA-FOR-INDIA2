@@ -211,7 +211,7 @@ class AdminService {
     try {
       const attendanceStats = await attendanceRepository.getAttendanceStatistics();
       stats.totalHoursLogged = attendanceStats.totalVolunteerHours || 0;
-    } catch (error) {
+    } catch (_error) {
       stats.totalHoursLogged = 0;
     }
     return stats;
