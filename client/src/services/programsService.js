@@ -51,6 +51,13 @@ export const getJoinedProgramById = async (id) => {
 };
 
 /**
+ * Get current user's enrolled programs (alias for getJoinedPrograms).
+ */
+export const getMyPrograms = async () => {
+  return await api.get('/programs/me');
+};
+
+/**
  * Volunteer hours placeholder (backend not implemented yet).
  */
 export const getVolunteerHours = async () => {

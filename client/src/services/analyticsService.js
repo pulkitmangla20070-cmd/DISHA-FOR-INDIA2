@@ -28,6 +28,24 @@ export const getSuperAdminDashboard = async () => {
   return api.get('/analytics/dashboard/super-admin');
 };
 
+// Notifications
+export const getNotifications = async (params = {}) => {
+  return api.get('/notifications', { params });
+};
+
+export const getUnreadNotificationCount = async () => {
+  return api.get('/notifications/unread/count');
+};
+
+// Leaderboard
+export const getLeaderboard = async (params = { limit: 10 }) => {
+  return api.get('/leaderboard', { params });
+};
+
+export const getMyRank = async () => {
+  return api.get('/leaderboard/me');
+};
+
 // Analytics Reports
 export const getVolunteerAnalytics = async (dateRange = null) => {
   const params = dateRange ? { dateRange } : {};

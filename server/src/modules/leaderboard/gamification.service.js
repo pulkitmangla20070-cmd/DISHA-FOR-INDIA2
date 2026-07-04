@@ -112,19 +112,6 @@ class GamificationService {
       skipped: skippedBadges.length,
       badges: earnedBadges,
     };
-
-    try {
-      const notificationPromises = earnedBadges.map((badge) =>
-        notificationService.sendInAppNotification('buildBadgeEarned', {
-          recipientId: badge.user.toString(),
-          badgeName: badge.name,
-          badgeDescription: badge.description,
-        }).catch(() => {})
-      );
-      await Promise.all(notificationPromises);
-    } catch (_error) {
-      // Notification failure is non-blocking
-    }
   }
 
   async evaluateAchievements(userId) {
@@ -206,19 +193,6 @@ class GamificationService {
       skipped: skippedAchievements.length,
       achievements: updatedAchievements,
     };
-
-    try {
-      const notificationPromises = updatedAchievements.map((achievement) =>
-        notificationService.sendInAppNotification('buildAchievementUnlocked', {
-          recipientId: achievement.user.toString(),
-          achievementTitle: achievement.title,
-          achievementDescription: achievement.description,
-        }).catch(() => {})
-      );
-      await Promise.all(notificationPromises);
-    } catch (_error) {
-      // Notification failure is non-blocking
-    }
   }
 
   async calculateVolunteerLevel(userId) {

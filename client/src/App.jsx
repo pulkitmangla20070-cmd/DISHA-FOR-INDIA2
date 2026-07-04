@@ -37,6 +37,7 @@ import AdminPrograms from './pages/admin/AdminPrograms';
 import AdminApplications from './pages/admin/AdminApplications';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
@@ -163,6 +164,15 @@ function App() {
               <Route path="programs" element={<AdminPrograms />} />
               <Route path="applications" element={<AdminApplications />} />
               <Route path="attendance" element={<AdminAttendance />} />
+            </Route>
+
+            {/* Protected Super Admin Routes */}
+            <Route path="/super-admin" element={
+              <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<SuperAdminDashboard />} />
             </Route>
 
             {/* Protected Volunteer Analytics */}

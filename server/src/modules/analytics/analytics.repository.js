@@ -9,6 +9,7 @@ const Role = require('../role/role.model');
 const Permission = require('../permission/permission.model');
 const UserBadge = require('../leaderboard/user-badge.model');
 const UserAchievement = require('../leaderboard/user-achievement.model');
+const Notification = require('../notification/notification.model');
 const { DATE_RANGES, calculatePercentage, calculateGrowthRate } = require('./analytics.utils');
 
 class AnalyticsRepository {
@@ -1128,11 +1129,11 @@ _buildDateFilter(dateRange, dateField, query = {}) {
   // DASHBOARD STATISTICS (Module 11.1)
   // ============================================================
 
-  /**
-   * Get volunteer dashboard statistics
-   * @param {string} userId - The volunteer user ID
-   * @returns {Promise<object>} Volunteer statistics
-   */
+/**
+    * Get volunteer dashboard statistics
+    * @param {string} userId - The volunteer user ID
+    * @returns {Promise<object>} Volunteer statistics
+    */
   async getVolunteerStats(userId) {
     const [
       totalProgramsJoined,
@@ -1143,6 +1144,9 @@ _buildDateFilter(dateRange, dateField, query = {}) {
       rejectedApps,
       totalAttendance,
       totalHoursAgg,
+      unreadNotifications,
+      certificatesCount,
+      rewardsCount,
     ] = await Promise.all([
       Application.countDocuments({ user: userId, status: 'joined', isDeleted: false }),
       Application.countDocuments({ user: userId, status: { $in: ['joined', 'ongoing'] }, isDeleted: false }),
@@ -1155,9 +1159,20 @@ _buildDateFilter(dateRange, dateField, query = {}) {
         { $match: { user: userId, isDeleted: false } },
         { $group: { _id: null, totalHours: { $sum: '$totalHours' } } },
       ]),
+      Notification.countDocuments({ recipient: userId, isRead: false, isDeleted: false }),
+      Certificate.countDocuments({ user: userId, status: 'issued', isDeleted: false }),
+      RewardTransaction.countDocuments({ user: userId, isDeleted: false }),
     ]);
 
-    const user = await User.findById(userId).select('coins').lean();
+    const user = await User.findById(userId).select('coins points volunteerLevel').lean();
+
+    // Get volunteer rank based on coins
+    const rankAgg = await User.aggregate([
+      { $match: { role: 'volunteer', isDeleted: false } },
+      { $sort: { coins: -1 } },
+      { $group: { _id: null, volunteers: { $push: '$_id' } } },
+      { $project: { rank: { $add: [{ $indexOfArray: ['$volunteers', userId] }, 1] } } },
+    ]);
 
     return {
       totalProgramsJoined,
@@ -1169,6 +1184,12 @@ _buildDateFilter(dateRange, dateField, query = {}) {
       totalAttendance,
       totalHours: totalHoursAgg[0]?.totalHours || 0,
       currentCoins: user?.coins || 0,
+      points: user?.points || 0,
+      volunteerLevel: user?.volunteerLevel || 'Beginner',
+      rank: rankAgg[0]?.rank || 0,
+      unreadNotifications,
+      certificatesEarned: certificatesCount,
+      rewards: rewardsCount,
     };
   }
 
