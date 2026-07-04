@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Shield, Home, Calendar, Award, Trophy, LogOut, Menu, X,
-  LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, Settings
+  LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, Settings, FileText
 } from 'lucide-react';
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'];
@@ -36,6 +36,7 @@ const DashboardLayout = () => {
     { name: 'Applications',  path: '/admin/applications', icon: <ClipboardList size={18} /> },
     { name: 'Attendance',    path: '/admin/attendance',   icon: <UserCheck size={18} /> },
     { name: 'Analytics',     path: '/admin/analytics',    icon: <BarChart2 size={18} /> },
+    { name: 'Reports',       path: '/admin/reports',      icon: <FileText size={18} /> },
     { name: 'Volunteers',    path: '/admin/users',        icon: <Users size={18} /> },
   ];
 
