@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { safeSlice } from '../../utils/safeSlice';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, MapPin, Clock, Users, CheckCircle } from 'lucide-react';
@@ -36,11 +37,15 @@ const Programs = () => {
       setLoading(true);
       setError(null);
       const response = await getAllPrograms({ limit: 4, status: 'active' });
-      if (response.success) {
-        setPrograms(response.data?.programs || response.data || []);
-      } else {
-        setError('Could not load programs.');
-      }
+      // Handle both { programs: [...] } and [...] formats
+      const programsArray = response?.success
+        ? (Array.isArray(response.data?.programs)
+          ? response.data.programs
+          : Array.isArray(response.data)
+            ? response.data
+            : [])
+        : [];
+      setPrograms(programsArray);
     } catch {
       setError('Could not connect to server.');
     } finally {
@@ -156,7 +161,7 @@ const Programs = () => {
                     {skills.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
                         <span style={{ fontSize: '0.7rem', color: 'var(--color-body)', fontWeight: 600 }}>Skills:</span>
-                        {skills.slice(0, 3).map((s, i) => (
+                        {safeSlice(skills, 0, 3).map((s, i) => (
                           <span key={i} style={{ fontSize: '0.7rem', color: 'var(--color-body)' }}>{s}{i < Math.min(skills.length, 3) - 1 ? ',' : ''}</span>
                         ))}
                       </div>

@@ -168,13 +168,16 @@ const organizationSchema = new mongoose.Schema(
   }
 );
 
+// Indexes optimized for queries
 organizationSchema.index({ name: 1 });
 organizationSchema.index({ slug: 1 }, { unique: true, sparse: true });
+organizationSchema.index({ organizationId: 1 }, { unique: true, sparse: true });
 organizationSchema.index({ organizationType: 1 });
 organizationSchema.index({ verificationStatus: 1 });
 organizationSchema.index({ isActive: 1 });
 organizationSchema.index({ createdAt: -1 });
 organizationSchema.index({ owner: 1 });
+organizationSchema.index({ 'socialLinks.facebook': 1, 'socialLinks.twitter': 1, 'socialLinks.linkedin': 1 });
 
 organizationSchema.set('toJSON', {
   transform: function (doc, ret) {

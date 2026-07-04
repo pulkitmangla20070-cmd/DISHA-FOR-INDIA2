@@ -13,7 +13,11 @@ const authorize = (...allowedRoles) => {
       return next(new AuthenticationError(MESSAGES.UNAUTHORIZED));
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    // Normalize role comparison to handle case differences
+    const userRole = req.user.role?.toLowerCase();
+    const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+    
+    if (!normalizedAllowedRoles.includes(userRole)) {
       return next(new AuthorizationError(MESSAGES.FORBIDDEN));
     }
 

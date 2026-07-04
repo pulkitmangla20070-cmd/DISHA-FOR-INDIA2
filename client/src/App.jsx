@@ -36,6 +36,11 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPrograms from './pages/admin/AdminPrograms';
 import AdminApplications from './pages/admin/AdminApplications';
 import AdminAttendance from './pages/admin/AdminAttendance';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
+
+// Volunteer Pages
+import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -79,7 +84,18 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 const RedirectIfAuthenticated = ({ children }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) {
+    const token = localStorage.getItem('authToken');
+    if (token && !user) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f4f1ea' }}>
+          <div style={{ width: '40px', height: '40px', border: '3px solid #4a90e2', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <p style={{ marginTop: '1rem', color: '#333', fontWeight: 500 }}>Checking session...</p>
+        </div>
+      );
+    }
+    return children;
+  }
 
   if (user) {
     const adminRoles = ['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'];
@@ -144,9 +160,28 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="programs" element={<AdminPrograms />} />
               <Route path="applications" element={<AdminApplications />} />
               <Route path="attendance" element={<AdminAttendance />} />
+            </Route>
+
+            {/* Protected Super Admin Routes */}
+            <Route path="/super-admin" element={
+              <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<SuperAdminDashboard />} />
+            </Route>
+
+            {/* Protected Volunteer Analytics */}
+            <Route path="/volunteer" element={
+              <ProtectedRoute allowedRoles={['VOLUNTEER', 'COORDINATOR', 'ADMIN', 'SUPER_ADMIN']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="analytics" element={<VolunteerAnalytics />} />
             </Route>
           </Routes>
         </BrowserRouter>

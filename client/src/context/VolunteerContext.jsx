@@ -22,6 +22,7 @@ import React, {
   useEffect,
 } from 'react';
 import toast from 'react-hot-toast';
+import { useAuth } from './AuthContext';
 
 import * as applicationsService from '../services/applicationsService';
 import * as attendanceService from '../services/attendanceService';
@@ -231,6 +232,7 @@ const VolunteerContext = createContext(null);
 // ─── 5. PROVIDER COMPONENT ─────────────────────────────────────────────────────
 
 export const VolunteerProvider = ({ children }) => {
+  const { user } = useAuth();
   const [state, dispatch] = useReducer(volunteerReducer, initialState);
 
   // ── Applications ───────────────────────────────────────────────
@@ -507,9 +509,11 @@ export const VolunteerProvider = ({ children }) => {
     }
   }, []);
 
-  // ── Initialise on mount ────────────────────────────────────────
+  // ── Initialise when authenticated ──────────────────────────────
   useEffect(() => {
     const boot = async () => {
+      // Only fetch volunteer data if they are actually a volunteer!
+      if (!user || (user.role !== 'VOLUNTEER' && user.role !== 'volunteer')) return;
       // Kick off all non-dependent init fetches in parallel for speed
       await Promise.allSettled([
         fetchAttendanceDashboard(),
@@ -520,7 +524,7 @@ export const VolunteerProvider = ({ children }) => {
     };
     boot();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   // ── Context value ──────────────────────────────────────────────
   const value = {

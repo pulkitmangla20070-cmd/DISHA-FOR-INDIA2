@@ -29,7 +29,10 @@ const AdminApplications = () => {
         const statsRes = await getAdminApplicationStats();
         const appsRes = await getAdminApplications();
         if (statsRes.success) setStats(statsRes.data);
-        if (appsRes.success) setApplications(appsRes.data);
+        // Handle both { applications: [...] } and [...] formats
+        if (appsRes.success) {
+          setApplications(Array.isArray(appsRes.data?.applications) ? appsRes.data.applications : Array.isArray(appsRes.data) ? appsRes.data : []);
+        }
       } catch (err) {
         console.error(err);
         toast.error('Failed to load applications');
@@ -120,7 +123,7 @@ const AdminApplications = () => {
                     applications.map((app) => {
                       const applicantName = app.user?.name || app.applicantName || 'Unknown User';
                       const applicantEmail = app.user?.email || app.applicantEmail || 'No email';
-                      const initials = applicantName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                      const initials = (applicantName || '').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                       
                       return (
                         <tr key={app.id || app._id} style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -184,14 +187,14 @@ const AdminApplications = () => {
                     setDeleting(true);
                     try {
                       const res = await softDeleteUser(deleteTargetId);
-                      if (res.success) {
-                        toast.success('User deleted successfully');
-                        // Refresh applications list
-                        const appsRes = await getAdminApplications();
-                        if (appsRes.success) setApplications(appsRes.data);
-                      } else {
-                        toast.error('Failed to delete user');
-                      }
+if (res.success) {
+                         toast.success('User deleted successfully');
+                         // Refresh applications list
+                         const appsRes = await getAdminApplications();
+                         if (appsRes.success) {
+                           setApplications(Array.isArray(appsRes.data?.applications) ? appsRes.data.applications : Array.isArray(appsRes.data) ? appsRes.data : []);
+                         }
+                       }
                     } catch (err) {
                       toast.error(err.message || 'Error deleting user');
                     } finally {

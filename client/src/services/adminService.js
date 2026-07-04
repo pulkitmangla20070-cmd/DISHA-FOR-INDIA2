@@ -15,6 +15,6 @@ export const softDeleteUser = async (userId) => {
   }
 };
 export const getDashboardStatistics = async () => {
-  const res = await api.get('/admin/dashboard');
+  const res = await api.get('/admin/users/statistics');
   return res;
 };

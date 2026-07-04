@@ -12,7 +12,6 @@ const permissionSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Module is required'],
       trim: true,
-      index: true,
     },
     action: {
       type: String,
@@ -34,12 +33,10 @@ const permissionSchema = new mongoose.Schema(
     category: {
       type: String,
       trim: true,
-      index: true,
     },
     isSystemPermission: {
       type: Boolean,
       default: false,
-      index: true,
     },
   },
   {
@@ -47,8 +44,13 @@ const permissionSchema = new mongoose.Schema(
   }
 );
 
+// Indexes optimized for queries
 permissionSchema.index({ module: 1 });
-permissionSchema.index({ code: 1 });
+permissionSchema.index({ action: 1, module: 1 });
+permissionSchema.index({ code: 1 }, { unique: true });
+permissionSchema.index({ isSystemPermission: 1 });
+permissionSchema.index({ category: 1 });
+
 permissionSchema.set('toJSON', {
   transform: function (doc, ret) {
     delete ret.__v;

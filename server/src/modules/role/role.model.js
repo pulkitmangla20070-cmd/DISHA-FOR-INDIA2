@@ -40,12 +40,10 @@ const roleSchema = new mongoose.Schema(
     isSystemRole: {
       type: Boolean,
       default: false,
-      index: true,
     },
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -58,7 +56,6 @@ const roleSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false,
-      index: true,
     },
     deletedAt: {
       type: Date,
@@ -75,8 +72,12 @@ const roleSchema = new mongoose.Schema(
   }
 );
 
+// Indexes optimized for queries
 roleSchema.index({ slug: 1 }, { unique: true });
+roleSchema.index({ organization: 1 });
 roleSchema.index({ isSystemRole: 1 });
+roleSchema.index({ isActive: 1 });
+
 roleSchema.set('toJSON', {
   transform: function (doc, ret) {
     delete ret.__v;

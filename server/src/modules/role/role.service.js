@@ -1,51 +1,9 @@
 const roleRepository = require('./role.repository');
 const Role = require('./role.model');
 const permissionService = require('../permission/permission.service');
-const { MESSAGES, SYSTEM_ROLES } = require('./role.constants');
+const { MESSAGES, ROLE_PERMISSIONS } = require('./role.constants');
 const NotFoundError = require('../../utils/errors/NotFoundError');
 const ConflictError = require('../../utils/errors/ConflictError');
-
-const ROLE_PERMISSIONS = {
-  [SYSTEM_ROLES.SUPER_ADMIN]: [],
-  [SYSTEM_ROLES.ADMIN]: [
-    'users:read',
-    'users:update',
-    'programs:create',
-    'programs:read',
-    'programs:update',
-    'programs:delete',
-    'programs:publish',
-    'applications:read',
-    'applications:approve',
-    'attendance:read',
-    'attendance:mark',
-    'certificates:read',
-    'certificates:generate',
-    'rewards:read',
-    'leaderboard:read',
-    'notifications:read',
-    'organizations:read',
-  ],
-  [SYSTEM_ROLES.PROGRAM_MANAGER]: [
-    'programs:create',
-    'programs:read',
-    'programs:update',
-    'programs:publish',
-    'applications:read',
-    'applications:approve',
-  ],
-  [SYSTEM_ROLES.VOLUNTEER_COORDINATOR]: [
-    'programs:read',
-    'applications:read',
-    'attendance:mark',
-    'attendance:read',
-    'leaderboard:read',
-  ],
-  [SYSTEM_ROLES.ATTENDANCE_MANAGER]: ['attendance:mark', 'attendance:read', 'users:read'],
-  [SYSTEM_ROLES.REVIEWER]: ['applications:read', 'users:read'],
-  [SYSTEM_ROLES.VOLUNTEER]: ['applications:create', 'attendance:read', 'certificates:read', 'programs:read'],
-  [SYSTEM_ROLES.GUEST]: ['programs:read'],
-};
 
 class RoleService {
   async createRole(userId, roleData) {

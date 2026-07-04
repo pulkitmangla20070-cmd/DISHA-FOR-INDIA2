@@ -44,7 +44,7 @@ class RoleRepository {
   }
 
   async existsBySlug(slug, excludeId = null) {
-    const query = { slug };
+    const query = { slug, isDeleted: false };
     if (excludeId) query._id = { $ne: excludeId };
     return Role.findOne(query);
   }

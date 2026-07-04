@@ -47,23 +47,23 @@ const AdminAttendance = () => {
 
       {loading ? <SkeletonLoader type="dashboard" /> : (
         <>
-          {data && (
+          {data?.stats && (
             <div className="grid grid-cols-4" style={{ marginBottom: '2rem' }}>
               <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ padding: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)', borderRadius: '50%' }}><Users size={24} /></div>
-                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.todayPresent}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Present Today</div></div>
+                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.todayPresent ?? 0}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Present Today</div></div>
               </div>
               <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-error)', borderRadius: '50%' }}><Users size={24} /></div>
-                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.todayAbsent}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Absent Today</div></div>
+                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.todayAbsent ?? 0}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Absent Today</div></div>
               </div>
               <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ padding: '0.75rem', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-accent)', borderRadius: '50%' }}><Clock size={24} /></div>
-                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.totalHoursToday}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Hours Logged Today</div></div>
+                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.totalHoursToday ?? 0}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Hours Logged Today</div></div>
               </div>
               <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ padding: '0.75rem', backgroundColor: 'rgba(37, 99, 235, 0.1)', color: 'var(--color-primary)', borderRadius: '50%' }}><CalendarCheck size={24} /></div>
-                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.programsRunning}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Active Programs</div></div>
+                <div><div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{data.stats.programsRunning ?? 0}</div><div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>Active Programs</div></div>
               </div>
             </div>
           )}

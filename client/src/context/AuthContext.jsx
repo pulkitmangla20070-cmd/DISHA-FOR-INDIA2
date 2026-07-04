@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { setAuthToken } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -18,6 +18,13 @@ export const AuthProvider = ({ children }) => {
 
   // ─── Check existing session on mount ────────────────────────────────────────
   const checkAuth = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await api.get('/auth/me');
       if (res.success && res.data?.user) {

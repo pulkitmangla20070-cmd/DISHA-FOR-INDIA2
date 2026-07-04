@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeSlice } from '../../utils/safeSlice';
 import { Link } from 'react-router-dom';
 import { Trophy, ArrowRight, Medal, Award, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -7,21 +8,19 @@ import { getTopVolunteers } from '../../services/gamificationService';
 const LeaderboardPreview = () => {
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchLeaders = async () => {
       try {
-        const data = await getTopVolunteers(5);
-
-console.log(JSON.stringify(data, null, 2));
-console.log("Is Array:", Array.isArray(data));
-
-setLeaders(data);
+        const res = await getTopVolunteers(5);
+        // Extract the array from the API response
+        const leadersArray = res?.success && Array.isArray(res.data) ? res.data : [];
+        setLeaders(leadersArray);
         setLoading(false);
       } catch (err) {
+        // Gracefully hide the section on error
         console.error('Failed to fetch leaderboard:', err);
-        setError('Failed to load leaderboard data.');
+        setLeaders([]);
         setLoading(false);
       }
     };
@@ -39,8 +38,8 @@ setLeaders(data);
     );
   }
 
-  // Handle empty or error state gracefully
-  if (error || !leaders || leaders.length < 3) {
+  // Handle empty state gracefully
+  if (!leaders || leaders.length < 3) {
     return null; // Hide section if not enough data for podium
   }
 
@@ -51,7 +50,7 @@ setLeaders(data);
     { ...leaders[2], rank: 3, height: 'h-40', color: 'bg-orange-200', text: 'text-orange-800', icon: <Award size={24} className="text-orange-700" /> }
   ];
 
-  const remainingLeaders = leaders.slice(3);
+  const remainingLeaders = safeSlice(leaders, 3);
 
   return (
     <section className="py-24 bg-white relative overflow-hidden">
@@ -95,7 +94,7 @@ setLeaders(data);
                       <img src={user.avatar} alt={user.name} className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white shadow-lg object-cover" />
                     ) : (
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center text-heading font-bold text-xl">
-                        {user.name.charAt(0)}
+                        {user.name ? user.name.charAt(0) : '?'}
                       </div>
                     )}
                     <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center">
@@ -111,8 +110,8 @@ setLeaders(data);
                   </div>
                   
                   <div className="text-center mt-4 w-24 md:w-32">
-                    <p className="font-bold text-heading text-sm line-clamp-1">{user.name}</p>
-                    <p className="text-xs text-primary font-bold">{user.points} pts</p>
+                    <p className="font-bold text-heading text-sm line-clamp-1">{user.name || 'Anonymous'}</p>
+                    <p className="text-xs text-primary font-bold">{(user.points ?? 0)} pts</p>
                   </div>
                 </motion.div>
               ))}
@@ -135,9 +134,9 @@ setLeaders(data);
                       {idx + 4}
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-heading text-sm line-clamp-1">{user.name}</p>
+                      <p className="font-bold text-heading text-sm line-clamp-1">{user.name || 'Anonymous'}</p>
                       <p className="text-xs text-body flex items-center gap-1">
-                        <Star size={10} className="text-accent fill-accent" /> {user.points} pts
+                        <Star size={10} className="text-accent fill-accent" /> {(user.points ?? 0)} pts
                       </p>
                     </div>
                   </motion.div>

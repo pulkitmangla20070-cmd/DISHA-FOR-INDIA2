@@ -6,13 +6,13 @@ class PermissionRepository {
   }
 
   async findByCode(code) {
-    return Permission.findOne({ code, isSystemPermission: true }).or([{ isDeleted: { $ne: true } }, { isDeleted: false }]);
+    return Permission.findOne({ code, isDeleted: false });
   }
 
   async findAll(query = {}) {
     const { page = 1, limit = 50, module, category } = query;
     const skip = (page - 1) * limit;
-    const filter = {};
+    const filter = { isDeleted: false };
 
     if (module) {
       filter.module = module;
@@ -30,7 +30,7 @@ class PermissionRepository {
   }
 
   async findById(id) {
-    return Permission.findById(id);
+    return Permission.findOne({ _id: id, isDeleted: false });
   }
 
   async existsByCode(code) {
