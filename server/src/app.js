@@ -1,3 +1,4 @@
+const path = require('path');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -149,7 +150,20 @@ app.use('/api/v1/support-tickets', supportTicketRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ─────────────────────────────────────────────
-// 12. 404 Handler (must be after all routes and docs)
+// 12. Serve React static build + SPA fallback
+// ─────────────────────────────────────────────
+const clientBuildPath = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientBuildPath));
+
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api') || req.path === '/api-docs') {
+    return res.status(404).json({ success: false, message: 'API endpoint not found' });
+  }
+  return res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
+
+// ─────────────────────────────────────────────
+// 13. 404 Handler (must be after all routes and docs)
 // ─────────────────────────────────────────────
 app.use(notFoundHandler);
 
