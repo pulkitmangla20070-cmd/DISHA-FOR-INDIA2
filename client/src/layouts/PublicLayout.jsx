@@ -20,6 +20,26 @@ const PublicLayout = () => {
 
   const isHomePage = location.pathname === '/';
 
+  // Transparent on home page until scrolled
+  const solidNav = !isHomePage || isScrolled;
+
+  const navBaseStyle = {
+    padding: '0.5rem 0.875rem',
+    borderRadius: 8,
+    fontSize: '0.9375rem',
+    fontWeight: 500,
+    textDecoration: 'none',
+    position: 'relative',
+    transition: 'color 0.23s ease, opacity 0.23s ease',
+  };
+
+  const commonLinkStyle = {
+    ...navBaseStyle,
+    color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.92)',
+    backgroundColor: 'transparent',
+    opacity: 1,
+  };
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 60);
     window.addEventListener('scroll', handleScroll);
@@ -47,9 +67,6 @@ const PublicLayout = () => {
     { name: 'About', path: '/about' },
   ];
 
-  // Transparent on home page until scrolled
-  const solidNav = !isHomePage || isScrolled;
-
   // Roles are stored in lowercase on server, normalize for comparison
   const adminRoles = ['admin', 'superadmin', 'coordinator'];
   const dashboardPath = user && adminRoles.includes(user?.role?.toLowerCase()) ? '/admin/dashboard' : '/dashboard';
@@ -59,16 +76,23 @@ const PublicLayout = () => {
 
       {/* ─────────────── HEADER ─────────────── */}
       <header
-        className="fixed w-full top-0 z-[100] transition-all duration-400"
+        className="fixed w-full top-0 z-[100]"
         style={{
-          backgroundColor: solidNav ? 'rgba(255,255,255,0.97)' : 'transparent',
-          backdropFilter: solidNav ? 'blur(16px)' : 'none',
-          borderBottom: solidNav ? '1px solid #F0EDE8' : '1px solid transparent',
-          boxShadow: solidNav ? '0 1px 16px rgba(0,0,0,0.06)' : 'none',
-          padding: solidNav ? '0' : '0',
+          backgroundColor: solidNav ? '#FFFFFF' : 'transparent',
+          borderBottom: solidNav ? '1px solid #E8E3D9' : '1px solid transparent',
+          boxShadow: 'none',
+          transition: 'background-color 0.23s ease, border-color 0.23s ease',
+          padding: '0 2rem',
+          height: '76px',
         }}
       >
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', height: solidNav ? '64px' : '72px', transition: 'height 0.3s ease', gap: '2rem' }}>
+        <style>{`
+          @media (prefers-reduced-motion: reduce) {
+            header { transition: none !important; }
+            header * { transition: none !important; }
+          }
+        `}</style>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', height: '100%', gap: '2.25rem' }}>
 
           {/* Logo */}
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', flexShrink: 0 }}>
@@ -76,10 +100,10 @@ const PublicLayout = () => {
               <Shield size={20} color="white" />
             </div>
             <div>
-              <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.25rem', color: solidNav ? 'var(--color-heading)' : 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.25rem', color: solidNav ? 'var(--color-heading)' : '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1 }}>
                 DISHA
               </span>
-              <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: 600, color: solidNav ? 'var(--color-primary)' : 'rgba(255,255,255,0.8)', letterSpacing: '0.12em', textTransform: 'uppercase', lineHeight: 1 }}>
+              <span style={{ display: 'block', fontSize: '0.6rem', fontWeight: 600, color: solidNav ? 'var(--color-primary)' : 'rgba(255,255,255,0.85)', letterSpacing: '0.12em', textTransform: 'uppercase', lineHeight: 1 }}>
                 for India
               </span>
             </div>
@@ -94,21 +118,18 @@ const PublicLayout = () => {
                   key={link.path}
                   to={link.path}
                   style={{
-                    padding: '0.5rem 0.875rem',
-                    borderRadius: 8,
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: isActive ? 'var(--color-primary)' : solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.9)',
-                    backgroundColor: isActive ? 'rgba(211,84,0,0.08)' : 'transparent',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s',
-                    position: 'relative',
+                    ...commonLinkStyle,
+                    backgroundColor: 'transparent',
+                    opacity: isActive ? 1 : 0.85,
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = solidNav ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.12)'; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.opacity = '0.85'; }}
+                  onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={e => { e.currentTarget.style.outline = 'none'; }}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   {link.name}
-                  {isActive && <span style={{ position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', width: 16, height: 2, borderRadius: 2, background: 'var(--color-primary)' }} />}
+                  {isActive && <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', width: 18, height: 2.5, borderRadius: 999, background: 'var(--color-primary)' }} />}
                 </Link>
               );
             })}
@@ -125,27 +146,29 @@ const PublicLayout = () => {
                   animate={{ width: 220, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', backgroundColor: solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.15)', borderRadius: 8, padding: '0.35rem 0.75rem', gap: '0.5rem' }}
+                  style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', backgroundColor: solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.15)', borderRadius: 8, padding: '0.35rem 0.75rem', gap: '0.5rem', transition: 'background 0.23s ease' }}
                 >
-                  <Search size={15} style={{ color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.7)', flexShrink: 0 }} />
+                  <Search size={15} style={{ color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.7)', flexShrink: 0, transition: 'color 0.23s ease' }} />
                   <input
                     ref={searchRef}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search programs, NGOs..."
-                    style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: '0.8rem', color: solidNav ? 'var(--color-heading)' : 'white', width: '100%' }}
+                    style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: '0.8rem', color: solidNav ? 'var(--color-heading)' : 'white', width: '100%', transition: 'color 0.23s ease' }}
                     onKeyDown={e => e.key === 'Escape' && setSearchOpen(false)}
                   />
                   <button onClick={() => setSearchOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
-                    <X size={14} style={{ color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.7)' }} />
+                    <X size={14} style={{ color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.7)', transition: 'color 0.23s ease' }} />
                   </button>
                 </motion.div>
               ) : (
                 <button
                   onClick={() => setSearchOpen(true)}
-                  style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.9)', transition: 'background 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.12)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.92)', transition: 'background 0.2s, opacity 0.23s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={e => { e.currentTarget.style.outline = 'none'; }}
                   aria-label="Search"
                 >
                   <Search size={18} />
@@ -155,8 +178,10 @@ const PublicLayout = () => {
 
             {user && (
               <button
-                style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.9)', position: 'relative' }}
+                style={{ width: 36, height: 36, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.92)', position: 'relative', transition: 'color 0.23s ease' }}
                 aria-label="Notifications"
+                onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                onBlur={e => { e.currentTarget.style.outline = 'none'; }}
               >
                 <Bell size={18} />
                 <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--color-error)', border: '2px solid white' }} />
@@ -169,9 +194,11 @@ const PublicLayout = () => {
               <>
                 <Link
                   to={dashboardPath}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, color: solidNav ? 'var(--color-heading)' : 'white', textDecoration: 'none', transition: 'background 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.12)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, color: solidNav ? 'var(--color-heading)' : 'white', textDecoration: 'none', transition: 'background 0.2s, opacity 0.23s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = solidNav ? '#F5F3EF' : 'rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={e => { e.currentTarget.style.outline = 'none'; }}
                 >
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <User size={14} color="white" />
@@ -182,6 +209,8 @@ const PublicLayout = () => {
                 <button
                   onClick={handleLogout}
                   style={{ padding: '0.4rem 0.875rem', borderRadius: 8, border: '1px solid #FCA5A5', background: 'rgba(239,68,68,0.06)', color: '#DC2626', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem', transition: 'all 0.2s' }}
+                  onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={e => { e.currentTarget.style.outline = 'none'; }}
                 >
                   <LogOut size={14} /> Logout
                 </button>
@@ -190,7 +219,11 @@ const PublicLayout = () => {
               <>
                 <Link
                   to="/login"
-                  style={{ padding: '0.4rem 0.875rem', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.9)', textDecoration: 'none', transition: 'all 0.2s' }}
+                  style={{ ...commonLinkStyle, backgroundColor: 'transparent' }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = '0.85'; }}
+                  onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={e => { e.currentTarget.style.outline = 'none'; }}
                 >
                   Sign In
                 </Link>
@@ -199,6 +232,8 @@ const PublicLayout = () => {
                   style={{ padding: '0.5rem 1.125rem', borderRadius: 8, fontSize: '0.875rem', fontWeight: 700, background: 'var(--color-primary)', color: 'white', textDecoration: 'none', boxShadow: '0 2px 8px rgba(211,84,0,0.3)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.375rem' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)'; e.currentTarget.style.transform = 'none'; }}
+                  onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={e => { e.currentTarget.style.outline = 'none'; }}
                 >
                   Dashboard
                 </Link>
@@ -209,9 +244,11 @@ const PublicLayout = () => {
           {/* Mobile hamburger */}
           <button
             className="md:hidden"
-            style={{ marginLeft: 'auto', width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: solidNav ? 'var(--color-heading)' : 'white' }}
+            style={{ marginLeft: 'auto', width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: solidNav ? 'var(--color-heading)' : 'white', transition: 'color 0.23s ease' }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
+            onFocus={e => { e.currentTarget.style.outline = '2px solid var(--color-primary)'; e.currentTarget.style.outlineOffset = '2px'; }}
+            onBlur={e => { e.currentTarget.style.outline = 'none'; }}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
