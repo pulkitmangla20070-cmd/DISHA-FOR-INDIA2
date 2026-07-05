@@ -533,7 +533,7 @@ Most endpoints require a **JWT Bearer Token**.
             },
           },
         },
-NotificationPreferenceUpdate: {
+        NotificationPreferenceUpdate: {
            type: 'object',
            properties: {
              inAppEnabled: { type: 'boolean', example: true },
@@ -568,6 +568,269 @@ NotificationPreferenceUpdate: {
              },
            },
          },
+        Announcement: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              example: '665f1b2c3d4e5f6789abcdef0',
+            },
+            announcementId: {
+              type: 'string',
+              example: 'ANN-MXQ3K7-ABCD',
+            },
+            title: {
+              type: 'string',
+              example: 'Summer Volunteer Drive 2026',
+            },
+            message: {
+              type: 'string',
+              example: 'We are launching our annual summer volunteer drive...',
+            },
+            type: {
+              type: 'string',
+              enum: ['general', 'program', 'emergency', 'maintenance', 'event', 'recruitment', 'system'],
+              example: 'recruitment',
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'critical'],
+              example: 'high',
+            },
+            targetAudience: {
+              type: 'string',
+              enum: ['all_users', 'volunteers', 'ngos', 'admins', 'specific_users'],
+              example: 'all_users',
+            },
+            specificUsers: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['665f1b2c3d4e5f6789abcdeg'],
+            },
+            scheduledAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-07-10T00:00:00.000Z',
+            },
+            publishedAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-07-10T00:00:00.000Z',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2026-07-31T23:59:59.000Z',
+            },
+            createdBy: {
+              type: 'string',
+              example: '665f1b2c3d4e5f6789abcdeh',
+            },
+            updatedBy: {
+              type: 'string',
+              nullable: true,
+              example: '665f1b2c3d4e5f6789abcdeh',
+            },
+            attachments: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', example: 'brochure.pdf' },
+                  url: { type: 'string', example: 'https://dishaforindia.org/files/brochure.pdf' },
+                  type: { type: 'string', example: 'file' },
+                  size: { type: 'integer', example: 1048576 },
+                },
+              },
+              example: [],
+            },
+            status: {
+              type: 'string',
+              enum: ['draft', 'scheduled', 'published', 'expired', 'archived'],
+              example: 'published',
+            },
+            isDeleted: {
+              type: 'boolean',
+              example: false,
+            },
+            deletedAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+            },
+            deletedBy: {
+              type: 'string',
+              nullable: true,
+            },
+            metadata: {
+              type: 'object',
+              example: {},
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-05T00:00:00.000Z',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-05T00:00:00.000Z',
+            },
+          },
+        },
+        AnnouncementsResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Announcements retrieved successfully' },
+            data: {
+              type: 'object',
+              properties: {
+                announcements: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Announcement' },
+                },
+                pagination: {
+                  type: 'object',
+                  properties: {
+                    page: { type: 'integer', example: 1 },
+                    limit: { type: 'integer', example: 10 },
+                    total: { type: 'integer', example: 25 },
+                    totalPages: { type: 'integer', example: 3 },
+                  },
+                },
+              },
+            },
+          },
+        },
+        AnnouncementCreateRequest: {
+          type: 'object',
+          required: ['title', 'message'],
+          properties: {
+            title: {
+              type: 'string',
+              maxLength: 255,
+              example: 'Summer Volunteer Drive 2026',
+            },
+            message: {
+              type: 'string',
+              maxLength: 2000,
+              example: 'We are launching our annual summer volunteer drive...',
+            },
+            type: {
+              type: 'string',
+              enum: ['general', 'program', 'emergency', 'maintenance', 'event', 'recruitment', 'system'],
+              example: 'recruitment',
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'critical'],
+              example: 'high',
+            },
+            targetAudience: {
+              type: 'string',
+              enum: ['all_users', 'volunteers', 'ngos', 'admins', 'specific_users'],
+              example: 'all_users',
+            },
+            specificUsers: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['665f1b2c3d4e5f6789abcdeg'],
+            },
+            scheduledAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-10T00:00:00.000Z',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-31T23:59:59.000Z',
+            },
+            attachments: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', example: 'brochure.pdf' },
+                  url: { type: 'string', example: 'https://dishaforindia.org/files/brochure.pdf' },
+                  type: { type: 'string', default: 'file' },
+                  size: { type: 'integer', example: 1048576 },
+                },
+              },
+            },
+            status: {
+              type: 'string',
+              enum: ['draft', 'scheduled', 'published', 'expired', 'archived'],
+              example: 'draft',
+            },
+          },
+        },
+        AnnouncementUpdateRequest: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              maxLength: 255,
+              example: 'Updated: Summer Volunteer Drive 2026',
+            },
+            message: {
+              type: 'string',
+              maxLength: 2000,
+              example: 'Updated details for the summer volunteer drive...',
+            },
+            type: {
+              type: 'string',
+              enum: ['general', 'program', 'emergency', 'maintenance', 'event', 'recruitment', 'system'],
+              example: 'recruitment',
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'critical'],
+              example: 'high',
+            },
+            targetAudience: {
+              type: 'string',
+              enum: ['all_users', 'volunteers', 'ngos', 'admins', 'specific_users'],
+              example: 'all_users',
+            },
+            specificUsers: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['665f1b2c3d4e5f6789abcdeg'],
+            },
+            scheduledAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-10T00:00:00.000Z',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-07-31T23:59:59.000Z',
+            },
+            attachments: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', example: 'brochure.pdf' },
+                  url: { type: 'string', example: 'https://dishaforindia.org/files/brochure.pdf' },
+                  type: { type: 'string', default: 'file' },
+                  size: { type: 'integer', example: 1048576 },
+                },
+              },
+            },
+            status: {
+              type: 'string',
+              enum: ['draft', 'scheduled', 'published', 'expired', 'archived'],
+              example: 'published',
+            },
+          },
+        },
 
         // ─── Role ─────────────────────────────────────────────
         Role: {
@@ -701,6 +964,10 @@ NotificationPreferenceUpdate: {
         description: 'Notification Foundation — In-App Notifications',
       },
       {
+        name: 'Announcements',
+        description: 'Announcement Management — Create, Publish, and Manage Announcements',
+      },
+      {
         name: 'Organization',
         description: 'Organization Management — Multi-tenancy Foundation',
       },
@@ -730,6 +997,7 @@ NotificationPreferenceUpdate: {
       './src/docs/rewards.docs.js',
       './src/docs/notification.docs.js',
       './src/docs/organization.docs.js',
+      './src/docs/announcement.docs.js',
       './src/docs/roles.docs.js',
       './src/docs/permission.docs.js',
     ],
