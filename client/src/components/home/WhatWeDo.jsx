@@ -58,20 +58,14 @@ const programsData = [
 
 const WhatWeDo = () => {
   return (
-    <section className="py-24 bg-[#FDFBF7] overflow-hidden" aria-labelledby="what-we-do-heading">
+    <section className="pt-32 pb-24 bg-[#FDFBF7] overflow-hidden" aria-labelledby="what-we-do-heading">
       <div className="container mx-auto px-6 max-w-[1400px]">
 
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <p
-            className="text-secondary mb-2 text-xl"
-            style={{ fontFamily: 'var(--font-heading)', fontStyle: 'italic' }}
-          >
-            Our Programs
-          </p>
+        <div className="text-left mb-16">
           <h2
             id="what-we-do-heading"
-            className="font-heading text-4xl md:text-5xl font-bold text-heading"
+            className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-heading"
           >
             What We Do
           </h2>
