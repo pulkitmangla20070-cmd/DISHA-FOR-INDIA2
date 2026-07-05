@@ -1,5 +1,5 @@
 const Certificate = require('./certificate.model');
-const { FILTERS, SORT_FIELDS, PAGINATION } = require('./certificate.constants');
+const { CERTIFICATE_STATUS, FILTERS, SORT_FIELDS, PAGINATION } = require('./certificate.constants');
 
 class CertificateRepository {
   async create(certData) {
@@ -33,10 +33,14 @@ class CertificateRepository {
     if (filter && filter !== FILTERS.ALL) {
       if (filter === FILTERS.REVOKED) {
         query.status = 'revoked';
+      } else if (filter === FILTERS.APPROVED) {
+        query.status = 'approved';
+      } else if (filter === FILTERS.REJECTED) {
+        query.status = 'rejected';
       } else if (filter === FILTERS.VERIFIED) {
         query.verificationCount = { $gt: 0 };
       } else if (filter === FILTERS.PENDING) {
-        query.status = 'issued';
+        query.status = 'pending';
       }
     }
 
@@ -81,10 +85,14 @@ class CertificateRepository {
     if (filter && filter !== FILTERS.ALL) {
       if (filter === FILTERS.REVOKED) {
         query.status = 'revoked';
+      } else if (filter === FILTERS.APPROVED) {
+        query.status = 'approved';
+      } else if (filter === FILTERS.REJECTED) {
+        query.status = 'rejected';
       } else if (filter === FILTERS.VERIFIED) {
         query.verificationCount = { $gt: 0 };
       } else if (filter === FILTERS.PENDING) {
-        query.status = 'issued';
+        query.status = 'pending';
       }
     }
 
@@ -119,6 +127,22 @@ class CertificateRepository {
 
   async update(id, updateData) {
     return Certificate.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  }
+
+  async approve(id, approvedBy) {
+    return Certificate.findByIdAndUpdate(
+      id,
+      { status: CERTIFICATE_STATUS.APPROVED, approvedBy },
+      { new: true, runValidators: true }
+    );
+  }
+
+  async reject(id) {
+    return Certificate.findByIdAndUpdate(
+      id,
+      { status: CERTIFICATE_STATUS.REJECTED },
+      { new: true, runValidators: true }
+    );
   }
 
   async revoke(id) {

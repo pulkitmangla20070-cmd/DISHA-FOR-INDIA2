@@ -63,6 +63,34 @@ export const revokeCertificate = async (id) => {
   return await api.post(`/certificates/admin/${id}/revoke`);
 };
 
+/**
+ * Admin: Approve a certificate.
+ */
+export const approveCertificate = async (id) => {
+  return await api.post(`/certificates/admin/${id}/approve`);
+};
+
+/**
+ * Admin: Reject a certificate.
+ */
+export const rejectCertificate = async (id) => {
+  return await api.post(`/certificates/admin/${id}/reject`);
+};
+
+/**
+ * Admin: Delete a certificate.
+ */
+export const deleteCertificate = async (id) => {
+  return await api.delete(`/certificates/admin/${id}`);
+};
+
+/**
+ * Admin: Manually generate a certificate for a volunteer.
+ */
+export const adminGenerateCertificate = async (payload) => {
+  return await api.post('/certificates/admin/generate', payload);
+};
+
 export default {
   getMyCertificates,
   searchCertificates,
@@ -73,4 +101,8 @@ export default {
   autoGenerateCertificates,
   bulkGenerateCertificates,
   revokeCertificate,
+  approveCertificate,
+  rejectCertificate,
+  deleteCertificate,
+  adminGenerateCertificate,
 };

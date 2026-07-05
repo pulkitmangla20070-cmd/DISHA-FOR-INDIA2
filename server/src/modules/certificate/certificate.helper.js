@@ -33,6 +33,8 @@ const generateCertificatePDF = async (data) => {
     certificateNumber,
     authorizedSignatory,
     verificationUrl,
+    description,
+    skillsEarned,
   } = data;
 
   const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 50 });
@@ -55,6 +57,15 @@ const generateCertificatePDF = async (data) => {
     .text('CERTIFICATE OF COMPLETION', centerX, 80, { align: 'center' });
 
   doc.moveDown(1.2);
+
+  if (description) {
+    doc
+      .fontSize(14)
+      .font('Helvetica-Oblique')
+      .fillColor('#555555')
+      .text(description, centerX, null, { align: 'center', width: pageWidth - 200 });
+    doc.moveDown(0.8);
+  }
 
   doc
     .fontSize(16)
@@ -102,6 +113,10 @@ const generateCertificatePDF = async (data) => {
     { align: 'center' }
   );
   doc.text(`Certificate Number: ${certificateNumber}`, centerX, null, { align: 'center' });
+
+  if (skillsEarned && skillsEarned.length > 0) {
+    doc.text(`Skills: ${skillsEarned.join(', ')}`, centerX, null, { align: 'center' });
+  }
 
   try {
     const qrBuffer = await generateQRCodeBuffer(verificationUrl);

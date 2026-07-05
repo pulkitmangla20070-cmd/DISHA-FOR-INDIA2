@@ -7,6 +7,7 @@ const {
   validateVerifyCertificate,
   validateRevokeCertificate,
   validateSearchCertificates,
+  validateAdminGenerateCertificate,
 } = require('./certificate.validation');
 const { authenticate } = require('../../middlewares/auth.middleware');
 const { authorize } = require('../../middlewares/rbac.middleware');
@@ -29,6 +30,10 @@ router.use(authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN));
 
 router.post('/admin/auto-generate/:programId', validateAutoGenerate, certificateController.autoGenerateForProgram);
 router.post('/admin/:id/revoke', validateRevokeCertificate, certificateController.revokeCertificate);
+router.post('/admin/:id/approve', validateRevokeCertificate, certificateController.approveCertificate);
+router.post('/admin/:id/reject', validateRevokeCertificate, certificateController.rejectCertificate);
+router.delete('/admin/:id', validateRevokeCertificate, certificateController.deleteCertificate);
+router.post('/admin/generate', validateAdminGenerateCertificate, certificateController.adminGenerateCertificate);
 router.post('/admin/bulk-generate/:programId', validateAutoGenerate, certificateController.bulkGenerateCertificates);
 
 module.exports = router;

@@ -8,7 +8,7 @@ const helpOptions = [
     id: 1,
     title: 'Become a Volunteer',
     description:
-      'Join thousands of changemakers and contribute your time and skills to transform lives across communities in India.',
+      `Join thousands of changemakers and contribute your time and skills to transform lives across communities in India.`,
     icon: Users,
     link: '/programs',
     ariaLabel: 'Learn more about becoming a volunteer',
@@ -17,7 +17,7 @@ const helpOptions = [
     id: 2,
     title: 'Donate to a Cause',
     description:
-      'Your donation helps us reach more communities and create a lasting, meaningful impact for those who need it most.',
+      `Your donation helps us reach more communities and create a lasting, meaningful impact for those who need it most.`,
     icon: Heart,
     link: '/programs',
     ariaLabel: 'Learn more about donating to a cause',
@@ -26,7 +26,7 @@ const helpOptions = [
     id: 3,
     title: 'Partner as an NGO',
     description:
-      'Collaborate with us to expand our reach and bring positive change together across India's most underserved regions.',
+      `Collaborate with us to expand our reach and bring positive change together across India's most underserved regions.`,
     icon: Building2,
     link: '/programs',
     ariaLabel: 'Learn more about partnering as an NGO',

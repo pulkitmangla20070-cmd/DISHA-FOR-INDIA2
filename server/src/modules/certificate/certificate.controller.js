@@ -116,6 +116,42 @@ class CertificateController {
       return next(error);
     }
   };
+
+  approveCertificate = async (req, res, next) => {
+    try {
+      const updated = await certificateService.approveCertificate(req.params.id, req.user.id);
+      return successResponse(res, 200, MESSAGES.CERTIFICATE_APPROVED, updated);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  rejectCertificate = async (req, res, next) => {
+    try {
+      const updated = await certificateService.rejectCertificate(req.params.id);
+      return successResponse(res, 200, MESSAGES.CERTIFICATE_REJECTED, updated);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  deleteCertificate = async (req, res, next) => {
+    try {
+      const deleted = await certificateService.deleteCertificate(req.params.id);
+      return successResponse(res, 200, MESSAGES.CERTIFICATE_DELETED, deleted);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  adminGenerateCertificate = async (req, res, next) => {
+    try {
+      const result = await certificateService.adminGenerateCertificate(req.user.id, req.body, `${req.protocol}://${req.get('host')}`);
+      return successResponse(res, 201, MESSAGES.CERTIFICATE_GENERATED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
 
 module.exports = new CertificateController();

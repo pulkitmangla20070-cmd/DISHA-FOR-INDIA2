@@ -11,13 +11,19 @@ const certificateSchema = new mongoose.Schema(
     application: { type: mongoose.Schema.Types.ObjectId, ref: 'Application', default: null },
     attendance: { type: mongoose.Schema.Types.ObjectId, ref: 'Attendance', default: null },
 
+    certificateTitle: { type: String, required: true, trim: true, default: 'Certificate of Completion' },
+    description: { type: String, trim: true, default: '' },
     certificateUrl: { type: String, trim: true, default: null },
     verificationUrl: { type: String, trim: true, default: null },
     qrCode: { type: String, trim: true, default: null },
+    verificationToken: { type: String, unique: true, sparse: true, trim: true, default: null },
 
     volunteerHours: { type: Number, required: true, min: [0, 'Volunteer hours cannot be negative'] },
+    completionDate: { type: Date, default: null },
+    skillsEarned: [{ type: String, trim: true }],
     organization: { type: String, required: true, trim: true, default: 'Disha for India' },
     authorizedSignatory: { type: String, required: true, trim: true },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
     status: { type: String, enum: Object.values(CERTIFICATE_STATUS), default: CERTIFICATE_STATUS.ISSUED, index: true },
     issuedAt: { type: Date, default: Date.now },

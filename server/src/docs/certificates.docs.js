@@ -126,83 +126,10 @@
  *       403:
  *         description: Forbidden - Admin access required.
  *
- * /api/v1/certificates/verify/{certificateNumber}:
- *   get:
- *     summary: Verify Certificate by Number (Public)
- *     description: Public endpoint to verify authenticity of a certificate using its unique number.
- *     tags: [Certificates]
- *     parameters:
- *       - in: path
- *         name: certificateNumber
- *         required: true
- *         schema:
- *           type: string
- *         example: DISHA-CERT-2026-000001
- *     responses:
- *       200:
- *         description: Certificate verified successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Certificate verified successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     verified:
- *                       type: boolean
- *                       example: true
- *                     status:
- *                       type: string
- *                       example: issued
- *                     isRevoked:
- *                       type: boolean
- *                       example: false
- *                     message:
- *                       type: string
- *                       example: Certificate is valid
- *                     certificate:
- *                       type: object
- *       404:
- *         description: Certificate not found or invalid.
- *
- * /api/v1/certificates/{id}/download:
- *   get:
- *     summary: Download Certificate PDF
- *     description: Download the certificate PDF. Only the certificate owner or an admin can download.
- *     tags: [Certificates]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         example: 665f1b2c3d4e5f6789abcdef
- *     responses:
- *       200:
- *         description: Certificate PDF returned.
- *         content:
- *           application/pdf:
- *             schema:
- *               type: string
- *               format: binary
- *       403:
- *         description: Forbidden - Only owner or admin can download.
- *       404:
- *         description: Certificate not found.
- *
- * /api/v1/certificates/admin/{id}/revoke:
+ * /api/v1/certificates/admin/{id}/approve:
  *   post:
- *     summary: Revoke Certificate (Admin)
- *     description: Admin-only endpoint to revoke a certificate.
+ *     summary: Approve Certificate (Admin)
+ *     description: Admin-only endpoint to approve a certificate.
  *     tags: [Certificates]
  *     security:
  *       - BearerAuth: []
@@ -215,9 +142,108 @@
  *         example: 665f1b2c3d4e5f6789abcdef
  *     responses:
  *       200:
- *         description: Certificate revoked successfully.
+ *         description: Certificate approved successfully.
  *       404:
  *         description: Certificate not found.
  *       403:
  *         description: Forbidden - Admin access required.
- */
+ *       400:
+ *         description: Bad request - certificate cannot be approved.
+ *
+ * /api/v1/certificates/admin/{id}/reject:
+ *   post:
+ *     summary: Reject Certificate (Admin)
+ *     description: Admin-only endpoint to reject a certificate.
+ *     tags: [Certificates]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665f1b2c3d4e5f6789abcdef
+ *     responses:
+ *       200:
+ *         description: Certificate rejected successfully.
+ *       404:
+ *         description: Certificate not found.
+ *       403:
+ *         description: Forbidden - Admin access required.
+ *       400:
+ *         description: Bad request - certificate cannot be rejected.
+ *
+ * /api/v1/certificates/admin/{id}:
+ *   delete:
+ *     summary: Delete Certificate (Admin)
+ *     description: Admin-only endpoint to softly delete a certificate.
+ *     tags: [Certificates]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 665f1b2c3d4e5f6789abcdef
+ *     responses:
+ *       200:
+ *         description: Certificate deleted successfully.
+ *       404:
+ *         description: Certificate not found.
+ *       403:
+ *         description: Forbidden - Admin access required.
+ *       400:
+ *         description: Bad request - cannot delete issued certificate.
+ *
+ * /api/v1/certificates/admin/generate:
+ *   post:
+ *     summary: Issue Certificate Manually (Admin)
+ *     description: Admin-only endpoint to manually issue a certificate for a specific volunteer and program, bypassing attendance and program completion checks.
+ *     tags: [Certificates]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - programId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: MongoDB ID of the volunteer
+ *               programId:
+ *                 type: string
+ *                 description: MongoDB ID of the program
+ *               volunteerHours:
+ *                 type: number
+ *                 description: Hours to record on the certificate
+ *                 example: 40
+ *               completionDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Completion date to display on the certificate
+ *               skillsEarned:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Skills earned
+ *               description:
+ *                 type: string
+ *                 description: Custom description text for the certificate
+ *     responses:
+ *       201:
+ *         description: Certificate issued successfully.
+ *       404:
+ *         description: Volunteer or program not found.
+ *       403:
+ *         description: Forbidden - Admin access required.
+ *       409:
+ *         description: Certificate already exists for this volunteer and program.
+ * */

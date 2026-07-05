@@ -73,7 +73,7 @@ const validateRevokeCertificate = (req, res, next) => {
 };
 
 const validateSearchCertificates = (req, res, next) => {
-  const { page, limit, sort, filter, search } = req.query;
+  const { page, limit, sort, filter, _search } = req.query;
   const errors = [];
 
   if (page !== undefined && (!Number.isInteger(Number(page)) || Number(page) < 1)) {
@@ -88,12 +88,8 @@ const validateSearchCertificates = (req, res, next) => {
     errors.push({ field: 'sort', message: 'Invalid sort value' });
   }
 
-  if (filter && !['all', 'issued', 'revoked', 'verified'].includes(filter)) {
+  if (filter && !['all', 'issued', 'revoked', 'approved', 'rejected', 'verified', 'pending'].includes(filter)) {
     errors.push({ field: 'filter', message: 'Invalid filter value' });
-  }
-
-  if (search !== undefined && typeof search !== 'string') {
-    errors.push({ field: 'search', message: 'Search must be a string' });
   }
 
   if (errors.length > 0) {
@@ -103,6 +99,34 @@ const validateSearchCertificates = (req, res, next) => {
   return next();
 };
 
+const validateAdminGenerateCertificate = (req, res, next) => {
+  const { userId, programId, volunteerHours, skillsEarned } = req.body;
+  const errors = [];
+
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    errors.push({ field: 'userId', message: 'Volunteer user ID is required' });
+  }
+
+  if (!programId || typeof programId !== 'string' || programId.trim() === '') {
+    errors.push({ field: 'programId', message: 'Program ID is required' });
+  }
+
+  if (volunteerHours !== undefined && (typeof volunteerHours !== 'number' || volunteerHours < 0)) {
+    errors.push({ field: 'volunteerHours', message: 'Volunteer hours must be a non-negative number' });
+  }
+
+  if (skillsEarned !== undefined && !Array.isArray(skillsEarned)) {
+    errors.push({ field: 'skillsEarned', message: 'Skills earned must be an array' });
+  }
+
+  if (errors.length > 0) {
+    return next(new ValidationError('Admin certificate generation validation failed', errors));
+  }
+
+  return next();
+};
+
+
 module.exports = {
   validateGenerateCertificate,
   validateAutoGenerate,
@@ -110,4 +134,5 @@ module.exports = {
   validateVerifyCertificate,
   validateRevokeCertificate,
   validateSearchCertificates,
+  validateAdminGenerateCertificate,
 };

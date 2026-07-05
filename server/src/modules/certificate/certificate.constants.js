@@ -1,4 +1,8 @@
 const CERTIFICATE_STATUS = {
+  PENDING: 'pending',
+  GENERATED: 'generated',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
   ISSUED: 'issued',
   REVOKED: 'revoked',
   EXPIRED: 'expired',
@@ -24,6 +28,14 @@ const MESSAGES = {
   CERTIFICATE_DOWNLOADED: 'Certificate downloaded successfully',
   CERTIFICATES_BULK_GENERATED: 'Bulk certificate generation completed',
   CERTIFICATES_BULK_DOWNLOADED: 'Bulk download completed',
+  CERTIFICATE_APPROVED: 'Certificate approved successfully',
+  CERTIFICATE_REJECTED: 'Certificate rejected successfully',
+  CERTIFICATE_DELETED: 'Certificate deleted successfully',
+  CERTIFICATE_ALREADY_APPROVED: 'Certificate is already approved',
+  CERTIFICATE_ALREADY_REJECTED: 'Certificate is already rejected',
+  CERTIFICATE_CANNOT_APPROVE_REVOKED: 'Cannot approve a revoked certificate',
+  CERTIFICATE_CANNOT_REJECT_REVOKED: 'Cannot reject a revoked certificate',
+  CERTIFICATE_CANNOT_DELETE_ISSUED: 'Cannot delete an issued certificate. Revoke it instead.',
 };
 
 const PAGINATION = {
@@ -52,6 +64,8 @@ const FILTERS = {
   PENDING: 'pending',
   REVOKED: 'revoked',
   DOWNLOADED: 'downloaded',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
 };
 
 module.exports = {

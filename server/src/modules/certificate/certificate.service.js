@@ -21,7 +21,7 @@ const notificationService = require('../notification/notification.service');
 
 class CertificateService {
   async generateCertificate(userId, programId, options = {}, issuedBy, host) {
-    const { applicationId, attendanceId, volunteerHours } = options;
+    const { applicationId, attendanceId, volunteerHours, completionDate, skillsEarned, description } = options;
 
     const existing = await certificateRepository.findCertificateToGenerate(userId, programId);
     if (existing) {
@@ -92,6 +92,7 @@ class CertificateService {
     const certificateNumber = generateCertificateNumber();
     const certificateId = generateCertificateId();
     const verificationUrl = `${host || 'http://localhost:5000'}/api/v1/certificates/verify/${certificateNumber}`;
+    const verificationToken = `${certificateNumber}-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const [pdfBuffer, qrBuffer] = await Promise.all([
       generateCertificatePDF({
@@ -99,7 +100,7 @@ class CertificateService {
         programName: program.title,
         organization: 'Disha for India',
         volunteerHours: totalHours,
-        completionDate: application.completedAt || new Date(),
+        completionDate: completionDate || application.completedAt || new Date(),
         certificateNumber,
         authorizedSignatory: 'Disha for India Team',
         verificationUrl,
@@ -119,10 +120,15 @@ class CertificateService {
       program: programIdStr,
       application: applicationIdStr,
       attendance: attendanceIdStr,
+      certificateTitle: program.title,
+      description: description || `Certificate of completion for ${program.title}`,
       certificateUrl,
       verificationUrl,
       qrCode: qrCodeUrl,
+      verificationToken,
       volunteerHours: totalHours,
+      completionDate: completionDate || application.completedAt || new Date(),
+      skillsEarned: skillsEarned || [],
       organization: 'Disha for India',
       authorizedSignatory: 'Disha for India Team',
       status: CERTIFICATE_STATUS.ISSUED,
@@ -185,14 +191,14 @@ class CertificateService {
       const leaderboardService = require('../leaderboard/leaderboard.service');
       await leaderboardService.calculateRank(userId);
     } catch (_error) {
-      // Leaderboard refresh is non-blocking
+      // Notification failure is non-blocking
     }
 
     try {
       const gamificationService = require('../leaderboard/gamification.service');
       await gamificationService.evaluateAll(userId);
     } catch (_error) {
-      // Gamification evaluation is non-blocking
+      // Notification failure is non-blocking
     }
 
     return certificate;
@@ -431,6 +437,275 @@ class CertificateService {
 
   async getCertificate(id) {
     return certificateRepository.findById(id);
+  }
+
+  async approveCertificate(id, approvedBy) {
+    const certificate = await certificateRepository.findById(id);
+    if (!certificate) {
+      throw new NotFoundError('Certificate not found');
+    }
+
+    if (certificate.status === CERTIFICATE_STATUS.REVOKED) {
+      throw new ValidationError(MESSAGES.CERTIFICATE_CANNOT_APPROVE_REVOKED);
+    }
+
+    if (certificate.status === CERTIFICATE_STATUS.APPROVED) {
+      throw new ValidationError(MESSAGES.CERTIFICATE_ALREADY_APPROVED);
+    }
+
+    const updated = await certificateRepository.approve(id, approvedBy);
+    await updated.populate('user', 'name email volunteerId');
+    await updated.populate('program', 'title programId');
+    await updated.populate('approvedBy', 'name email');
+
+    try {
+      await notificationService.sendInAppNotification('buildCertificateApproved', {
+        recipientId: updated.user._id.toString(),
+        programName: updated.program.title,
+        certificateId: updated._id.toString(),
+        certificateNumber: updated.certificateNumber,
+      });
+    } catch (_error) {
+      // Notification failure is non-blocking
+    }
+
+    return updated;
+  }
+
+  async rejectCertificate(id) {
+    const certificate = await certificateRepository.findById(id);
+    if (!certificate) {
+      throw new NotFoundError('Certificate not found');
+    }
+
+    if (certificate.status === CERTIFICATE_STATUS.REVOKED) {
+      throw new ValidationError(MESSAGES.CERTIFICATE_CANNOT_REJECT_REVOKED);
+    }
+
+    if (certificate.status === CERTIFICATE_STATUS.REJECTED) {
+      throw new ValidationError(MESSAGES.CERTIFICATE_ALREADY_REJECTED);
+    }
+
+    const updated = await certificateRepository.reject(id);
+    await updated.populate('user', 'name email volunteerId');
+    await updated.populate('program', 'title programId');
+
+    try {
+      await notificationService.sendInAppNotification('buildCertificateRejected', {
+        recipientId: updated.user._id.toString(),
+        programName: updated.program.title,
+        certificateId: updated._id.toString(),
+        certificateNumber: updated.certificateNumber,
+      });
+    } catch (_error) {
+      // Notification failure is non-blocking
+    }
+
+    return updated;
+  }
+
+  async deleteCertificate(id) {
+    const certificate = await certificateRepository.findById(id);
+    if (!certificate) {
+      throw new NotFoundError('Certificate not found');
+    }
+
+    if ([CERTIFICATE_STATUS.ISSUED, CERTIFICATE_STATUS.APPROVED].includes(certificate.status)) {
+      throw new ValidationError(MESSAGES.CERTIFICATE_CANNOT_DELETE_ISSUED);
+    }
+
+    const deleted = await certificateRepository.softDelete(id, certificate.user._id || certificate.user);
+
+    try {
+      await notificationService.sendInAppNotification('buildCertificateDeleted', {
+        recipientId: deleted.user._id.toString(),
+        certificateId: deleted._id.toString(),
+        certificateNumber: deleted.certificateNumber,
+      });
+    } catch (_error) {
+      // Notification failure is non-blocking
+    }
+
+    return deleted;
+  }
+
+  async adminGenerateCertificate(issuedBy, payload, host) {
+    const {
+      userId,
+      programId,
+      volunteerHours = 0,
+      completionDate,
+      skillsEarned = [],
+      description = '',
+      applicationId = null,
+      attendanceId = null,
+    } = payload;
+
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('Volunteer not found');
+    }
+
+    const program = await programRepository.findById(programId);
+    if (!program || program.isDeleted) {
+      throw new NotFoundError('Program not found');
+    }
+
+    const existing = await certificateRepository.findCertificateToGenerate(userId, programId);
+    if (existing) {
+      throw new ConflictError(MESSAGES.CERTIFICATE_ALREADY_EXISTS);
+    }
+
+    let application;
+    if (applicationId) {
+      application = await applicationRepository.findById(applicationId);
+      if (!application) {
+        throw new NotFoundError('Application not found');
+      }
+    } else {
+      const applications = await applicationRepository.findByUser(userId, {}, { page: 1, limit: 100 });
+      application = applications.applications.find((a) => {
+        const pid = a.program?._id || a.program;
+        return pid && pid.toString() === programId.toString();
+      }) || null;
+    }
+
+    let targetAttendance = null;
+    if (attendanceId) {
+      targetAttendance = await attendanceRepository.findById(attendanceId);
+    } else if (application) {
+      const allProgramAttendances = await attendanceRepository.findByProgram(programId);
+      const appId = application._id || application;
+      targetAttendance = allProgramAttendances.find((a) => {
+        const aid = a.application?._id || a.application;
+        const appRef = aid ? aid.toString() : null;
+        return a.user.toString() === userId.toString() && appRef === appId.toString();
+      }) || null;
+    }
+
+    const effectiveHours = targetAttendance?.totalHours ? volunteerHours || targetAttendance.totalHours : volunteerHours;
+    if (effectiveHours < VALIDATION.MIN_VOLUNTEER_HOURS) {
+      throw new ValidationError(MESSAGES.ATTENDANCE_CRITERIA_NOT_MET);
+    }
+
+    const programIdStr = program._id;
+    const applicationIdStr = application?._id || applicationId;
+    const attendanceIdStr = targetAttendance?._id || attendanceId;
+
+    const certificateNumber = generateCertificateNumber();
+    const certificateId = generateCertificateId();
+    const verificationUrl = `${host || 'http://localhost:5000'}/api/v1/certificates/verify/${certificateNumber}`;
+    const verificationToken = `${certificateNumber}-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    const [pdfBuffer, qrBuffer] = await Promise.all([
+      generateCertificatePDF({
+        volunteerName: user.name,
+        programName: program.title,
+        organization: 'Disha for India',
+        volunteerHours: effectiveHours,
+        completionDate: completionDate || new Date(),
+        certificateNumber,
+        authorizedSignatory: 'Disha for India Team',
+        verificationUrl,
+        description: description || `Certificate of completion for ${program.title}`,
+        skillsEarned,
+      }),
+      generateQRCodeBuffer(verificationUrl),
+    ]);
+
+    const [certificateUrl, qrCodeUrl] = await Promise.all([
+      uploadBufferToCloudinary(pdfBuffer, 'disha/certificates', 'raw'),
+      uploadBufferToCloudinary(qrBuffer, 'disha/qrcodes', 'image'),
+    ]);
+
+    const certificate = await certificateRepository.create({
+      certificateId,
+      certificateNumber,
+      user: userId,
+      program: programIdStr,
+      application: applicationIdStr,
+      attendance: attendanceIdStr,
+      certificateTitle: program.title,
+      description,
+      certificateUrl,
+      verificationUrl,
+      qrCode: qrCodeUrl,
+      verificationToken,
+      volunteerHours: effectiveHours,
+      completionDate: completionDate || new Date(),
+      skillsEarned,
+      organization: 'Disha for India',
+      authorizedSignatory: 'Disha for India Team',
+      status: CERTIFICATE_STATUS.ISSUED,
+      issuedAt: new Date(),
+      issuedBy: issuedBy,
+    });
+
+    try {
+      await notificationService.sendInAppNotification('buildCertificateGenerated', {
+        recipientId: userId,
+        programName: program.title,
+        certificateId: certificate._id.toString(),
+        certificateNumber,
+      });
+    } catch (_error) {
+      // Notification failure is non-blocking
+    }
+
+    await certificate.populate('user', 'name email volunteerId');
+    await certificate.populate('program', 'title programId');
+    await certificate.populate('application');
+    await certificate.populate('attendance');
+    await certificate.populate('issuedBy', 'name email');
+
+    const currentEarned = user.certificatesEarned || 0;
+    await userRepository.updateProfile(userId, {
+      certificatesEarned: currentEarned + 1,
+    });
+
+    let reward = await rewardRepository.findByUser(userId);
+    if (!reward) {
+      reward = await rewardRepository.create({
+        rewardId: `RWD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        user: userId,
+        totalCertificates: 1,
+      });
+    } else {
+      await rewardRepository.update(userId, {
+        totalCertificates: (reward.totalCertificates || 0) + 1,
+      });
+    }
+
+    const transactionId = `TXN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    await rewardTransactionRepository.create({
+      transactionId,
+      user: userId,
+      program: programIdStr,
+      certificate: certificate._id,
+      application: applicationIdStr,
+      attendance: attendanceIdStr,
+      type: TRANSACTION_TYPE.EARNED,
+      reason: `Certificate issued by admin for completing ${program.title}`,
+      coins: 0,
+      points: 0,
+      impact: 0,
+    });
+
+    try {
+      const leaderboardService = require('../leaderboard/leaderboard.service');
+      await leaderboardService.calculateRank(userId);
+    } catch (_error) {
+      // Notification failure is non-blocking
+    }
+
+    try {
+      const gamificationService = require('../leaderboard/gamification.service');
+      await gamificationService.evaluateAll(userId);
+    } catch (_error) {
+      // Notification failure is non-blocking
+    }
+
+    return certificate;
   }
 }
 
