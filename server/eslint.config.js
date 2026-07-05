@@ -16,6 +16,7 @@ module.exports = [
         require: 'readonly',
         console: 'readonly',
         Buffer: 'readonly',
+        fetch: 'readonly',
         // Common testing globals
         describe: 'readonly',
         test: 'readonly',

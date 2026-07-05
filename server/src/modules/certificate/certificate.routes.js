@@ -6,6 +6,7 @@ const {
   validateDownloadCertificate,
   validateVerifyCertificate,
   validateRevokeCertificate,
+  validateSearchCertificates,
 } = require('./certificate.validation');
 const { authenticate } = require('../../middlewares/auth.middleware');
 const { authorize } = require('../../middlewares/rbac.middleware');
@@ -18,14 +19,16 @@ router.get('/verify/:certificateNumber', validateVerifyCertificate, certificateC
 router.use(authenticate);
 
 router.post('/generate', validateGenerateCertificate, certificateController.generateCertificate);
-router.get('/me', certificateController.getMyCertificates);
-router.get('/', certificateController.getMyCertificates);
+router.get('/me', validateSearchCertificates, certificateController.getMyCertificates);
+router.get('/', validateSearchCertificates, certificateController.searchCertificates);
 router.get('/:id', validateDownloadCertificate, certificateController.getCertificate);
 router.get('/:id/download', validateDownloadCertificate, certificateController.downloadCertificate);
+router.get('/:id/history', validateDownloadCertificate, certificateController.getCertificateHistory);
 
 router.use(authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN));
 
 router.post('/admin/auto-generate/:programId', validateAutoGenerate, certificateController.autoGenerateForProgram);
 router.post('/admin/:id/revoke', validateRevokeCertificate, certificateController.revokeCertificate);
+router.post('/admin/bulk-generate/:programId', validateAutoGenerate, certificateController.bulkGenerateCertificates);
 
 module.exports = router;

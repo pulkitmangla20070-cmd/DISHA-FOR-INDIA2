@@ -72,10 +72,42 @@ const validateRevokeCertificate = (req, res, next) => {
   return next();
 };
 
+const validateSearchCertificates = (req, res, next) => {
+  const { page, limit, sort, filter, search } = req.query;
+  const errors = [];
+
+  if (page !== undefined && (!Number.isInteger(Number(page)) || Number(page) < 1)) {
+    errors.push({ field: 'page', message: 'Page must be a positive integer' });
+  }
+
+  if (limit !== undefined && (!Number.isInteger(Number(limit)) || Number(limit) < 1 || Number(limit) > 100)) {
+    errors.push({ field: 'limit', message: 'Limit must be an integer between 1 and 100' });
+  }
+
+  if (sort && !['newest', 'oldest', 'program', 'volunteer'].includes(sort)) {
+    errors.push({ field: 'sort', message: 'Invalid sort value' });
+  }
+
+  if (filter && !['all', 'issued', 'revoked', 'verified'].includes(filter)) {
+    errors.push({ field: 'filter', message: 'Invalid filter value' });
+  }
+
+  if (search !== undefined && typeof search !== 'string') {
+    errors.push({ field: 'search', message: 'Search must be a string' });
+  }
+
+  if (errors.length > 0) {
+    return next(new ValidationError('Certificate search validation failed', errors));
+  }
+
+  return next();
+};
+
 module.exports = {
   validateGenerateCertificate,
   validateAutoGenerate,
   validateDownloadCertificate,
   validateVerifyCertificate,
   validateRevokeCertificate,
+  validateSearchCertificates,
 };

@@ -330,12 +330,103 @@ class CertificateService {
     return revoked;
   }
 
-  async getMyCertificates(userId, queryParams) {
-    const { page, limit } = queryParams;
+  async getMyCertificates(userId, queryParams = {}) {
+    const { page, limit, sort, filter } = queryParams;
     return certificateRepository.findByUser(userId, {
       page: Number(page) || 1,
-      limit: Number(limit) || 10,
+      limit: Number(limit) || 12,
+      sort: sort || 'newest',
+      filter: filter || 'all',
     });
+  }
+
+  async searchCertificates(queryParams = {}) {
+    const { page, limit, sort, filter, search } = queryParams;
+    return certificateRepository.findAll({
+      page: Number(page) || 1,
+      limit: Number(limit) || 12,
+      sort: sort || 'newest',
+      filter: filter || 'all',
+      search: search || '',
+    });
+  }
+
+  async getCertificateHistory(certificateId) {
+    const certificate = await certificateRepository.findById(certificateId);
+    if (!certificate) {
+      throw new NotFoundError('Certificate not found');
+    }
+
+    return {
+      certificate,
+      history: [
+        {
+          action: 'issued',
+          date: certificate.issuedAt,
+          details: `Certificate issued to ${certificate.user?.name || 'Volunteer'}`,
+        },
+        ...(certificate.status === 'revoked'
+          ? [{ action: 'revoked', date: certificate.updatedAt, details: 'Certificate has been revoked' }]
+          : []),
+        ...(certificate.verificationCount > 0
+          ? [{ action: 'verified', date: certificate.lastVerifiedAt, details: `Verified ${certificate.verificationCount} time(s)` }]
+          : []),
+      ],
+    };
+  }
+
+  async bulkGenerateCertificates(programId, issuedBy) {
+    const program = await programRepository.findById(programId);
+    if (!program || program.isDeleted) {
+      throw new NotFoundError('Program not found');
+    }
+
+    if (program.status !== 'completed') {
+      throw new ValidationError(MESSAGES.PROGRAM_NOT_COMPLETED);
+    }
+
+    const applications = await applicationRepository.findByProgram(programId, {}, { page: 1, limit: 1000 });
+    const results = { generated: 0, skipped: 0, failed: [] };
+
+    for (const app of applications.applications) {
+      try {
+        const existing = await certificateRepository.findCertificateToGenerate(app.user._id, programId);
+        if (existing) {
+          results.skipped++;
+          continue;
+        }
+
+        const allProgramAttendances = await attendanceRepository.findByProgram(programId);
+        const programAttendances = allProgramAttendances.filter((a) => {
+          const aid = a.application._id || a.application;
+          return aid && aid.toString() === app._id.toString();
+        });
+
+        if (programAttendances.length === 0) {
+          results.skipped++;
+          continue;
+        }
+
+        const totalHours = programAttendances.reduce((sum, a) => sum + (a.totalHours || 0), 0);
+        if (totalHours < VALIDATION.MIN_VOLUNTEER_HOURS) {
+          results.skipped++;
+          continue;
+        }
+
+        await this.generateCertificate(
+          app.user._id,
+          programId,
+          { applicationId: app._id, attendanceId: programAttendances[0]._id, volunteerHours: totalHours },
+          issuedBy,
+          null
+        );
+        results.generated++;
+      } catch (error) {
+        results.failed.push({ userId: app.user._id, error: error.message });
+      }
+    }
+
+    return results;
   }
 
   async getCertificate(id) {

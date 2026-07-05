@@ -8,6 +8,7 @@ const NOTIFICATION_TYPES = {
   APPLICATION_REJECTED: 'application_rejected',
   ATTENDANCE_MARKED: 'attendance_marked',
   CERTIFICATE_GENERATED: 'certificate_generated',
+  CERTIFICATE_REVOKED: 'certificate_revoked',
   REWARD_EARNED: 'reward_earned',
   COINS_ADDED: 'coins_added',
   BADGE_EARNED: 'badge_earned',

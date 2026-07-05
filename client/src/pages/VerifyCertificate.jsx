@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, XCircle, Search, Award, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Search, Award, Loader2, Download } from 'lucide-react';
 import certificateService from '../services/certificateService';
 
 const VerifyCertificate = () => {
@@ -94,22 +94,40 @@ const VerifyCertificate = () => {
           {result && !loading && (
             <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.05)', border: '1px solid var(--color-success)', borderRadius: 'var(--radius-lg)', padding: '2.5rem', textAlign: 'center' }}>
               <CheckCircle size={64} style={{ color: 'var(--color-success)', margin: '0 auto 1.5rem' }} />
-              <h3 style={{ color: 'var(--color-success)', marginBottom: '1rem' }}>Certificate is Valid</h3>
-              
+              <h3 style={{ color: 'var(--color-success)', marginBottom: '1rem' }}>{result.isRevoked ? 'Certificate Revoked' : 'Certificate is Valid'}</h3>
+
               <div style={{ textAlign: 'left', backgroundColor: '#fff', borderRadius: 'var(--radius-md)', padding: '1.5rem', border: '1px solid var(--color-border)' }}>
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ fontSize: '0.85rem', color: 'var(--color-body)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Awarded To</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>{result.user?.name || 'Volunteer'}</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>{result.certificate?.user?.name || 'Volunteer'}</div>
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ fontSize: '0.85rem', color: 'var(--color-body)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Program</div>
-                  <div style={{ fontSize: '1.1rem' }}>{result.program?.title || 'Disha for India Program'}</div>
+                  <div style={{ fontSize: '1.1rem' }}>{result.certificate?.program?.title || 'Disha for India Program'}</div>
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--color-body)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Certificate Number</div>
+                  <div style={{ fontFamily: 'monospace' }}>{result.certificate?.certificateNumber || 'N/A'}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--color-body)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Issue Date</div>
-                  <div>{new Date(result.issuedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                  <div>{result.certificate?.issuedAt ? new Date(result.certificate.issuedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</div>
                 </div>
               </div>
+
+              {result.isRevoked && (
+                <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-error)' }}>
+                  <p style={{ margin: 0, color: 'var(--color-error)', fontWeight: 600 }}>This certificate has been revoked and is no longer valid.</p>
+                </div>
+              )}
+
+              {result.certificate?.certificateUrl && !result.isRevoked && (
+                <div style={{ marginTop: '1.5rem' }}>
+                  <a href={result.certificate.certificateUrl} download className="btn btn-primary" style={{ gap: '0.5rem' }}>
+                    <Download size={16} /> Download Certificate
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -20,8 +20,8 @@ const PublicLayout = () => {
 
   const isHomePage = location.pathname === '/';
 
-  // Transparent on home page until scrolled
-  const solidNav = !isHomePage || isScrolled;
+  // Always use light text because navbar is always dark glass or transparent
+  const solidNav = false;
 
   const navBaseStyle = {
     padding: '0.5rem 0.875rem',
@@ -35,7 +35,7 @@ const PublicLayout = () => {
 
   const commonLinkStyle = {
     ...navBaseStyle,
-    color: solidNav ? 'var(--color-body)' : 'rgba(255,255,255,0.92)',
+    color: 'rgba(255,255,255,0.92)',
     backgroundColor: 'transparent',
     opacity: 1,
   };
@@ -82,10 +82,12 @@ const PublicLayout = () => {
       <header
         className="fixed w-full top-0 z-[100]"
         style={{
-          backgroundColor: solidNav ? '#FFFFFF' : 'transparent',
-          borderBottom: solidNav ? '1px solid #E5E7E3' : '1px solid transparent',
+          backgroundColor: solidNav ? 'rgba(255,255,255,0.55)' : 'transparent',
+          borderBottom: solidNav ? '1px solid rgba(0,0,0,0.06)' : '1px solid transparent',
           boxShadow: 'none',
-          transition: 'background-color 0.23s ease-in-out, border-color 0.23s ease-in-out',
+          backdropFilter: solidNav ? 'blur(16px)' : 'none',
+          WebkitBackdropFilter: solidNav ? 'blur(16px)' : 'none',
+          transition: 'background-color 0.23s ease-in-out, border-color 0.23s ease-in-out, backdrop-filter 0.23s ease-in-out, -webkit-backdrop-filter 0.23s ease-in-out',
           padding: '0 2rem',
           height: '76px',
         }}
@@ -317,7 +319,7 @@ const PublicLayout = () => {
       </header>
 
       {/* Main */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: isHomePage ? 0 : '76px' }}>
         <Outlet />
       </main>
 

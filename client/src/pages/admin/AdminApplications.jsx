@@ -26,10 +26,23 @@ const AdminApplications = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const statsRes = await getAdminApplicationStats();
-        const appsRes = await getAdminApplications();
-        if (statsRes.success) setStats(statsRes.data);
-        // Handle both { applications: [...] } and [...] formats
+        const [statsRes, appsRes] = await Promise.all([
+          getAdminApplicationStats(),
+          getAdminApplications(),
+        ]);
+        if (statsRes.success) {
+          const raw = statsRes.data || {};
+          setStats({
+            pending: raw.pending || 0,
+            today: raw.applicationsThisMonth || 0,
+            newVolunteers: raw.total || 0,
+            total: raw.total || 0,
+            joined: raw.joined || 0,
+            withdrawn: raw.withdrawn || 0,
+            completed: raw.completed || 0,
+            cancelled: raw.cancelled || 0,
+          });
+        }
         if (appsRes.success) {
           setApplications(Array.isArray(appsRes.data?.applications) ? appsRes.data.applications : Array.isArray(appsRes.data) ? appsRes.data : []);
         }
@@ -52,7 +65,19 @@ const AdminApplications = () => {
         
         // Refresh stats
         const statsRes = await getAdminApplicationStats();
-        if (statsRes.success) setStats(statsRes.data);
+        if (statsRes.success) {
+          const raw = statsRes.data || {};
+          setStats({
+            pending: raw.pending || 0,
+            today: raw.applicationsThisMonth || 0,
+            newVolunteers: raw.total || 0,
+            total: raw.total || 0,
+            joined: raw.joined || 0,
+            withdrawn: raw.withdrawn || 0,
+            completed: raw.completed || 0,
+            cancelled: raw.cancelled || 0,
+          });
+        }
       }
     } catch (err) {
       toast.error('Failed to update application status');

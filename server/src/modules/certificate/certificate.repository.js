@@ -1,4 +1,5 @@
 const Certificate = require('./certificate.model');
+const { FILTERS, SORT_FIELDS, PAGINATION } = require('./certificate.constants');
 
 class CertificateRepository {
   async create(certData) {
@@ -7,7 +8,7 @@ class CertificateRepository {
 
   async findById(id) {
     return Certificate.findOne({ _id: id, isDeleted: false })
-      .populate('user', 'name email volunteerId')
+      .populate('user', 'name email volunteerId profilePhoto')
       .populate('program', 'title programId')
       .populate('application')
       .populate('attendance')
@@ -16,7 +17,7 @@ class CertificateRepository {
 
   async findByCertificateNumber(certificateNumber) {
     return Certificate.findOne({ certificateNumber, isDeleted: false })
-      .populate('user', 'name email volunteerId')
+      .populate('user', 'name email volunteerId profilePhoto')
       .populate('program', 'title programId')
       .populate('application')
       .populate('attendance')
@@ -24,17 +25,34 @@ class CertificateRepository {
   }
 
   async findByUser(userId, options = {}) {
-    const { page = 1, limit = 10 } = options;
+    const { page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.DEFAULT_LIMIT, sort = 'newest', filter = 'all' } = options;
     const skip = (page - 1) * limit;
 
+    const query = { user: userId, isDeleted: false };
+
+    if (filter && filter !== FILTERS.ALL) {
+      if (filter === FILTERS.REVOKED) {
+        query.status = 'revoked';
+      } else if (filter === FILTERS.VERIFIED) {
+        query.verificationCount = { $gt: 0 };
+      } else if (filter === FILTERS.PENDING) {
+        query.status = 'issued';
+      }
+    }
+
+    let sortOption = { issuedAt: -1 };
+    if (sort === SORT_FIELDS.OLDEST) sortOption = { issuedAt: 1 };
+    else if (sort === SORT_FIELDS.PROGRAM) sortOption = { 'program.title': 1 };
+    else if (sort === SORT_FIELDS.VOLUNTEER) sortOption = { 'user.name': 1 };
+
     const [certificates, total] = await Promise.all([
-      Certificate.find({ user: userId, isDeleted: false })
-        .sort({ issuedAt: -1 })
+      Certificate.find(query)
+        .sort(sortOption)
         .skip(skip)
         .limit(limit)
         .populate('program', 'title programId')
         .lean(),
-      Certificate.countDocuments({ user: userId, isDeleted: false }),
+      Certificate.countDocuments(query),
     ]);
 
     return { certificates, total, page, limit };
@@ -54,6 +72,51 @@ class CertificateRepository {
       .lean();
   }
 
+  async findAll(options = {}) {
+    const { page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.DEFAULT_LIMIT, sort = 'newest', filter = 'all', search = '' } = options;
+    const skip = (page - 1) * limit;
+
+    const query = { isDeleted: false };
+
+    if (filter && filter !== FILTERS.ALL) {
+      if (filter === FILTERS.REVOKED) {
+        query.status = 'revoked';
+      } else if (filter === FILTERS.VERIFIED) {
+        query.verificationCount = { $gt: 0 };
+      } else if (filter === FILTERS.PENDING) {
+        query.status = 'issued';
+      }
+    }
+
+    if (search) {
+      query.$or = [
+        { certificateNumber: { $regex: search, $options: 'i' } },
+        { 'user.name': { $regex: search, $options: 'i' } },
+        { 'program.title': { $regex: search, $options: 'i' } },
+        { organization: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    let sortOption = { issuedAt: -1 };
+    if (sort === SORT_FIELDS.OLDEST) sortOption = { issuedAt: 1 };
+    else if (sort === SORT_FIELDS.PROGRAM) sortOption = { 'program.title': 1 };
+    else if (sort === SORT_FIELDS.VOLUNTEER) sortOption = { 'user.name': 1 };
+
+    const [certificates, total] = await Promise.all([
+      Certificate.find(query)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .populate('user', 'name email volunteerId profilePhoto')
+        .populate('program', 'title programId')
+        .populate('issuedBy', 'name email')
+        .lean(),
+      Certificate.countDocuments(query),
+    ]);
+
+    return { certificates, total, page, limit };
+  }
+
   async update(id, updateData) {
     return Certificate.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
   }
@@ -71,6 +134,21 @@ class CertificateRepository {
       id,
       { isDeleted: true, deletedAt: new Date(), deletedBy: deletedById },
       { new: true }
+    );
+  }
+
+  async incrementVerificationCount(id) {
+    return Certificate.findByIdAndUpdate(
+      id,
+      { $inc: { verificationCount: 1 }, $set: { lastVerifiedAt: new Date() } },
+      { new: true }
+    );
+  }
+
+  async bulkUpdateStatus(ids, status) {
+    return Certificate.updateMany(
+      { _id: { $in: ids }, isDeleted: false },
+      { $set: { status } }
     );
   }
 }

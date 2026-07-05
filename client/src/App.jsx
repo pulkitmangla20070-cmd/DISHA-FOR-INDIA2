@@ -14,7 +14,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Programs from './pages/Programs';
 import Leaderboard from './pages/Leaderboard';
-import Certificates from './pages/Certificates';
+import Certificates from './pages/certificates/Certificates';
+import CertificateDetails from './pages/certificates/CertificateDetails';
 import ProfileSetup from './pages/ProfileSetup';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
@@ -163,6 +164,7 @@ function App() {
             }>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="certificates" element={<Certificates />} />
+              <Route path="certificates/:id" element={<CertificateDetails />} />
               <Route path="profile/setup" element={<ProfileSetup />} />
               <Route path="applications" element={<MyApplications />} />
               <Route path="applications/:id" element={<ApplicationDetails />} />

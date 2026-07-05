@@ -23,6 +23,13 @@ const certificateSchema = new mongoose.Schema(
     issuedAt: { type: Date, default: Date.now },
     issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
+    verificationHash: { type: String, unique: true, sparse: true, trim: true },
+    digitalSignature: { type: String, trim: true, default: null },
+    template: { type: String, trim: true, default: 'default' },
+    expiryDate: { type: Date, default: null },
+    lastVerifiedAt: { type: Date, default: null },
+    verificationCount: { type: Number, default: 0, min: 0 },
+
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

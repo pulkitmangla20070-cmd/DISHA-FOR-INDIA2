@@ -140,8 +140,8 @@ app.use('/api/v1/permissions', permissionRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/reports', reportsRoutes);
-app.use('/api/v1/conversations', conversationRoutes);
 app.use('/api/v1/conversations', messageRoutes);
+app.use('/api/v1/conversations', conversationRoutes);
 app.use('/api/v1/support-tickets', supportTicketRoutes);
 
 // ─────────────────────────────────────────────

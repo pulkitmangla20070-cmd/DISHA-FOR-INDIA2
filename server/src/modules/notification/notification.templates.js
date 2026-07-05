@@ -124,6 +124,20 @@ const buildCertificateGenerated = ({ recipientId, programName, certificateId, ce
   metadata: { programName, certificateId, certificateNumber },
 });
 
+const buildCertificateRevoked = ({ recipientId, programName, certificateId }) => ({
+  recipient: recipientId,
+  title: 'Certificate Revoked',
+  message: `Your certificate for "${programName}" has been revoked. Please contact support if you believe this is an error.`,
+  type: NOTIFICATION_TYPES.CERTIFICATE_REVOKED,
+  category: 'certificate',
+  priority: PRIORITY.HIGH,
+  channel: CHANNEL.IN_APP,
+  status: STATUS.SENT,
+  relatedEntityType: 'certificate',
+  relatedEntityId: certificateId,
+  metadata: { programName, certificateId },
+});
+
 const buildRewardEarned = ({ recipientId, rewardType, amount }) => ({
   recipient: recipientId,
   title: 'Reward Earned',
@@ -291,6 +305,7 @@ module.exports = {
   buildApplicationRejected,
   buildAttendanceMarked,
   buildCertificateGenerated,
+  buildCertificateRevoked,
   buildRewardEarned,
   buildCoinsAdded,
   buildBadgeEarned,

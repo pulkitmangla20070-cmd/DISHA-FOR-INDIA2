@@ -3,13 +3,33 @@ import api from './api';
 /**
  * Get all certificates for the current user.
  */
-export const getMyCertificates = async () => {
-  return await api.get('/certificates/me');
+export const getMyCertificates = async (params = {}) => {
+  return await api.get('/certificates/me', { params });
+};
+
+/**
+ * Search certificates (admin/volunteer).
+ */
+export const searchCertificates = async (params = {}) => {
+  return await api.get('/certificates', { params });
+};
+
+/**
+ * Get a single certificate by ID.
+ */
+export const getCertificate = async (id) => {
+  return await api.get(`/certificates/${id}`);
+};
+
+/**
+ * Get certificate history.
+ */
+export const getCertificateHistory = async (id) => {
+  return await api.get(`/certificates/${id}/history`);
 };
 
 /**
  * Download a certificate PDF.
- * @param {string} id - Certificate ID
  */
 export const downloadCertificate = async (id) => {
   return await api.get(`/certificates/${id}/download`, { responseType: 'blob' });
@@ -17,7 +37,6 @@ export const downloadCertificate = async (id) => {
 
 /**
  * Verify a certificate by its unique number (Public route).
- * @param {string} certificateNumber 
  */
 export const verifyCertificate = async (certificateNumber) => {
   return await api.get(`/certificates/verify/${certificateNumber}`);
@@ -25,15 +44,33 @@ export const verifyCertificate = async (certificateNumber) => {
 
 /**
  * Admin: Auto-generate certificates for a completed program.
- * @param {string} programId 
  */
 export const autoGenerateCertificates = async (programId) => {
   return await api.post(`/certificates/admin/auto-generate/${programId}`);
 };
 
+/**
+ * Admin: Bulk generate certificates for a completed program.
+ */
+export const bulkGenerateCertificates = async (programId) => {
+  return await api.post(`/certificates/admin/bulk-generate/${programId}`);
+};
+
+/**
+ * Admin: Revoke a certificate.
+ */
+export const revokeCertificate = async (id) => {
+  return await api.post(`/certificates/admin/${id}/revoke`);
+};
+
 export default {
   getMyCertificates,
+  searchCertificates,
+  getCertificate,
+  getCertificateHistory,
   downloadCertificate,
   verifyCertificate,
   autoGenerateCertificates,
+  bulkGenerateCertificates,
+  revokeCertificate,
 };

@@ -41,11 +41,21 @@ class CertificateController {
   downloadCertificate = async (req, res, next) => {
     try {
       const result = await certificateService.downloadCertificate(req.params.id, req.user.id, req.user.role);
-      if (result.certificateUrl) {
-        return res.redirect(result.certificateUrl);
-      }
+      const certificate = result.certificate;
+      const filename = `certificate-${certificate.certificateNumber}.pdf`;
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=certificate-${result.certificate.certificateNumber}.pdf`);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      if (result.certificateUrl) {
+        const response = await fetch(result.certificateUrl);
+        const chunks = [];
+        for await (const chunk of response.body) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+        return res.send(buffer);
+      }
+
       return res.send(result.pdfBuffer);
     } catch (error) {
       return next(error);
@@ -65,6 +75,34 @@ class CertificateController {
     try {
       const result = await certificateService.getMyCertificates(req.user.id, req.query);
       return successResponse(res, 200, MESSAGES.CERTIFICATES_FETCHED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  searchCertificates = async (req, res, next) => {
+    try {
+      const result = await certificateService.searchCertificates(req.query);
+      return successResponse(res, 200, MESSAGES.CERTIFICATES_FETCHED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getCertificateHistory = async (req, res, next) => {
+    try {
+      const result = await certificateService.getCertificateHistory(req.params.id);
+      return successResponse(res, 200, 'Certificate history retrieved successfully', result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  bulkGenerateCertificates = async (req, res, next) => {
+    try {
+      const { programId } = req.params;
+      const results = await certificateService.bulkGenerateCertificates(programId, req.user.id);
+      return successResponse(res, 200, MESSAGES.CERTIFICATES_BULK_GENERATED, results);
     } catch (error) {
       return next(error);
     }
