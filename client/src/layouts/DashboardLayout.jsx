@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationsContext';
 import {
   Shield, Home, Calendar, Award, Trophy, LogOut, Menu, X,
   LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, Settings, FileText, MessageSquare, HelpCircle
 } from 'lucide-react';
+import NotificationBell from '../components/notifications/NotificationBell';
+import NotificationDrawer from '../components/notifications/NotificationDrawer';
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'];
 
@@ -13,6 +16,17 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const {
+    unreadCount,
+    drawerOpen,
+    drawerNotifications,
+    drawerLoading,
+    toggleDrawer,
+    closeDrawer,
+    markRead,
+    markAllRead,
+    delete: deleteNotification,
+  } = useNotifications();
 
   const isAdmin = ADMIN_ROLES.includes(user?.role?.toUpperCase());
 
@@ -25,6 +39,7 @@ const DashboardLayout = () => {
 
   const volunteerNavItems = [
     { name: 'Dashboard',     path: '/dashboard',   icon: <Home size={18} /> },
+    { name: 'Notifications', path: '/notifications', icon: <Bell size={18} /> },
     { name: 'Opportunities', path: '/programs',     icon: <Calendar size={18} /> },
     { name: 'Leaderboard',   path: '/leaderboard',  icon: <Trophy size={18} /> },
     { name: 'Certificates',  path: '/certificates', icon: <Award size={18} /> },
@@ -34,6 +49,7 @@ const DashboardLayout = () => {
 
   const adminNavItems = [
     { name: 'Dashboard',     path: '/admin/dashboard',    icon: <LayoutDashboard size={18} /> },
+    { name: 'Notifications', path: '/notifications',      icon: <Bell size={18} /> },
     { name: 'Messages',      path: '/admin/messages',     icon: <MessageSquare size={18} /> },
     { name: 'Support',       path: '/admin/support',      icon: <HelpCircle size={18} /> },
     { name: 'Programs',      path: '/admin/programs',     icon: <Calendar size={18} /> },
@@ -230,6 +246,7 @@ const DashboardLayout = () => {
           </h2>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <NotificationBell unreadCount={unreadCount} onClick={toggleDrawer} loading={drawerLoading} />
             <span style={{
               fontSize: '0.75rem',
               padding: '0.25rem 0.75rem',
@@ -274,6 +291,18 @@ const DashboardLayout = () => {
           </div>
         </div>
       )}
+
+      <NotificationDrawer
+        open={drawerOpen}
+        onClose={closeDrawer}
+        notifications={drawerNotifications}
+        unreadCount={unreadCount}
+        loading={drawerLoading}
+        onMarkRead={markRead}
+        onMarkAllRead={markAllRead}
+        onDelete={deleteNotification}
+        onViewAll={() => { closeDrawer(); navigate('/notifications'); }}
+      />
 
       <style>{`
         @media (max-width: 768px) {

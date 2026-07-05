@@ -4,8 +4,20 @@ export const getNotifications = async (params = {}) => {
   return api.get('/notifications', { params });
 };
 
+export const getUnreadNotifications = async (params = {}) => {
+  return api.get('/notifications/unread', { params });
+};
+
 export const getUnreadNotificationCount = async () => {
   return api.get('/notifications/unread/count');
+};
+
+export const getNotificationById = async (id) => {
+  return api.get(`/notifications/${id}`);
+};
+
+export const createNotification = async (data) => {
+  return api.post('/notifications', data);
 };
 
 export const markNotificationAsRead = async (notificationId) => {
@@ -26,6 +38,10 @@ export const restoreNotification = async (notificationId) => {
 
 export const searchNotifications = async ({ search, ...params }) => {
   return api.get('/notifications/search', { params: { search, ...params } });
+};
+
+export const broadcastNotification = async (data) => {
+  return api.post('/notifications/broadcast', data);
 };
 
 export const getNotificationPreferences = async () => {
