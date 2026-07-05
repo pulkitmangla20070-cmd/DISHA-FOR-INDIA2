@@ -10,6 +10,7 @@ const {
   validateDeleteNotification,
   validateRestoreNotification,
   validateBroadcastNotification,
+  validateCreateNotification,
   validateGetPreferences,
   validateUpdatePreferences,
 } = require('./notification.validation');
@@ -35,6 +36,8 @@ router.patch('/read-all', authenticate, validateMarkAllAsRead, notificationContr
 router.patch('/:id/restore', authenticate, validateRestoreNotification, notificationController.restoreNotification);
 
 router.delete('/:id', authenticate, validateDeleteNotification, notificationController.deleteNotification);
+
+router.post('/notifications', authenticate, validateCreateNotification, authorize(['admin', 'superadmin']), notificationController.createNotification);
 
 router.post('/broadcast', authenticate, validateBroadcastNotification, authorize(['admin', 'superadmin']), notificationController.broadcastNotification);
 

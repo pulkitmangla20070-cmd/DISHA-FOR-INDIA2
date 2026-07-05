@@ -48,6 +48,16 @@ const NotificationSchema = {
       enum: Object.values(CHANNEL),
       example: 'in-app',
     },
+    actionUrl: {
+      type: 'string',
+      nullable: true,
+      example: '/programs/123',
+    },
+    icon: {
+      type: 'string',
+      nullable: true,
+      example: 'https://example.com/icon.png',
+    },
     relatedEntityType: {
       type: 'string',
       nullable: true,

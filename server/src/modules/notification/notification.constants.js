@@ -23,6 +23,20 @@ const NOTIFICATION_TYPES = {
   LEADERBOARD_POSITION_CHANGED: 'leaderboard_position_changed',
 };
 
+const CATEGORY = {
+  APPLICATION: 'application',
+  PROGRAM: 'program',
+  ATTENDANCE: 'attendance',
+  CERTIFICATE: 'certificate',
+  REWARD: 'reward',
+  LEADERBOARD: 'leaderboard',
+  ANNOUNCEMENT: 'announcement',
+  SECURITY: 'security',
+  ACCOUNT: 'account',
+  SYSTEM: 'system',
+  MESSAGE: 'message',
+};
+
 const PRIORITY = {
   LOW: 'low',
   MEDIUM: 'medium',
@@ -75,6 +89,7 @@ const VALIDATION = {
 
 module.exports = {
   NOTIFICATION_TYPES,
+  CATEGORY,
   PRIORITY,
   CHANNEL,
   STATUS,

@@ -1,8 +1,9 @@
 const notificationRepository = require('./notification.repository');
 const notificationPreferenceRepository = require('./notificationPreference.repository');
 const { generateNotificationId, notificationFormatter } = require('./notification.utils');
-const { MESSAGES, DEFAULTS, STATUS } = require('./notification.constants');
+const { MESSAGES, DEFAULTS, STATUS, CATEGORY, PRIORITY } = require('./notification.constants');
 const templates = require('./notification.templates');
+const User = require('../../modules/user/user.model');
 const NotFoundError = require('../../utils/errors/NotFoundError');
 const ValidationError = require('../../utils/errors/ValidationError');
 
@@ -386,6 +387,117 @@ class NotificationService {
     return {
       notification: notificationFormatter(notification),
       message: MESSAGES.NOTIFICATION_UPDATED,
+    };
+  }
+
+  async broadcastNotification({ recipient, title, message, type, priority, category, actionUrl, icon, sender }) {
+    const filter = {};
+    if (recipient) {
+      filter.recipient = recipient;
+    }
+
+    const users = await User.find(filter).distinct('_id');
+    const notifications = [];
+
+    for (const userId of users) {
+      notifications.push({
+        recipient: userId,
+        sender,
+        title,
+        message,
+        type: type || 'admin_announcement',
+        category: category || CATEGORY.ANNOUNCEMENT,
+        priority: priority || PRIORITY.MEDIUM,
+        actionUrl,
+        icon,
+        channel: 'in-app',
+        status: STATUS.SENT,
+        isRead: false,
+        sentAt: new Date(),
+        metadata: {},
+      });
+    }
+
+    const created = await notificationRepository.bulkCreate(notifications);
+
+    return {
+      count: created.length,
+      message: MESSAGES.NOTIFICATION_CREATED,
+    };
+  }
+
+  async notifyApplicationApproved(recipientId, programName, applicationId) {
+     return this.sendInAppNotification('buildApplicationApproved', { recipientId, programName, applicationId });
+  }
+
+  async notifyApplicationRejected(recipientId, programName, applicationId, reason) {
+     return this.sendInAppNotification('buildApplicationRejected', { recipientId, programName, applicationId, reason });
+  }
+
+  async notifyCertificateGenerated(recipientId, programName, certificateId, certificateNumber) {
+     return this.sendInAppNotification('buildCertificateGenerated', { recipientId, programName, certificateId, certificateNumber });
+  }
+
+  async notifyRewardEarned(recipientId, rewardType, amount) {
+     return this.sendInAppNotification('buildRewardEarned', { recipientId, rewardType, amount });
+  }
+
+  async notifyAttendanceMarked(recipientId, programName, attendanceId, totalHours) {
+     return this.sendInAppNotification('buildAttendanceMarked', { recipientId, programName, attendanceId, totalHours });
+  }
+
+  async notifyProgramReminder(recipientId, programName, programId, dateTime) {
+    const payload = {
+      recipient: recipientId,
+      title: 'Program Reminder',
+      message: `Reminder: "${programName}" is coming up on ${dateTime || 'soon'}. Don't forget to attend!`,
+      type: 'program_reminder',
+      category: CATEGORY.PROGRAM,
+      priority: PRIORITY.HIGH,
+      channel: 'in-app',
+      status: STATUS.SENT,
+      relatedEntityType: 'program',
+      relatedEntityId: programId,
+      metadata: { programName, programId, dateTime },
+    };
+    const notification = await notificationRepository.create({
+      ...payload,
+      notificationId: generateNotificationId(),
+      sentAt: new Date(),
+    });
+    return {
+      notification: notificationFormatter(notification),
+      message: MESSAGES.NOTIFICATION_CREATED,
+    };
+  }
+
+  async notifyLeaderboardChanged(recipientId, newPosition, leaderboardType) {
+     return this.sendInAppNotification('buildLeaderboardPositionChanged', { recipientId, newPosition, leaderboardType });
+  }
+
+  async notifyAnnouncement(recipientId, title, message, actionUrl, icon, sender) {
+    const payload = {
+      recipient: recipientId,
+      title: title || 'Announcement',
+      message,
+      type: 'announcement',
+      category: CATEGORY.ANNOUNCEMENT,
+      priority: PRIORITY.HIGH,
+      channel: 'in-app',
+      status: STATUS.SENT,
+      sender,
+      actionUrl,
+      icon,
+      metadata: {},
+    };
+    const notification = await notificationRepository.create({
+      ...payload,
+      notificationId: generateNotificationId(),
+      sentAt: new Date(),
+    });
+    return {
+      notification: notificationFormatter(notification),
+      message: MESSAGES.NOTIFICATION_CREATED,
     };
   }
 }

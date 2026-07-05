@@ -1,5 +1,5 @@
 const ValidationError = require('../../utils/errors/ValidationError');
-const { NOTIFICATION_TYPES, PRIORITY, CHANNEL, VALIDATION } = require('./notification.constants');
+const { NOTIFICATION_TYPES, CATEGORY, PRIORITY, CHANNEL, VALIDATION } = require('./notification.constants');
 
 const validateCreateNotification = (req, res, next) => {
   const errors = [];
@@ -60,8 +60,8 @@ const validateCreateNotification = (req, res, next) => {
   }
 
   if (category !== undefined) {
-    if (typeof category !== 'string' || category.trim() === '') {
-      errors.push({ field: 'category', message: 'Category must be a non-empty string' });
+    if (!Object.values(CATEGORY).includes(category)) {
+      errors.push({ field: 'category', message: 'Invalid category' });
     }
   }
 
@@ -139,8 +139,8 @@ const validateGetNotifications = (req, res, next) => {
   }
 
   if (category !== undefined && category !== '') {
-    if (typeof category !== 'string') {
-      errors.push({ field: 'category', message: 'Category must be a string' });
+    if (!Object.values(CATEGORY).includes(category)) {
+      errors.push({ field: 'category', message: 'Invalid category filter' });
     }
   }
 

@@ -41,8 +41,18 @@ const notificationSchema = new mongoose.Schema(
     category: {
       type: String,
       trim: true,
-      default: 'general',
+      default: 'announcement',
       index: true,
+    },
+    actionUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    icon: {
+      type: String,
+      trim: true,
+      default: null,
     },
     priority: {
       type: String,

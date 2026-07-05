@@ -23,6 +23,8 @@ const notificationFormatter = (notification) => {
     category: notification.category,
     priority: notification.priority,
     channel: notification.channel,
+    actionUrl: notification.actionUrl,
+    icon: notification.icon,
     relatedEntityType: notification.relatedEntityType,
     relatedEntityId: notification.relatedEntityId,
     isRead: notification.isRead,

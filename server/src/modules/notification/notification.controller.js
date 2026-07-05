@@ -3,6 +3,17 @@ const { MESSAGES } = require('./notification.constants');
 const { successResponse } = require('../../utils/response');
 
 class NotificationController {
+  createNotification = async (req, res, next) => {
+    try {
+      const result = await notificationService.createNotification(req.body);
+      return successResponse(res, 201, result.message, {
+        notification: result.notification,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getNotifications = async (req, res, next) => {
     try {
       const { type, category, priority, isRead, startDate, endDate, page, limit, sortBy, order } = req.query;
@@ -150,14 +161,23 @@ class NotificationController {
 
   broadcastNotification = async (req, res, next) => {
     try {
-      const { title, type = 'admin_announcement', category = 'announcement' } = req.body;
+      const { title, message, type, priority, category, actionUrl, icon } = req.body;
       const adminId = req.user.id;
 
-      return successResponse(res, 200, 'Broadcast notification queued successfully', {
-        adminId,
+      const result = await notificationService.broadcastNotification({
         title,
+        message,
         type,
+        priority,
         category,
+        actionUrl,
+        icon,
+        sender: adminId,
+      });
+
+      return successResponse(res, 200, 'Broadcast notification sent successfully', {
+        adminId,
+        ...result,
       });
     } catch (error) {
       return next(error);
