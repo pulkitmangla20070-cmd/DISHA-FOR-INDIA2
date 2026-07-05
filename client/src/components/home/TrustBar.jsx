@@ -6,7 +6,7 @@ const partnerNames = ['unicef', 'TATA', 'Infosys', 'Reliance Industries', 'Micro
 
 const TrustBar = () => {
   return (
-    <section style={{ background: 'white', borderTop: '1px solid #F0EDE8', borderBottom: '1px solid #F0EDE8', padding: '2.5rem 0', overflow: 'hidden' }}>
+    <section style={{ background: 'white', borderTop: '1px solid #F0EDE8', borderBottom: '1px solid #F0EDE8', padding: '2.5rem 0', marginTop: '-1px', overflow: 'hidden', position: 'relative' }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
         <p style={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: '1.75rem' }}>
           Trusted by Leading Organizations

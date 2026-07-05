@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Components
-import Hero from '../components/home/Hero';
+import HeroGallery from '../components/home/HeroGallery';
 import TrustBar from '../components/home/TrustBar';
 import ImpactStats from '../components/home/ImpactStats';
 import Mission from '../components/home/Mission';
@@ -20,7 +20,7 @@ import CTA from '../components/home/CTA';
 const Home = () => {
   return (
     <div className="home-container bg-brandBg font-primary">
-      <Hero />
+      <HeroGallery />
       <TrustBar />
       <ImpactStats />
       <Mission />

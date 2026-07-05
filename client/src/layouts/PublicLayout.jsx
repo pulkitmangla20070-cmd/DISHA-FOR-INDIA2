@@ -20,8 +20,7 @@ const PublicLayout = () => {
 
   const isHomePage = location.pathname === '/';
 
-  // Always use light text because navbar is always dark glass or transparent
-  const solidNav = false;
+  const solidNav = isHomePage ? isScrolled : true;
 
   const navBaseStyle = {
     padding: '0.5rem 0.875rem',
@@ -38,6 +37,7 @@ const PublicLayout = () => {
     color: 'rgba(255,255,255,0.92)',
     backgroundColor: 'transparent',
     opacity: 1,
+    textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.25)',
   };
 
   useEffect(() => {
