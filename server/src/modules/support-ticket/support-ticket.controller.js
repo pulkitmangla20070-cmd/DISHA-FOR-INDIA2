@@ -106,6 +106,24 @@ class SupportTicketController {
       return next(error);
     }
   };
+
+  getTicketHistory = async (req, res, next) => {
+    try {
+      const result = await supportTicketService.getTicketHistory(req.user.id, req.params.id, req.query);
+      return successResponse(res, 200, result.successMessage, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  escalateTicket = async (req, res, next) => {
+    try {
+      const result = await supportTicketService.escalateTicket(req.user.id, req.params.id);
+      return successResponse(res, 200, result.successMessage, { ticket: result.ticket });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
 
 module.exports = new SupportTicketController();

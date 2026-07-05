@@ -1,23 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, Inbox, Loader2 } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Search, Plus, Inbox } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConversationCard from './ConversationCard';
-import { useQuery } from '@tanstack/react-query';
+import { MessagingSkeletons, ErrorState } from './MessagingSkeletons';
 
-const ConversationList = ({ conversations, activeId, onSelect, unreadCounts = {}, onCreateConversation, isLoading }) => {
+const ConversationList = React.memo(({ conversations = [], activeId, onSelect, onCreateConversation, isLoading, isError, refetch, onlineUserIds = [] }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
 
-  const filteredConversations = conversations?.filter((conv) => {
-    const other = conv.participants?.find((p) => p._id !== conv._id) || conv.participants?.[0];
-    const matchesSearch = other?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterType === 'all' || conv.type === filterType;
-    return matchesSearch && matchesFilter;
-  }) || [];
+  const filteredConversations = useMemo(() => {
+    if (!conversations.length) return [];
+    return conversations.filter((conv) => {
+      const other = conv.participants?.find((p) => p._id !== conv._id) || conv.participants?.[0];
+      const matchesSearch = other?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = filterType === 'all' || conv.type === filterType;
+      return matchesSearch && matchesFilter;
+    });
+  }, [conversations, searchQuery, filterType]);
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  const handleFilterChange = useCallback((type) => {
+    setFilterType(type);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    refetch?.();
+  }, [refetch]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fff', borderRadius: 16, border: '1px solid var(--color-border)' }}>
-      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fff', borderRadius: 16, border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)', background: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Messages</h3>
           <motion.button
@@ -43,12 +58,12 @@ const ConversationList = ({ conversations, activeId, onSelect, unreadCounts = {}
         </div>
 
         <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
-          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none' }} aria-hidden="true" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             style={{
               width: '100%',
               padding: '0.6rem 0.75rem 0.6rem 2.25rem',
@@ -57,16 +72,18 @@ const ConversationList = ({ conversations, activeId, onSelect, unreadCounts = {}
               fontSize: '0.85rem',
               outline: 'none',
               boxSizing: 'border-box',
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-heading)',
             }}
             aria-label="Search conversations"
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem' }} role="group" aria-label="Conversation type filter">
           {['all', 'private', 'support'].map((type) => (
             <button
               key={type}
-              onClick={() => setFilterType(type)}
+              onClick={() => handleFilterChange(type)}
               style={{
                 padding: '0.35rem 0.75rem',
                 borderRadius: 8,
@@ -86,16 +103,23 @@ const ConversationList = ({ conversations, activeId, onSelect, unreadCounts = {}
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.75rem' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.75rem', background: '#fff' }} role="list" aria-label="Conversation list">
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-            <Loader2 size={24} className="spinner" />
-          </div>
+          <MessagingSkeletons type="conversation" count={5} />
+        ) : isError ? (
+          <ErrorState message="Failed to load conversations" onRetry={handleRetry} />
         ) : filteredConversations.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
-            <Inbox size={32} style={{ margin: '0 auto 0.75rem', color: '#D1D5DB' }} />
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-body)', margin: 0 }}>No conversations found</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ textAlign: 'center', padding: '3rem 1rem' }}
+          >
+            <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
+              <Inbox size={28} style={{ color: '#D1D5DB' }} />
+            </div>
+            <p style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-heading)', margin: '0 0 0.25rem' }}>No conversations found</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-body)', margin: 0 }}>Start a new conversation to begin messaging.</p>
+          </motion.div>
         ) : (
           <AnimatePresence>
             {filteredConversations.map((conv) => (
@@ -105,12 +129,13 @@ const ConversationList = ({ conversations, activeId, onSelect, unreadCounts = {}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
+                role="listitem"
               >
                 <ConversationCard
                   conversation={conv}
                   isActive={conv._id === activeId}
                   onClick={() => onSelect(conv)}
-                  unreadCount={unreadCounts[conv._id] || 0}
+                  onlineUsers={onlineUserIds}
                 />
               </motion.div>
             ))}
@@ -119,6 +144,8 @@ const ConversationList = ({ conversations, activeId, onSelect, unreadCounts = {}
       </div>
     </div>
   );
-};
+});
+
+ConversationList.displayName = 'ConversationList';
 
 export default ConversationList;

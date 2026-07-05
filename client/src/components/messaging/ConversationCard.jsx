@@ -1,9 +1,9 @@
 import React from 'react';
-import { MessageSquare, Search, Archive, Trash2, MoreVertical } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const ConversationCard = ({ conversation, isActive, onClick, unreadCount }) => {
+const ConversationCard = ({ conversation, isActive, onClick, unreadCount, onlineUsers = [] }) => {
   const otherParticipant = conversation.participants?.find((p) => p._id !== conversation._id) || conversation.participants?.[0];
+  const isOnline = onlineUsers.includes(otherParticipant?._id);
 
   return (
     <motion.div
@@ -54,9 +54,13 @@ const ConversationCard = ({ conversation, isActive, onClick, unreadCount }) => {
           fontWeight: 700,
           fontSize: '1rem',
           flexShrink: 0,
+          position: 'relative',
         }}
       >
         {otherParticipant?.name?.[0]?.toUpperCase() || '?'}
+        {isOnline && (
+          <span style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', backgroundColor: '#10B981', border: '2px solid white' }} />
+        )}
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -91,18 +95,22 @@ const ConversationCard = ({ conversation, isActive, onClick, unreadCount }) => {
             </span>
           )}
         </div>
-        <p
-          style={{
-            fontSize: '0.75rem',
-            color: 'var(--color-body)',
-            margin: 0,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {conversation.lastMessagePreview || 'No messages yet'}
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <p
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--color-body)',
+              margin: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              flex: 1,
+            }}
+          >
+            {conversation.lastMessagePreview || 'No messages yet'}
+          </p>
+          {isOnline && <span style={{ fontSize: '0.65rem', color: '#10B981', fontWeight: 600 }}>Online</span>}
+        </div>
       </div>
     </motion.div>
   );

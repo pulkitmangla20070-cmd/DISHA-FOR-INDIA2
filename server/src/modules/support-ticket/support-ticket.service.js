@@ -1,35 +1,11 @@
 const supportTicketRepository = require('./support-ticket.repository');
-const conversationRepository = require('../conversation/conversation.repository');
-const { TICKET_STATUS } = require('./support-ticket.constants');
+const ticketAutomationService = require('./ticket-automation.service');
 const NotFoundError = require('../../utils/errors/NotFoundError');
-const ValidationError = require('../../utils/errors/ValidationError');
 
 class SupportTicketService {
   async createSupportTicket(userId, data) {
-    const { subject, description, category = 'general', priority = 'medium', participantIds = [] } = data;
-
-    const conversation = await conversationRepository.create({
-      participants: [userId, ...participantIds],
-      type: 'support',
-      title: subject,
-      status: 'active',
-    });
-
-    const ticket = await supportTicketRepository.create({
-      conversationId: conversation._id,
-      userId,
-      subject,
-      description,
-      category,
-      priority,
-      status: TICKET_STATUS.OPEN,
-    });
-
-    return {
-      ticket,
-      conversation,
-      successMessage: 'Support ticket created successfully',
-    };
+    const result = await ticketAutomationService.createSupportTicket(userId, data);
+    return result;
   }
 
   async getUserTickets(userId, query = {}) {
@@ -89,70 +65,13 @@ class SupportTicketService {
   }
 
   async updateTicket(userId, ticketId, updateData) {
-    const ticket = await supportTicketRepository.findById(ticketId);
-
-    if (!ticket) {
-      throw new NotFoundError('Support ticket not found');
-    }
-
-    const allowedFields = ['subject', 'description', 'priority', 'category', 'resolution'];
-    const safeUpdate = {};
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined) {
-        safeUpdate[field] = updateData[field];
-      }
-    }
-
-    if (updateData.status) {
-      const validStatuses = Object.values(TICKET_STATUS);
-      if (!validStatuses.includes(updateData.status)) {
-        throw new ValidationError('Invalid ticket status');
-      }
-      safeUpdate.status = updateData.status;
-      if (updateData.status === TICKET_STATUS.RESOLVED) {
-        safeUpdate.resolvedAt = new Date();
-      }
-      if (updateData.status === TICKET_STATUS.CLOSED) {
-        safeUpdate.closedAt = new Date();
-      }
-    }
-
-    const updated = await supportTicketRepository.update(ticketId, safeUpdate);
-
-    return {
-      ticket: updated,
-      successMessage: 'Support ticket updated successfully',
-    };
+    const result = await ticketAutomationService.updateTicket(userId, ticketId, updateData);
+    return result;
   }
 
   async updateTicketStatus(userId, ticketId, status) {
-    const ticket = await supportTicketRepository.findById(ticketId);
-
-    if (!ticket) {
-      throw new NotFoundError('Support ticket not found');
-    }
-
-    const validStatuses = Object.values(TICKET_STATUS);
-    if (!validStatuses.includes(status)) {
-      throw new ValidationError('Invalid ticket status');
-    }
-
-    const updateData = { status };
-
-    if (status === TICKET_STATUS.RESOLVED) {
-      updateData.resolvedAt = new Date();
-    }
-
-    if (status === TICKET_STATUS.CLOSED) {
-      updateData.closedAt = new Date();
-    }
-
-    const updated = await supportTicketRepository.update(ticketId, updateData);
-
-    return {
-      ticket: updated,
-      successMessage: 'Support ticket status updated successfully',
-    };
+    const result = await ticketAutomationService.updateTicketStatus(userId, ticketId, status);
+    return result;
   }
 
   async searchTickets(query = {}) {
@@ -182,58 +101,18 @@ class SupportTicketService {
   }
 
   async assignTicket(userId, ticketId, assignToUserId) {
-    const ticket = await supportTicketRepository.findById(ticketId);
-
-    if (!ticket) {
-      throw new NotFoundError('Support ticket not found');
-    }
-
-    const updated = await supportTicketRepository.update(ticketId, {
-      assignedTo: assignToUserId,
-      status: TICKET_STATUS.IN_PROGRESS,
-    });
-
-    return {
-      ticket: updated,
-      successMessage: 'Support ticket assigned successfully',
-    };
+    const result = await ticketAutomationService.assignTicket(userId, ticketId, assignToUserId);
+    return result;
   }
 
   async resolveTicket(userId, ticketId, resolution) {
-    const ticket = await supportTicketRepository.findById(ticketId);
-
-    if (!ticket) {
-      throw new NotFoundError('Support ticket not found');
-    }
-
-    const updated = await supportTicketRepository.update(ticketId, {
-      status: TICKET_STATUS.RESOLVED,
-      resolution: resolution || null,
-      resolvedAt: new Date(),
-    });
-
-    return {
-      ticket: updated,
-      successMessage: 'Support ticket resolved successfully',
-    };
+    const result = await ticketAutomationService.resolveTicket(userId, ticketId, resolution);
+    return result;
   }
 
   async closeTicket(userId, ticketId) {
-    const ticket = await supportTicketRepository.findById(ticketId);
-
-    if (!ticket) {
-      throw new NotFoundError('Support ticket not found');
-    }
-
-    const updated = await supportTicketRepository.update(ticketId, {
-      status: TICKET_STATUS.CLOSED,
-      closedAt: new Date(),
-    });
-
-    return {
-      ticket: updated,
-      successMessage: 'Support ticket closed successfully',
-    };
+    const result = await ticketAutomationService.closeTicket(userId, ticketId);
+    return result;
   }
 
   async deleteTicket(userId, ticketId) {
@@ -248,6 +127,16 @@ class SupportTicketService {
     return {
       successMessage: 'Support ticket deleted successfully',
     };
+  }
+
+  async getTicketHistory(userId, ticketId, query = {}) {
+    const result = await ticketAutomationService.getTicketHistory(userId, ticketId, query);
+    return result;
+  }
+
+  async escalateTicket(userId, ticketId) {
+    const result = await ticketAutomationService.escalateTicket(userId, ticketId);
+    return result;
   }
 }
 

@@ -268,7 +268,31 @@ class ApplicationService {
       throw new ValidationError('Invalid status value');
     }
 
+    const applications = await applicationRepository.findByIds(ids);
     await applicationRepository.bulkUpdate(ids, { status: newStatus });
+
+    for (const application of applications) {
+      try {
+        const program = application.program || await programRepository.findById(application.program.toString());
+        const recipientId = application.user._id || application.user;
+        if (newStatus === APPLICATION_STATUS.JOINED) {
+          await notificationService.sendInAppNotification('buildApplicationApproved', {
+            recipientId: recipientId.toString(),
+            programName: program?.title || 'Program',
+            applicationId: application._id.toString(),
+          });
+        } else if (newStatus === APPLICATION_STATUS.REJECTED) {
+          await notificationService.sendInAppNotification('buildApplicationRejected', {
+            recipientId: recipientId.toString(),
+            programName: program?.title || 'Program',
+            applicationId: application._id.toString(),
+            reason: 'Your application has been rejected',
+          });
+        }
+      } catch (_error) {
+        // Notification failure is non-blocking
+      }
+    }
 
     return { updatedCount: ids.length };
   }

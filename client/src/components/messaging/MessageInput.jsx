@@ -1,43 +1,70 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { Send, Paperclip, X, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const MessageInput = ({ onSend, placeholder = 'Type a message...', disabled = false, onTyping, onStopTyping }) => {
+const MessageInput = ({ onSend, placeholder = 'Type a message...', disabled = false, onTypingStart, onTypingStop, onCancelEdit, isEditing = false, error }) => {
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState([]);
   const textareaRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (!content.trim() && attachments.length === 0) return;
     onSend({ content: content.trim(), attachments });
     setContent('');
     setAttachments([]);
-    if (onStopTyping) onStopTyping();
-  };
+    if (onTypingStop) onTypingStop();
+    textareaRef.current?.focus();
+  }, [content, attachments, onSend, onTypingStop]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+    if (e.key === 'Escape' && isEditing && onCancelEdit) {
+      onCancelEdit();
+    }
+  }, [handleSend, isEditing, onCancelEdit]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     setContent(e.target.value);
-    if (onTyping) {
-      onTyping();
+    if (onTypingStart) {
+      onTypingStart();
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {
-        if (onStopTyping) onStopTyping();
+        if (onTypingStop) onTypingStop();
       }, 2000);
     }
-  };
+  }, [onTypingStart, onTypingStop]);
+
+  const handleFileChange = useCallback((e) => {
+    const files = Array.from(e.target.files || []);
+    const newAttachments = files.map((file) => ({
+      type: file.type.startsWith('image/') ? 'image' : 'document',
+      url: URL.createObjectURL(file),
+      name: file.name,
+      size: file.size,
+      mimeType: file.type,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
 
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isEditing]);
+
+  const isSendDisabled = disabled || (!content.trim() && attachments.length === 0);
 
   return (
     <div
@@ -48,10 +75,50 @@ const MessageInput = ({ onSend, placeholder = 'Type a message...', disabled = fa
         borderTop: '1px solid var(--color-border)',
         backgroundColor: '#fff',
         borderRadius: '0 0 16px 16px',
+        alignItems: 'flex-end',
+        position: 'relative',
       }}
     >
-      <button
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            position: 'absolute',
+            top: -36,
+            left: '1rem',
+            right: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 0.75rem',
+            borderRadius: 8,
+            backgroundColor: '#FEE2E2',
+            color: '#991B1B',
+            fontSize: '0.8rem',
+          }}
+          role="alert"
+        >
+          <AlertCircle size={14} aria-hidden="true" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         type="button"
+        onClick={() => fileInputRef.current?.click()}
         style={{
           width: 40,
           height: 40,
@@ -68,7 +135,7 @@ const MessageInput = ({ onSend, placeholder = 'Type a message...', disabled = fa
         aria-label="Attach file"
       >
         <Paperclip size={18} />
-      </button>
+      </motion.button>
 
       <div style={{ flex: 1, position: 'relative' }}>
         <textarea
@@ -90,31 +157,59 @@ const MessageInput = ({ onSend, placeholder = 'Type a message...', disabled = fa
             boxSizing: 'border-box',
             maxHeight: 120,
             fontFamily: 'inherit',
+            backgroundColor: 'var(--color-bg)',
+            color: 'var(--color-heading)',
           }}
           aria-label="Message input"
+          aria-invalid={!!error}
         />
       </div>
+
+      {isEditing && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          type="button"
+          onClick={onCancelEdit}
+          aria-label="Cancel editing"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            backgroundColor: '#F3F4F6',
+            color: '#4A5568',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <X size={18} />
+        </motion.button>
+      )}
 
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={handleSend}
-        disabled={disabled || (!content.trim() && attachments.length === 0)}
+        disabled={isSendDisabled}
+        aria-label={isEditing ? 'Update message' : 'Send message'}
         style={{
           width: 40,
           height: 40,
           borderRadius: '50%',
           border: 'none',
-          cursor: disabled || (!content.trim() && attachments.length === 0) ? 'not-allowed' : 'pointer',
+          cursor: isSendDisabled ? 'not-allowed' : 'pointer',
           backgroundColor: '#D35400',
           color: 'white',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          opacity: disabled || (!content.trim() && attachments.length === 0) ? 0.5 : 1,
+          opacity: isSendDisabled ? 0.5 : 1,
         }}
-        aria-label="Send message"
       >
         <Send size={18} />
       </motion.button>

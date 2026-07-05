@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Bell, Check, Trash2, ExternalLink } from 'lucide-react';
 
 const categoryStyles = {
@@ -33,7 +34,14 @@ const formatTime = (dateString) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-const NotificationCard = ({
+const cardVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  hover: { y: -2, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' },
+  tap: { scale: 0.995 },
+};
+
+const NotificationCard = React.memo(({
   notification,
   onMarkRead,
   onDelete,
@@ -41,14 +49,41 @@ const NotificationCard = ({
   showActions = true,
   compact = false,
 }) => {
-  if (!notification) return null;
-
-  const category = categoryStyles[notification.category] || categoryStyles.announcement;
+  const category = useMemo(() => categoryStyles[notification.category] || categoryStyles.announcement, [notification.category]);
   const isUnread = !notification.isRead;
 
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick?.();
+    }
+  }, [onClick]);
+
+  const handleMarkRead = useCallback((e) => {
+    e.stopPropagation();
+    onMarkRead?.(notification._id);
+  }, [onMarkRead, notification._id]);
+
+  const handleDelete = useCallback((e) => {
+    e.stopPropagation();
+    onDelete?.(notification._id);
+  }, [onDelete, notification._id]);
+
+  if (!notification) return null;
+
   return (
-    <div
+    <motion.div
+      role="article"
+      aria-label={`${isUnread ? 'Unread' : 'Read'} notification: ${notification.title}`}
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      whileHover={!notification.isDeleted ? 'hover' : undefined}
+      whileTap={!notification.isDeleted ? 'tap' : undefined}
+      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       style={{
         position: 'relative',
         display: 'flex',
@@ -58,37 +93,32 @@ const NotificationCard = ({
         backgroundColor: isUnread ? '#FFFBEB' : 'var(--color-card)',
         borderLeft: `4px solid ${priorityBorder[notification.priority] || priorityBorder.medium}`,
         border: `1px solid ${isUnread ? 'rgba(245,158,11,0.25)' : 'var(--color-border)'}`,
-        cursor: 'pointer',
-        transition: 'var(--transition-fast)',
+        cursor: notification.isDeleted ? 'not-allowed' : 'pointer',
         opacity: notification.isDeleted ? 0.6 : 1,
-      }}
-      onMouseEnter={(e) => {
-        if (!notification.isDeleted) {
-          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          e.currentTarget.style.transform = 'translateX(2px)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.transform = 'translateX(0)';
       }}
     >
       {isUnread && (
-        <div style={{
-          position: 'absolute',
-          top: '0.5rem',
-          right: '0.5rem',
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          backgroundColor: 'var(--color-primary)',
-        }} />
+        <motion.div
+          aria-hidden="true"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+          style={{
+            position: 'absolute',
+            top: '0.5rem',
+            right: '0.5rem',
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-primary)',
+          }}
+        />
       )}
 
       <div style={{
         width: 36,
         height: 36,
-        borderRadius: '10px',
+        borderRadius: 10,
         backgroundColor: category.bg,
         color: category.color,
         display: 'flex',
@@ -96,7 +126,7 @@ const NotificationCard = ({
         justifyContent: 'center',
         fontSize: '1rem',
         flexShrink: 0,
-      }}>
+      }} aria-hidden="true">
         {notification.icon ? <img src={notification.icon} alt="" style={{ width: 20, height: 20 }} /> : category.icon}
       </div>
 
@@ -120,7 +150,7 @@ const NotificationCard = ({
             {notification.title}
           </h4>
           {notification.actionUrl && (
-            <ExternalLink size={14} style={{ color: 'var(--color-body)', flexShrink: 0 }} />
+            <ExternalLink size={14} style={{ color: 'var(--color-body)', flexShrink: 0 }} aria-hidden="true" />
           )}
         </div>
 
@@ -155,8 +185,10 @@ const NotificationCard = ({
           }}>
             {notification.category}
           </span>
-          <span>•</span>
-          <span>{formatTime(notification.createdAt || notification.sentAt)}</span>
+          <span aria-hidden="true">•</span>
+          <time dateTime={notification.createdAt || notification.sentAt} style={{ fontSize: 'inherit', color: 'inherit' }}>
+            {formatTime(notification.createdAt || notification.sentAt)}
+          </time>
         </div>
       </div>
 
@@ -168,9 +200,13 @@ const NotificationCard = ({
           flexShrink: 0,
         }}>
           {isUnread && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onMarkRead?.(notification._id); }}
+            <motion.button
+              key="mark-read"
+              onClick={handleMarkRead}
               title="Mark as read"
+              aria-label="Mark notification as read"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               style={{
                 width: 28,
                 height: 28,
@@ -182,15 +218,18 @@ const NotificationCard = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'var(--transition-fast)',
               }}
             >
               <Check size={14} />
-            </button>
+            </motion.button>
           )}
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete?.(notification._id); }}
+          <motion.button
+            key="delete"
+            onClick={handleDelete}
             title="Delete"
+            aria-label="Delete notification"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             style={{
               width: 28,
               height: 28,
@@ -202,15 +241,17 @@ const NotificationCard = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'var(--transition-fast)',
             }}
           >
             <Trash2 size={14} />
-          </button>
+          </motion.button>
         </div>
       )}
-    </div>
+    </motion.div>
   );
-};
+});
+
+NotificationCard.displayName = 'NotificationCard';
 
 export default NotificationCard;
+

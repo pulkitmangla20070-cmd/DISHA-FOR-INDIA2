@@ -102,6 +102,12 @@ class ApplicationRepository {
     return Application.updateMany({ _id: { $in: ids } }, { $set: updateData });
   }
 
+  async findByIds(ids) {
+    return Application.find({ _id: { $in: ids } })
+      .populate('user', 'name email volunteerId')
+      .populate('program', 'title programId');
+  }
+
   async getStatistics() {
     const [total, joined, withdrawn, completed, cancelled, applicationsThisMonth] =
       await Promise.all([

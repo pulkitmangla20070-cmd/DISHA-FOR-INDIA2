@@ -1,26 +1,69 @@
-import React, { useState } from 'react';
-import { MessageSquare, Plus, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback, useEffect } from 'react';
+import { MessageSquare, Plus, X, Menu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import ConversationList from '../../components/messaging/ConversationList';
 import MessageWindow from '../../components/messaging/MessageWindow';
 import { getConversations, createConversation } from '../../services/conversationsService';
-import EmptyState from '../../components/volunteer/EmptyState';
+import { ErrorState } from '../../components/messaging/MessagingSkeletons';
+import useSocket from '../../hooks/useSocket';
 
 const Messages = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [onlineUserIds, setOnlineUserIds] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const queryClient = useQueryClient();
   const { user, loading } = useAuth();
+  const { onNewMessage, onMessageRead, onUserOnline, onUserOffline, offNewMessage, offMessageRead, offUserOnline, offUserOffline } = useSocket();
 
-  const { data, isLoading } = useQuery({
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleUserOnline = (data) => {
+      setOnlineUserIds((prev) => [...new Set([...prev, data.userId])]);
+    };
+
+    const handleUserOffline = (data) => {
+      setOnlineUserIds((prev) => prev.filter((id) => id !== data.userId));
+    };
+
+    const handleNewMessage = () => {
+      queryClient.invalidateQueries(['messages']);
+      queryClient.invalidateQueries(['conversations']);
+    };
+
+    const handleMessageRead = () => {
+      queryClient.invalidateQueries(['messages']);
+    };
+
+    onUserOnline(handleUserOnline);
+    onUserOffline(handleUserOffline);
+    onNewMessage(handleNewMessage);
+    onMessageRead(handleMessageRead);
+
+    return () => {
+      offUserOnline(handleUserOnline);
+      offUserOffline(handleUserOffline);
+      offNewMessage(handleNewMessage);
+      offMessageRead(handleMessageRead);
+    };
+  }, [queryClient, onNewMessage, onMessageRead, onUserOnline, onUserOffline, offNewMessage, offMessageRead, offUserOnline, offUserOffline]);
+
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
       const res = await getConversations({ page: 1, limit: 50 });
       return res.data || [];
     },
     enabled: !loading && !!user,
+    refetchInterval: 30000,
   });
 
   const createMutation = useMutation({
@@ -30,58 +73,199 @@ const Messages = () => {
       if (conversation) {
         queryClient.invalidateQueries(['conversations']);
         setActiveConversation(conversation);
+        setShowCreateModal(false);
+        setSidebarOpen(false);
       }
-      setShowCreateModal(false);
     },
   });
 
   const conversations = data?.conversations || [];
 
-  const handleCreateConversation = () => {
-    setShowCreateModal(true);
-  };
-
-  const handleSelectConversation = (conversation) => {
+  const handleSelectConversation = useCallback((conversation) => {
     setActiveConversation(conversation._id);
-  };
+    setSidebarOpen(false);
+  }, []);
+
+  const handleBackToSidebar = useCallback(() => {
+    setActiveConversation(null);
+    setSidebarOpen(true);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  if (isError && !data) {
+    return (
+      <div style={{ padding: '1.5rem', maxWidth: 1400, margin: '0 auto', height: 'calc(100vh - 120px)', minHeight: 600 }}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.6rem', fontWeight: 800, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <MessageSquare size={26} color="#D35400" />
+            Messages
+          </h1>
+        </div>
+        <ErrorState message="Failed to load conversations" onRetry={handleRetry} />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <MessageSquare size={28} color="#D35400" />
-          Messages
-        </h1>
-        <p style={{ margin: 0, color: 'var(--color-body)', fontSize: '0.9rem' }}>
-          Chat with volunteers, organizations, and support team
-        </p>
+    <div style={{ padding: '1.5rem', maxWidth: 1400, margin: '0 auto', height: 'calc(100vh - 120px)', minHeight: 600 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {isMobile && !activeConversation && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: '#F3F4F6',
+                color: '#4A5568',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+              aria-label="Toggle conversations"
+            >
+              <Menu size={20} />
+            </motion.button>
+          )}
+          <div>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.6rem', fontWeight: 800, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <MessageSquare size={26} color="#D35400" />
+              Messages
+            </h1>
+            <p style={{ margin: 0, color: 'var(--color-body)', fontSize: '0.85rem' }}>
+              Chat with volunteers, organizations, and support team
+            </p>
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.6rem 1.1rem',
+            borderRadius: 10,
+            border: 'none',
+            backgroundColor: '#D35400',
+            color: 'white',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          <Plus size={18} /> New Conversation
+        </motion.button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem', height: 'calc(100vh - 200px)' }}>
-        <ConversationList
-          conversations={conversations}
-          activeId={activeConversation}
-          onSelect={handleSelectConversation}
-          onCreateConversation={handleCreateConversation}
-          isLoading={isLoading}
-        />
-
-        <div>
-          {activeConversation ? (
-            <MessageWindow
-              conversationId={activeConversation}
-              onBack={() => setActiveConversation(null)}
-              currentUserId={user?._id}
-            />
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#fff', borderRadius: 16, border: '1px solid var(--color-border)' }}>
-              <EmptyState
-                type="search"
-                title="Select a conversation"
-                description="Choose a conversation from the list or start a new one to begin messaging."
+      <div style={{ display: 'flex', gap: '1.25rem', height: 'calc(100% - 80px)', minHeight: 520, position: 'relative' }}>
+        <AnimatePresence>
+          {(sidebarOpen || !isMobile) && (
+            <motion.div
+              initial={{ x: -280, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -280, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              style={{
+                width: isMobile ? '100%' : 320,
+                flexShrink: 0,
+                position: isMobile ? 'absolute' : 'relative',
+                inset: isMobile ? 0 : 'auto',
+                zIndex: isMobile ? 10 : 'auto',
+                background: isMobile ? '#fff' : 'transparent',
+              }}
+            >
+              {isMobile && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                  <button
+                    onClick={() => setSidebarOpen(false)}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      border: 'none',
+                      backgroundColor: '#F3F4F6',
+                      color: '#4A5568',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                    aria-label="Close conversations"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              )}
+              <ConversationList
+                conversations={conversations}
+                activeId={activeConversation}
+                onSelect={handleSelectConversation}
+                onCreateConversation={() => setShowCreateModal(true)}
+                isLoading={isLoading}
+                isError={isError}
+                refetch={refetch}
+                onlineUserIds={onlineUserIds}
               />
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <AnimatePresence mode="wait">
+            {activeConversation ? (
+              <motion.div
+                key={activeConversation}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                style={{ height: '100%' }}
+              >
+                <MessageWindow
+                  conversationId={activeConversation}
+                  onBack={isMobile ? handleBackToSidebar : undefined}
+                  currentUserId={user?._id}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  background: '#fff',
+                  borderRadius: 16,
+                  border: '1px solid var(--color-border)',
+                  padding: '2rem',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                  <MessageSquare size={32} style={{ color: '#D1D5DB' }} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-heading)', margin: '0 0 0.5rem' }}>Select a conversation</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-body)', maxWidth: 280, lineHeight: 1.6, margin: 0 }}>
+                  Choose a conversation from the list or start a new one to begin messaging.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

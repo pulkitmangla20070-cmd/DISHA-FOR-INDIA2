@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 import {
   Shield, Home, Calendar, Award, Trophy, LogOut, Menu, X,
-  LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, Settings, FileText, MessageSquare, HelpCircle
+  LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, Settings, FileText, MessageSquare, HelpCircle, Bell, Megaphone
 } from 'lucide-react';
 import NotificationBell from '../components/notifications/NotificationBell';
 import NotificationDrawer from '../components/notifications/NotificationDrawer';
@@ -38,18 +38,20 @@ const DashboardLayout = () => {
   };
 
   const volunteerNavItems = [
-    { name: 'Dashboard',     path: '/dashboard',   icon: <Home size={18} /> },
+    { name: 'Dashboard',     path: '/dashboard',    icon: <Home size={18} /> },
     { name: 'Notifications', path: '/notifications', icon: <Bell size={18} /> },
-    { name: 'Opportunities', path: '/programs',     icon: <Calendar size={18} /> },
-    { name: 'Leaderboard',   path: '/leaderboard',  icon: <Trophy size={18} /> },
-    { name: 'Certificates',  path: '/certificates', icon: <Award size={18} /> },
-    { name: 'Messages',      path: '/messages',      icon: <MessageSquare size={18} /> },
-    { name: 'Support',       path: '/support',       icon: <HelpCircle size={18} /> },
+    { name: 'Announcements', path: '/announcements',  icon: <Megaphone size={18} /> },
+    { name: 'Opportunities', path: '/programs',      icon: <Calendar size={18} /> },
+    { name: 'Leaderboard',   path: '/leaderboard',   icon: <Trophy size={18} /> },
+    { name: 'Certificates',  path: '/certificates',  icon: <Award size={18} /> },
+    { name: 'Messages',      path: '/messages',       icon: <MessageSquare size={18} /> },
+    { name: 'Support',       path: '/support',        icon: <HelpCircle size={18} /> },
   ];
 
   const adminNavItems = [
     { name: 'Dashboard',     path: '/admin/dashboard',    icon: <LayoutDashboard size={18} /> },
     { name: 'Notifications', path: '/notifications',      icon: <Bell size={18} /> },
+    { name: 'Announcements', path: '/admin/announcements', icon: <Megaphone size={18} /> },
     { name: 'Messages',      path: '/admin/messages',     icon: <MessageSquare size={18} /> },
     { name: 'Support',       path: '/admin/support',      icon: <HelpCircle size={18} /> },
     { name: 'Programs',      path: '/admin/programs',     icon: <Calendar size={18} /> },

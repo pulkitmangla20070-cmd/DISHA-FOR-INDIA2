@@ -46,6 +46,10 @@ router.patch('/replies/:replyId', authenticate, validateUpdateReply, ticketReply
 
 router.delete('/replies/:replyId', authenticate, ticketReplyController.deleteReply);
 
+router.get('/:id/history', authenticate, supportTicketController.getTicketHistory);
+
+router.post('/:id/escalate', authenticate, authorize(['ADMIN', 'SUPER_ADMIN']), supportTicketController.escalateTicket);
+
 router.delete('/:id', authenticate, validateGetSupportTicket, supportTicketController.deleteTicket);
 
 module.exports = router;

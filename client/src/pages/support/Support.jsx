@@ -1,22 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Ticket, Search, Plus, X } from 'lucide-react';
+import { Ticket, Search, Plus, Inbox, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUserTickets, getAllTickets, resolveTicket, closeTicket, assignTicket, createSupportTicket } from '../../services/supportTicketsService';
+import { useQuery } from '@tanstack/react-query';
+import { getUserTickets, getAllTickets } from '../../services/supportTicketsService';
 import EmptyState from '../../components/volunteer/EmptyState';
+import SkeletonLoader from '../../components/volunteer/SkeletonLoader';
+import TicketDetailModal from './TicketDetailModal';
+import CreateTicketModal from './CreateTicketModal';
+
+const statCards = [
+  { key: 'all', label: 'My Tickets', color: 'var(--color-primary)', Icon: Ticket },
+  { key: 'open', label: 'Open', color: 'var(--color-info)', Icon: Inbox },
+  { key: 'in_progress', label: 'In Progress', color: 'var(--color-accent)', Icon: Clock },
+  { key: 'resolved', label: 'Resolved', color: 'var(--color-secondary)', Icon: CheckCircle },
+  { key: 'closed', label: 'Closed', color: 'var(--color-purple)', Icon: XCircle },
+];
 
 const Support = () => {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const queryClient = useQueryClient();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user?.role?.toUpperCase());
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['support-tickets', filter],
     queryFn: async () => {
       const res = isAdmin
@@ -24,53 +34,82 @@ const Support = () => {
         : await getUserTickets({ page: 1, limit: 50, status: filter === 'all' ? null : filter });
       return res.data || {};
     },
-    enabled: !loading && !!user,
+    enabled: !authLoading && !!user,
   });
 
-  const tickets = data?.tickets || [];
+  const tickets = useMemo(() => data?.tickets || [], [data]);
 
-  const resolveMutation = useMutation({
-    mutationFn: ({ ticketId, resolution }) => resolveTicket(ticketId, resolution),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['support-tickets']);
-    },
-  });
+  const stats = useMemo(() => {
+    const all = tickets.length;
+    const open = tickets.filter(t => t.status === 'open').length;
+    const inProgress = tickets.filter(t => t.status === 'in_progress').length;
+    const resolved = tickets.filter(t => t.status === 'resolved').length;
+    const closed = tickets.filter(t => t.status === 'closed').length;
+    return { all, open, inProgress, resolved, closed };
+  }, [tickets]);
 
-  const closeMutation = useMutation({
-    mutationFn: (ticketId) => closeTicket(ticketId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['support-tickets']);
-    },
-  });
+  const values = useMemo(() => ({
+    all: stats.all,
+    open: stats.open,
+    in_progress: stats.inProgress,
+    resolved: stats.resolved,
+    closed: stats.closed,
+  }), [stats]);
 
-  const filteredTickets = tickets?.filter((ticket) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      ticket.subject?.toLowerCase().includes(query) ||
-      ticket.description?.toLowerCase().includes(query) ||
-      ticket.ticketId?.toLowerCase().includes(query)
+  const filteredTickets = useMemo(() => {
+    if (!searchQuery.trim()) return tickets;
+    const q = searchQuery.toLowerCase();
+    return tickets.filter(t =>
+      t.subject?.toLowerCase().includes(q) ||
+      t.description?.toLowerCase().includes(q) ||
+      t.ticketId?.toLowerCase().includes(q) ||
+      t.user?.name?.toLowerCase().includes(q)
     );
-  }) || [];
+  }, [tickets, searchQuery]);
 
-  const handleResolve = (ticket) => {
-    const resolution = window.prompt('Enter resolution details:');
-    if (resolution !== null && resolution.trim() !== '') {
-      resolveMutation.mutate({ ticketId: ticket._id, resolution });
+  const getPriorityConfig = (p) => {
+    switch (p) {
+      case 'urgent': return { label: 'Urgent', color: 'badge-red' };
+      case 'high': return { label: 'High', color: 'badge-orange' };
+      case 'medium': return { label: 'Medium', color: 'badge-blue' };
+      case 'low': return { label: 'Low', color: 'badge-purple' };
+      default: return { label: p || 'Unknown', color: 'badge-blue' };
     }
   };
 
-  const handleClose = (ticket) => {
-    if (window.confirm('Are you sure you want to close this ticket?')) {
-      closeMutation.mutate(ticket._id);
+  const getStatusConfig = (s) => {
+    switch (s) {
+      case 'open': return { label: 'Open', color: 'badge-blue' };
+      case 'in_progress': return { label: 'In Progress', color: 'badge-orange' };
+      case 'resolved': return { label: 'Resolved', color: 'badge-green' };
+      case 'closed': return { label: 'Closed', color: 'badge-purple' };
+      default: return { label: s || 'Unknown', color: 'badge-blue' };
     }
   };
+
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape' && selectedTicket) setSelectedTicket(null); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [selectedTicket]);
+
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <h3 style={{ color: 'var(--color-error)', margin: '0 0 0.5rem 0' }}>Failed to load tickets</h3>
+          <p style={{ color: 'var(--color-body)', margin: '0 0 1rem 0' }}>{(error?.message || 'Something went wrong. Please try again.')}</p>
+          <button onClick={() => refetch()} className="btn btn-secondary">Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Ticket size={28} color="#D35400" />
             Support Tickets
           </h1>
@@ -79,240 +118,161 @@ const Support = () => {
           </p>
         </div>
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => setShowCreateModal(true)}
           className="btn btn-primary"
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          <Plus size={18} />
-          Create Ticket
+          <Plus size={18} /> Create Ticket
         </motion.button>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+      <div className="grid grid-cols-5" style={{ marginBottom: '2rem', gap: '1rem' }}>
+        {statCards.map(({ key: valueKey, label, color, Icon }) => (
+          <motion.div
+            key={label}
+            className="card"
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderLeft: `4px solid ${color}` }}
+          >
+            <div style={{ padding: '0.6rem', borderRadius: '50%', background: `${color}15`, color }}>
+              <Icon size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-heading)', lineHeight: 1.1 }}>
+                {values[valueKey]}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-body)', whiteSpace: 'nowrap' }}>{label}</div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 250 }}>
-          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+          <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-body)' }} />
           <input
             type="text"
             placeholder="Search tickets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.6rem 0.75rem 0.6rem 2.25rem',
-              borderRadius: 10,
-              border: '1px solid var(--color-border)',
-              fontSize: '0.85rem',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            className="form-control"
+            style={{ paddingLeft: '2.25rem' }}
             aria-label="Search tickets"
           />
         </div>
-
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {['all', 'open', 'in_progress', 'resolved', 'closed'].map((status) => (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'open', label: 'Open' },
+            { key: 'in_progress', label: 'In Progress' },
+            { key: 'resolved', label: 'Resolved' },
+            { key: 'closed', label: 'Closed' },
+          ].map(({ key, label }) => (
             <button
-              key={status}
-              onClick={() => setFilter(status)}
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`badge ${filter === key ? '' : 'badge-blue'}`}
               style={{
-                padding: '0.5rem 1rem',
-                borderRadius: 8,
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                backgroundColor: filter === status ? '#D35400' : '#F3F4F6',
-                color: filter === status ? 'white' : '#4A5568',
-                transition: 'all 0.2s',
+                padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer',
+                backgroundColor: filter === key ? 'var(--color-primary)' : 'var(--color-bg)',
+                color: filter === key ? '#fff' : 'var(--color-body)',
+                border: 'none', borderRadius: 'var(--radius-md)',
               }}
-              aria-pressed={filter === status}
+              aria-pressed={filter === key}
             >
-              {status === 'all' ? 'All' : status.replace('_', ' ')}
+              {label}
             </button>
           ))}
         </div>
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: 40, height: 40, border: '4px solid #D35400', borderTopColor: 'transparent', borderRadius: '50%' }} />
+        <div style={{ overflow: 'hidden' }}>
+          <SkeletonLoader type="list" count={5} />
         </div>
       ) : filteredTickets.length === 0 ? (
-        <EmptyState
-          type="applications"
-          title="No tickets found"
-          description="You don't have any support tickets yet or try adjusting your filters."
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <EmptyState
+            type="applications"
+            title="No tickets found"
+            description="You don't have any support tickets yet or try adjusting your filters."
+          />
+        </motion.div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <motion.div
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <AnimatePresence>
-            {filteredTickets.map((ticket) => (
-              <motion.div
-                key={ticket._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                whileHover={{ scale: 1.005 }}
-                style={{
-                  background: 'white',
-                  borderRadius: 12,
-                  padding: '1rem 1.25rem',
-                  border: '1px solid var(--color-border)',
-                  cursor: 'pointer',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                }}
-                onClick={() => setSelectedTicket(ticket)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>{ticket.subject}</h4>
-                      <span className={`badge badge-${ticket.priority === 'critical' ? 'red' : ticket.priority === 'high' ? 'orange' : 'blue'}`}>
-                        {ticket.priority}
-                      </span>
-                      <span className={`badge badge-${ticket.status === 'open' ? 'blue' : ticket.status === 'resolved' ? 'green' : 'orange'}`}>
-                        {ticket.status}
+            {filteredTickets.map((ticket, index) => {
+              const pConfig = getPriorityConfig(ticket.priority);
+              const sConfig = getStatusConfig(ticket.status);
+              return (
+                <motion.div
+                  key={ticket._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, delay: index * 0.03 }}
+                  whileHover={{ scale: 1.005, transition: { duration: 0.15 } }}
+                  className="card"
+                  style={{
+                    cursor: 'pointer', padding: '1.15rem 1.5rem',
+                    boxShadow: 'var(--shadow-xs)',
+                  }}
+                  onClick={() => setSelectedTicket(ticket)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                        <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {ticket.subject}
+                        </h4>
+                        <span className={`badge ${pConfig.color}`}>{pConfig.label}</span>
+                        <span className={`badge ${sConfig.color}`}>{sConfig.label}</span>
+                      </div>
+                      <p style={{ margin: '0 0 0.4rem 0', fontSize: '0.85rem', color: 'var(--color-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {ticket.description}
+                      </p>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-body)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Ticket size={12} /> {ticket.ticketId}
                       </span>
                     </div>
-                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: 'var(--color-body)' }}>
-                      {ticket.description?.substring(0, 120)}{ticket.description?.length > 120 ? '...' : ''}
-                    </p>
-                    <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>ID: {ticket.ticketId}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-body)', whiteSpace: 'nowrap' }}>
+                      {new Date(ticket.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
-        </div>
+        </motion.div>
+      )}
+
+      {selectedTicket && (
+        <TicketDetailModal
+          ticket={selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          isAdmin={isAdmin}
+          onRefresh={refetch}
+        />
       )}
 
       {showCreateModal && (
         <CreateTicketModal
           onClose={() => setShowCreateModal(false)}
-          isSubmitting={false}
+          isAdmin={isAdmin}
         />
       )}
     </div>
-  );
-};
-
-const CreateTicketModal = ({ onClose, isSubmitting }) => {
-  const [subject, setSubject] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('general');
-  const mutation = useMutation({
-    mutationFn: (data) => createSupportTicket(data),
-    onSuccess: () => {
-      onClose();
-    },
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    mutation.mutate({ subject, description, category });
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15,23,42,0.4)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: 'white',
-          borderRadius: 16,
-          padding: '2rem',
-          width: '100%',
-          maxWidth: 480,
-          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-        }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="create-ticket-title"
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 id="create-ticket-title" style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Create Support Ticket</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4A5568' }} aria-label="Close modal">
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Subject</label>
-            <input
-              type="text"
-              className="form-control"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Brief description of your issue"
-              required
-              maxLength={255}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Category</label>
-            <select className="form-control" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="general">General</option>
-              <option value="technical">Technical</option>
-              <option value="billing">Billing</option>
-              <option value="complaint">Complaint</option>
-              <option value="suggestion">Suggestion</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Description</label>
-            <textarea
-              className="form-control"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your issue in detail..."
-              rows={5}
-              required
-              maxLength={2000}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSubmitting}>
-              Cancel
-            </button>
-            <motion.button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              <Plus size={18} />
-              {isSubmitting ? 'Creating...' : 'Create Ticket'}
-            </motion.button>
-          </div>
-        </form>
-      </motion.div>
-    </motion.div>
   );
 };
 

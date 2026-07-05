@@ -360,6 +360,22 @@ class ProgramService {
 
     const updatedProgram = await programRepository.updateStatus(programId, newStatus);
 
+    if (newStatus === PROGRAM_STATUS.ONGOING) {
+      try {
+        const applicationRepository = require('../application/application.repository');
+        const applications = await applicationRepository.findByProgram(programId, {}, { page: 1, limit: 1000 });
+        for (const app of applications.applications) {
+          await notificationService.sendInAppNotification('buildProgramUpdated', {
+            recipientId: app.user._id.toString(),
+            programName: updatedProgram.title,
+            programId: updatedProgram._id.toString(),
+          });
+        }
+      } catch (_error) {
+        // Notification failure is non-blocking
+      }
+    }
+
     if (newStatus === PROGRAM_STATUS.CANCELLED) {
       try {
         await notificationService.sendInAppNotification('buildProgramCancelled', {

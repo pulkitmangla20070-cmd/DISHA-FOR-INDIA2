@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 const TypingIndicator = ({ users = [] }) => {
   if (!users || users.length === 0) return null;
 
+  const names = users.map((u) => u.name || 'Someone').join(', ');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
@@ -35,7 +37,7 @@ const TypingIndicator = ({ users = [] }) => {
           style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#D35400' }}
         />
       </div>
-      <span>{users[0]?.name || 'Someone'} is typing...</span>
+      <span>{names} is typing...</span>
     </motion.div>
   );
 };

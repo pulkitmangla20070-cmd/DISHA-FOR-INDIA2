@@ -34,7 +34,10 @@ import AttendanceHistory from './pages/attendance/AttendanceHistory';
 import VolunteerHours from './pages/attendance/VolunteerHours';
 import Messages from './pages/messages/Messages';
 import Support from './pages/support/Support';
+import AdminSupport from './pages/support/AdminSupport';
 import NotificationCenter from './pages/notifications/NotificationCenter';
+import Announcements from './pages/announcements/Announcements';
+import AnnouncementDetails from './pages/announcements/AnnouncementDetails';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -45,6 +48,9 @@ import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminCertificates from './pages/admin/AdminCertificates';
 import Reports from './pages/admin/Reports';
 import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
+import AdminAnnouncementDashboard from './pages/admin/AdminAnnouncementDashboard';
+import AdminAnnouncementCreate from './pages/admin/AdminAnnouncementCreate';
+import AdminAnnouncementEdit from './pages/admin/AdminAnnouncementEdit';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
@@ -182,6 +188,8 @@ function App() {
                 <Route path="attendance/hours" element={<VolunteerHours />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="support" element={<Support />} />
+                <Route path="announcements" element={<Announcements />} />
+                <Route path="announcements/:id" element={<AnnouncementDetails />} />
               </Route>
               {/* Protected Admin Routes */}
               <Route path="/admin" element={
@@ -197,7 +205,10 @@ function App() {
                 <Route path="attendance" element={<AdminAttendance />} />
                 <Route path="certificates" element={<AdminCertificates />} />
                 <Route path="messages" element={<Messages />} />
-                <Route path="support" element={<Support />} />
+                <Route path="support" element={<AdminSupport />} />
+                <Route path="announcements" element={<AdminAnnouncementDashboard />} />
+                <Route path="announcements/create" element={<AdminAnnouncementCreate />} />
+                <Route path="announcements/:id/edit" element={<AdminAnnouncementEdit />} />
               </Route>
 
               {/* Protected Super Admin Routes */}

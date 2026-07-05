@@ -1,7 +1,8 @@
-import React from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import React, { useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Search, SlidersHorizontal, X, AlertCircle } from 'lucide-react';
 
-const NotificationFilters = ({
+const NotificationFilters = React.memo(({
   search,
   onSearchChange,
   category,
@@ -13,8 +14,9 @@ const NotificationFilters = ({
   sortBy,
   onSortByChange,
   onClear,
+  error,
 }) => {
-  const categories = [
+  const categories = useMemo(() => [
     { value: '', label: 'All Categories' },
     { value: 'application', label: 'Applications' },
     { value: 'program', label: 'Programs' },
@@ -26,46 +28,89 @@ const NotificationFilters = ({
     { value: 'security', label: 'Security' },
     { value: 'system', label: 'System' },
     { value: 'message', label: 'Messages' },
-  ];
+  ], []);
 
-  const priorities = [
+  const priorities = useMemo(() => [
     { value: '', label: 'All Priorities' },
     { value: 'low', label: 'Low' },
     { value: 'medium', label: 'Medium' },
     { value: 'high', label: 'High' },
     { value: 'critical', label: 'Critical' },
-  ];
+  ], []);
 
-  const readStatuses = [
+  const readStatuses = useMemo(() => [
     { value: '', label: 'All Status' },
     { value: 'false', label: 'Unread' },
     { value: 'true', label: 'Read' },
-  ];
+  ], []);
 
-  const sortOptions = [
+  const sortOptions = useMemo(() => [
     { value: 'createdAt', label: 'Newest First' },
     { value: '-createdAt', label: 'Oldest First' },
     { value: 'priority', label: 'Priority' },
-  ];
+  ], []);
+
+  const hasActiveFilters = useMemo(() => category || priority || readStatus || search, [category, priority, readStatus, search]);
+
+  const handleSearchChange = useCallback((e) => {
+    onSearchChange?.(e.target.value);
+  }, [onSearchChange]);
+
+  const handleCategoryChange = useCallback((e) => {
+    onCategoryChange?.(e.target.value);
+  }, [onCategoryChange]);
+
+  const handlePriorityChange = useCallback((e) => {
+    onPriorityChange?.(e.target.value);
+  }, [onPriorityChange]);
+
+  const handleReadStatusChange = useCallback((e) => {
+    onReadStatusChange?.(e.target.value);
+  }, [onReadStatusChange]);
+
+  const handleSortByChange = useCallback((e) => {
+    onSortByChange?.(e.target.value);
+  }, [onSortByChange]);
+
+  const handleClear = useCallback(() => {
+    onClear?.();
+  }, [onClear]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape' && search) {
+      onSearchChange?.('');
+    }
+  }, [search, onSearchChange]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.75rem',
-      padding: '1rem',
-      backgroundColor: 'var(--color-card)',
-      borderRadius: 'var(--radius-md)',
-      border: '1px solid var(--color-border)',
-    }}>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+        padding: '1rem',
+        backgroundColor: 'var(--color-card)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--color-border)',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <SlidersHorizontal size={16} style={{ color: 'var(--color-body)' }} />
+        <SlidersHorizontal size={16} style={{ color: 'var(--color-body)' }} aria-hidden="true" />
         <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-heading)' }}>
           Filters
         </span>
-        {onClear && (
+        {hasActiveFilters && (
+          <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)', fontWeight: 600 }}>
+            Active
+          </span>
+        )}
+        {onClear && hasActiveFilters && (
           <button
-            onClick={onClear}
+            onClick={handleClear}
+            aria-label="Clear all filters"
             style={{
               marginLeft: 'auto',
               display: 'flex',
@@ -79,18 +124,36 @@ const NotificationFilters = ({
               fontWeight: 600,
             }}
           >
-            <X size={14} /> Clear
+            <X size={14} aria-hidden="true" /> Clear
           </button>
         )}
       </div>
 
+      {error && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.75rem',
+          borderRadius: 8,
+          backgroundColor: '#FEE2E2',
+          color: '#991B1B',
+          fontSize: '0.85rem',
+        }} role="alert">
+          <AlertCircle size={16} aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
+
       <div style={{ position: 'relative' }}>
-        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }} aria-hidden="true" />
         <input
           type="text"
           placeholder="Search notifications..."
           value={search}
-          onChange={(e) => onSearchChange?.(e.target.value)}
+          onChange={handleSearchChange}
+          onKeyDown={handleKeyDown}
+          aria-label="Search notifications"
           style={{
             width: '100%',
             padding: '0.625rem 0.875rem 0.625rem 2.5rem',
@@ -104,10 +167,18 @@ const NotificationFilters = ({
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+        gap: '0.5rem',
+        '@media (max-width: 640px)': {
+          gridTemplateColumns: '1fr',
+        }
+      }}>
         <select
           value={category}
-          onChange={(e) => onCategoryChange?.(e.target.value)}
+          onChange={handleCategoryChange}
+          aria-label="Filter by category"
           style={{
             padding: '0.5rem 0.75rem',
             borderRadius: 8,
@@ -116,6 +187,7 @@ const NotificationFilters = ({
             fontSize: '0.82rem',
             color: 'var(--color-heading)',
             cursor: 'pointer',
+            minHeight: 40,
           }}
         >
           {categories.map((c) => (
@@ -125,7 +197,8 @@ const NotificationFilters = ({
 
         <select
           value={priority}
-          onChange={(e) => onPriorityChange?.(e.target.value)}
+          onChange={handlePriorityChange}
+          aria-label="Filter by priority"
           style={{
             padding: '0.5rem 0.75rem',
             borderRadius: 8,
@@ -134,6 +207,7 @@ const NotificationFilters = ({
             fontSize: '0.82rem',
             color: 'var(--color-heading)',
             cursor: 'pointer',
+            minHeight: 40,
           }}
         >
           {priorities.map((p) => (
@@ -143,7 +217,8 @@ const NotificationFilters = ({
 
         <select
           value={readStatus}
-          onChange={(e) => onReadStatusChange?.(e.target.value)}
+          onChange={handleReadStatusChange}
+          aria-label="Filter by read status"
           style={{
             padding: '0.5rem 0.75rem',
             borderRadius: 8,
@@ -152,6 +227,7 @@ const NotificationFilters = ({
             fontSize: '0.82rem',
             color: 'var(--color-heading)',
             cursor: 'pointer',
+            minHeight: 40,
           }}
         >
           {readStatuses.map((r) => (
@@ -161,7 +237,8 @@ const NotificationFilters = ({
 
         <select
           value={sortBy}
-          onChange={(e) => onSortByChange?.(e.target.value)}
+          onChange={handleSortByChange}
+          aria-label="Sort notifications by"
           style={{
             padding: '0.5rem 0.75rem',
             borderRadius: 8,
@@ -170,6 +247,7 @@ const NotificationFilters = ({
             fontSize: '0.82rem',
             color: 'var(--color-heading)',
             cursor: 'pointer',
+            minHeight: 40,
           }}
         >
           {sortOptions.map((s) => (
@@ -177,8 +255,11 @@ const NotificationFilters = ({
           ))}
         </select>
       </div>
-    </div>
+    </motion.div>
   );
-};
+});
+
+NotificationFilters.displayName = 'NotificationFilters';
 
 export default NotificationFilters;
+

@@ -3,8 +3,11 @@ const jwt = require('../utils/jwt');
 const User = require('../modules/user/user.model');
 
 let io = null;
+const onlineUsers = new Map();
 
 const getSocketServer = () => io;
+
+const getOnlineUsers = () => Array.from(onlineUsers.keys());
 
 const broadcastToUser = (userId, event, data) => {
   if (io) {
@@ -59,6 +62,8 @@ const initializeSocket = (server) => {
     const user = socket.user;
 
     socket.join(`user:${user._id.toString()}`);
+    onlineUsers.set(user._id.toString(), { userId: user._id.toString(), name: user.name, email: user.email, socketId: socket.id });
+    io.emit('user-online', { userId: user._id.toString(), name: user.name, email: user.email, online: true });
 
     socket.on('join-room', (conversationId) => {
       socket.join(`conversation:${conversationId}`);
@@ -68,10 +73,24 @@ const initializeSocket = (server) => {
       socket.leave(`conversation:${conversationId}`);
     });
 
+    socket.on('send-message', async (data) => {
+      const { conversationId, message } = data;
+      try {
+        await broadcastToConversation(conversationId, 'new-message', {
+          message,
+          conversationId,
+          userId: user._id.toString(),
+        });
+      } catch (_error) {
+        // Socket broadcast is non-blocking
+      }
+    });
+
     socket.on('typing', ({ conversationId }) => {
       socket.to(`conversation:${conversationId}`).emit('typing', {
         userId: user._id.toString(),
         conversationId,
+        name: user.name,
       });
     });
 
@@ -91,6 +110,8 @@ const initializeSocket = (server) => {
     });
 
     socket.on('disconnect', () => {
+      onlineUsers.delete(user._id.toString());
+      io.emit('user-offline', { userId: user._id.toString(), name: user.name, email: user.email, online: false });
       socket.leave(`user:${user._id.toString()}`);
     });
   });
@@ -103,4 +124,5 @@ module.exports = {
   getSocketServer,
   broadcastToUser,
   broadcastToConversation,
+  getOnlineUsers,
 };

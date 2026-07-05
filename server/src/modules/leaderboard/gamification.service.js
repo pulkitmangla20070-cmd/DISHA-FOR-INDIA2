@@ -104,6 +104,16 @@ class GamificationService {
         });
 
         earnedBadges.push(userBadge);
+
+        try {
+          await notificationService.sendInAppNotification('buildBadgeEarned', {
+            recipientId: userId,
+            badgeName: badge.name,
+            badgeDescription: badge.description,
+          });
+        } catch (_error) {
+          // Notification failure is non-blocking
+        }
       }
     }
 

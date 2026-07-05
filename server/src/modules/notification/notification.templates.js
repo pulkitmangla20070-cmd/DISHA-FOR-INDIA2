@@ -271,6 +271,66 @@ const buildVolunteerLevelUp = ({ recipientId, newLevel }) => ({
   metadata: { newLevel },
 });
 
+const buildTicketCreated = ({ recipientId, ticketId, subject }) => ({
+  recipient: recipientId,
+  title: 'Support Ticket Created',
+  message: `Your support ticket "${subject}" (${ticketId}) has been created. We will get back to you shortly.`,
+  type: NOTIFICATION_TYPES.ADMIN_ANNOUNCEMENT,
+  category: 'support',
+  priority: PRIORITY.MEDIUM,
+  channel: CHANNEL.IN_APP,
+  status: STATUS.SENT,
+  metadata: { ticketId, subject },
+});
+
+const buildTicketUpdated = ({ recipientId, ticketId, subject, update }) => ({
+  recipient: recipientId,
+  title: 'Support Ticket Updated',
+  message: `Your support ticket "${subject}" (${ticketId}) has been updated: ${update || 'status changed'}.`,
+  type: NOTIFICATION_TYPES.ADMIN_ANNOUNCEMENT,
+  category: 'support',
+  priority: PRIORITY.MEDIUM,
+  channel: CHANNEL.IN_APP,
+  status: STATUS.SENT,
+  metadata: { ticketId, subject, update },
+});
+
+const buildTicketResolved = ({ recipientId, ticketId, subject }) => ({
+  recipient: recipientId,
+  title: 'Support Ticket Resolved',
+  message: `Your support ticket "${subject}" (${ticketId}) has been resolved. Please review and close if satisfied.`,
+  type: NOTIFICATION_TYPES.ADMIN_ANNOUNCEMENT,
+  category: 'support',
+  priority: PRIORITY.HIGH,
+  channel: CHANNEL.IN_APP,
+  status: STATUS.SENT,
+  metadata: { ticketId, subject },
+});
+
+const buildTicketClosed = ({ recipientId, ticketId, subject }) => ({
+  recipient: recipientId,
+  title: 'Support Ticket Closed',
+  message: `Your support ticket "${subject}" (${ticketId}) has been closed. Thank you for contacting support.`,
+  type: NOTIFICATION_TYPES.ADMIN_ANNOUNCEMENT,
+  category: 'support',
+  priority: PRIORITY.MEDIUM,
+  channel: CHANNEL.IN_APP,
+  status: STATUS.SENT,
+  metadata: { ticketId, subject },
+});
+
+const buildAdminTicketAssigned = ({ recipientId, ticketId, subject }) => ({
+  recipient: recipientId,
+  title: 'New Support Ticket Assigned',
+  message: `You have been assigned a new support ticket "${subject}" (${ticketId}). Please review and take action.`,
+  type: NOTIFICATION_TYPES.ADMIN_ANNOUNCEMENT,
+  category: 'support',
+  priority: PRIORITY.HIGH,
+  channel: CHANNEL.IN_APP,
+  status: STATUS.SENT,
+  metadata: { ticketId, subject },
+});
+
 const buildLeaderboardPositionChanged = ({ recipientId, newPosition, leaderboardType }) => ({
   recipient: recipientId,
   title: 'Leaderboard Position Changed',
@@ -319,4 +379,9 @@ module.exports = {
   buildVolunteerLevelUp,
   buildLeaderboardPositionChanged,
   buildWelcome,
+  buildTicketCreated,
+  buildTicketUpdated,
+  buildTicketResolved,
+  buildTicketClosed,
+  buildAdminTicketAssigned,
 };
