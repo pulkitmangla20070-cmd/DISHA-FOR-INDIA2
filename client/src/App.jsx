@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerProvider } from './context/VolunteerContext';
+import { NotificationsProvider } from './context/NotificationsContext';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
@@ -161,7 +162,9 @@ function App() {
             {/* Protected Volunteer Routes */}
             <Route path="/" element={
               <ProtectedRoute allowedRoles={['VOLUNTEER', 'COORDINATOR', 'ADMIN', 'SUPER_ADMIN']}>
-                <DashboardLayout />
+                <NotificationsProvider>
+                  <DashboardLayout />
+                </NotificationsProvider>
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<Dashboard />} />
@@ -183,7 +186,9 @@ function App() {
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']}>
-                <DashboardLayout />
+                <NotificationsProvider>
+                  <DashboardLayout />
+                </NotificationsProvider>
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
@@ -199,7 +204,9 @@ function App() {
             {/* Protected Super Admin Routes */}
             <Route path="/super-admin" element={
               <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-                <DashboardLayout />
+                <NotificationsProvider>
+                  <DashboardLayout />
+                </NotificationsProvider>
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<SuperAdminDashboard />} />
@@ -208,7 +215,9 @@ function App() {
             {/* Protected Volunteer Analytics */}
             <Route path="/volunteer" element={
               <ProtectedRoute allowedRoles={['VOLUNTEER', 'COORDINATOR', 'ADMIN', 'SUPER_ADMIN']}>
-                <DashboardLayout />
+                <NotificationsProvider>
+                  <DashboardLayout />
+                </NotificationsProvider>
               </ProtectedRoute>
             }>
               <Route path="analytics" element={<VolunteerAnalytics />} />
