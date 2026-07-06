@@ -17,6 +17,8 @@ import Programs from './pages/Programs';
 import Leaderboard from './pages/Leaderboard';
 import Certificates from './pages/certificates/Certificates';
 import CertificateDetails from './pages/certificates/CertificateDetails';
+import Announcements from './pages/announcements/Announcements';
+import NotificationCenter from './pages/notifications/NotificationCenter';
 import ProfileSetup from './pages/ProfileSetup';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
@@ -44,6 +46,8 @@ import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import Reports from './pages/admin/Reports';
 import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
+import AdminAnnouncementDashboard from './pages/admin/AdminAnnouncementDashboard';
+import AdminCertificates from './pages/admin/AdminCertificates';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
@@ -168,6 +172,8 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="notifications" element={<NotificationCenter />} />
+              <Route path="announcements" element={<Announcements />} />
               <Route path="certificates" element={<Certificates />} />
               <Route path="certificates/:id" element={<CertificateDetails />} />
               <Route path="profile/setup" element={<ProfileSetup />} />
@@ -192,11 +198,13 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="announcements" element={<AdminAnnouncementDashboard />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="reports" element={<Reports />} />
               <Route path="programs" element={<AdminPrograms />} />
               <Route path="applications" element={<AdminApplications />} />
               <Route path="attendance" element={<AdminAttendance />} />
+              <Route path="certificates" element={<AdminCertificates />} />
               <Route path="messages" element={<Messages />} />
               <Route path="support" element={<Support />} />
             </Route>
