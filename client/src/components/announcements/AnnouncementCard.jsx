@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Megaphone, Calendar, Users, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Calendar, Users, ExternalLink } from 'lucide-react';
 
 const priorityBorder = {
   low: '#94A3B8',
@@ -78,7 +77,6 @@ const AnnouncementCard = React.memo(
       [onClick]
     );
 
-    const announcementId = announcement._id || announcement.announcementId;
     const targetLabel = {
       all_users: 'All Users',
       volunteers: 'Volunteers',

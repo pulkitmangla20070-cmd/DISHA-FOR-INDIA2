@@ -1,23 +1,19 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BellOff, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { getAnnouncements } from '../../services/announcementsService';
-import { useAuth } from '../../context/AuthContext';
 import AnnouncementCard from '../../components/announcements/AnnouncementCard';
 import AnnouncementBanner from '../../components/announcements/AnnouncementBanner';
 import AnnouncementFilters from '../../components/announcements/AnnouncementFilters';
 import AnnouncementSkeleton from '../../components/announcements/AnnouncementSkeleton';
 import AnnouncementEmptyState from '../../components/announcements/AnnouncementEmptyState';
 import AnnouncementPagination from '../../components/announcements/AnnouncementPagination';
-import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 9;
 
 const Announcements = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -36,7 +32,7 @@ const Announcements = () => {
     return p;
   }, [page, search, type, priority, targetAudience]);
 
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ['announcements', params],
     queryFn: async () => {
       setError(null);
@@ -65,30 +61,17 @@ const Announcements = () => {
   }, [announcements, bannerDismissed]);
 
   const listAnnouncements = useMemo(() => {
-    if (topAnnouncement && !bannerDismissed) {
-      return announcements.filter((a) => (a._id || a.announcementId) !== (topAnnouncement._id || topAnnouncement.announcementId));
-    }
-    return announcements;
+    if (!topAnnouncement || bannerDismissed) return announcements;
+    return announcements.filter(
+      (a) => (a._id || a.announcementId) !== (topAnnouncement._id || topAnnouncement.announcementId)
+    );
   }, [announcements, topAnnouncement, bannerDismissed]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, type, priority, targetAudience]);
-
-  const handleSearch = (val) => {
-    setSearch(val);
-  };
 
   const handleClearFilters = () => {
     setSearch('');
     setType('');
     setPriority('');
     setTargetAudience('');
-  };
-
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (isLoading) {
@@ -110,7 +93,7 @@ const Announcements = () => {
           </Link>
         </div>
         <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-heading)', margin: '0 0 0.5rem' }}>
-          <BellOff size={28} style={{ color: 'var(--color-primary)', display: 'inline', marginRight: '0.5rem' }} aria-hidden="true" />
+          <Info size={28} style={{ color: 'var(--color-primary)', display: 'inline', marginRight: '0.5rem' }} aria-hidden="true" />
           Announcements
         </h1>
         <p style={{ color: 'var(--color-body)', margin: 0 }}>
@@ -120,7 +103,7 @@ const Announcements = () => {
 
       <AnnouncementFilters
         search={search}
-        onSearchChange={handleSearch}
+        onSearchChange={setSearch}
         type={type}
         onTypeChange={setType}
         priority={priority}
@@ -180,7 +163,10 @@ const Announcements = () => {
         totalPages={totalPages}
         totalItems={total}
         itemsPerPage={PAGE_SIZE}
-        onPageChange={handlePageChange}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
     </div>
   );

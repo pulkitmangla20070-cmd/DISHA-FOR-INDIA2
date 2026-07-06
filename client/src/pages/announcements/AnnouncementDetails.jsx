@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Users, Calendar, Tag, Shield } from 'lucide-react';
-import { getAnnouncementById } from '../../services/announcementsService';
+import { getAnnouncementById, publishAnnouncement, archiveAnnouncement, deleteAnnouncement } from '../../services/announcementsService';
 import { useAuth } from '../../context/AuthContext';
 import AnnouncementSkeleton from '../../components/announcements/AnnouncementSkeleton';
 import AnnouncementEmptyState from '../../components/announcements/AnnouncementEmptyState';
@@ -46,6 +46,7 @@ const formatDateTime = (dateString) => {
 const AnnouncementDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'].includes(user?.role?.toUpperCase());
 
@@ -217,7 +218,6 @@ const AnnouncementDetails = () => {
                   <button
                     onClick={async () => {
                       try {
-                        const { publishAnnouncement } = await import('../../services/announcementsService');
                         const res = await publishAnnouncement(announcement._id || announcement.announcementId);
                         if (res.success) {
                           toast.success('Announcement published');
@@ -235,10 +235,9 @@ const AnnouncementDetails = () => {
                 )}
                 {announcement.status !== 'archived' && (
                   <button
-                    onClick={async () => {
-                      try {
-                        const { archiveAnnouncement } = await import('../../services/announcementsService');
-                        const res = await archiveAnnouncement(announcement._id || announcement.announcementId);
+                  onClick={async () => {
+                    try {
+                      const res = await archiveAnnouncement(announcement._id || announcement.announcementId);
                         if (res.success) {
                           toast.success('Announcement archived');
                           queryClient.invalidateQueries(['announcements']);
@@ -257,7 +256,6 @@ const AnnouncementDetails = () => {
                   onClick={async () => {
                     if (!window.confirm('Are you sure you want to delete this announcement?')) return;
                     try {
-                      const { deleteAnnouncement } = await import('../../services/announcementsService');
                       const res = await deleteAnnouncement(announcement._id || announcement.announcementId);
                       if (res.success) {
                         toast.success('Announcement deleted');

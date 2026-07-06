@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Megaphone, Calendar, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AnnouncementBanner = ({ announcement, onClose }) => {
-  if (!announcement) return null;
-
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') {
       onClose?.();
     }
   }, [onClose]);
+
+  if (!announcement) return null;
 
   return (
     <motion.div

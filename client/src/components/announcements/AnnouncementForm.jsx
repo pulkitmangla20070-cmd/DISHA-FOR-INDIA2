@@ -83,7 +83,6 @@ const AnnouncementForm = ({ announcementId, onSuccess, onCancel }) => {
     if (!isEdit) return;
     const fetchAnnouncement = async () => {
       try {
-        const { getAnnouncementById } = await import('../../services/announcementsService');
         const res = await getAnnouncementById(announcementId);
         if (res.success) {
           const a = res.data?.announcement || res.data;

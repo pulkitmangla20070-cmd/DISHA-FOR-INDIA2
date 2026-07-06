@@ -135,7 +135,7 @@ const AnnouncementFilters = ({
         </div>
 
         <AnimatePresence>
-          {(showMobileFilters || true) && (
+          {(showMobileFilters || window.innerWidth > 768) && (
             <motion.div
               id="announcement-filters-panel"
               initial={{ opacity: 0, height: 0 }}
