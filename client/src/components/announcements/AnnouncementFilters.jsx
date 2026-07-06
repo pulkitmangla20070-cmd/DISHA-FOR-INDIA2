@@ -1,205 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Filter } from 'lucide-react';
+import { Search, X, Filter, ChevronDown } from 'lucide-react';
 
 const AnnouncementFilters = ({
-  search,
-  onSearchChange,
-  type,
-  onTypeChange,
-  priority,
-  onPriorityChange,
-  status,
-  onStatusChange,
-  targetAudience,
-  onTargetAudienceChange,
-  showAdminFilters = false,
-  onClear,
+  search, onSearchChange, type, onTypeChange, priority, onPriorityChange, status, onStatusChange, targetAudience, onTargetAudienceChange, showAdminFilters = false, onClear,
 }) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-
   const hasActive = [search, type, priority, status, targetAudience].some((v) => v !== '' && v !== 'all');
 
-  const FilterSelect = ({ label, value, onChange, options }) => (
+  useEffect(() => {
+    const handler = () => { if (window.innerWidth > 768) setShowMobileFilters(false); };
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  const FilterSelect = ({ label, value, onChange, options, icon: Icon }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       {label && (
-        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-body)' }}>{label}:</span>
+        <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-heading)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          {Icon && <Icon size={13} aria-hidden="true" style={{ color: 'var(--color-body)' }} />}
+          {label}
+        </label>
       )}
-      <select
-        className="form-control"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={label}
-        style={{ padding: '0.4rem 2rem 0.4rem 1rem', width: 'auto', minWidth: '150px' }}
-      >
-        <option value="">All</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <div style={{ position: 'relative' }}>
+        <select
+          className="form-control"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={label}
+          style={{ padding: '0.5rem 2.25rem 0.5rem 0.875rem', width: 'auto', minWidth: '155px', appearance: 'none', backgroundColor: 'var(--color-card)' }}
+        >
+          <option value="">All</option>
+          {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+        </select>
+        <ChevronDown size={14} style={{ position: 'absolute', right: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-body)', pointerEvents: 'none' }} aria-hidden="true" />
+      </div>
     </div>
   );
 
   const typeOptions = [
-    { value: 'general', label: 'General' },
-    { value: 'program', label: 'Program' },
-    { value: 'emergency', label: 'Emergency' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'event', label: 'Event' },
-    { value: 'recruitment', label: 'Recruitment' },
-    { value: 'system', label: 'System' },
+    { value: 'general', label: 'General', icon: require('lucide-react').Tag },
+    { value: 'program', label: 'Program', icon: require('lucide-react').Calendar },
+    { value: 'emergency', label: 'Emergency', icon: require('lucide-react').AlertTriangle },
+    { value: 'maintenance', label: 'Maintenance', icon: require('lucide-react').Settings },
+    { value: 'event', label: 'Event', icon: require('lucide-react').Star },
+    { value: 'recruitment', label: 'Recruitment', icon: require('lucide-react').Users },
+    { value: 'system', label: 'System', icon: require('lucide-react').Monitor },
   ];
-
   const priorityOptions = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'critical', label: 'Critical' },
+    { value: 'low', label: 'Low', icon: require('lucide-react').Minus },
+    { value: 'medium', label: 'Medium', icon: require('lucide-react').Minus },
+    { value: 'high', label: 'High', icon: require('lucide-react').AlertCircle },
+    { value: 'critical', label: 'Critical', icon: require('lucide-react').Flag },
   ];
-
   const statusOptions = [
-    { value: 'draft', label: 'Draft' },
-    { value: 'scheduled', label: 'Scheduled' },
-    { value: 'published', label: 'Published' },
-    { value: 'expired', label: 'Expired' },
-    { value: 'archived', label: 'Archived' },
+    { value: 'draft', label: 'Draft' }, { value: 'scheduled', label: 'Scheduled' }, { value: 'published', label: 'Published' }, { value: 'expired', label: 'Expired' }, { value: 'archived', label: 'Archived' },
   ];
-
   const audienceOptions = [
-    { value: 'all_users', label: 'All Users' },
-    { value: 'volunteers', label: 'Volunteers' },
-    { value: 'ngos', label: 'NGOs' },
-    { value: 'admins', label: 'Admins' },
-    { value: 'specific_users', label: 'Specific Users' },
+    { value: 'all_users', label: 'All Users' }, { value: 'volunteers', label: 'Volunteers' }, { value: 'ngos', label: 'NGOs' }, { value: 'admins', label: 'Admins' }, { value: 'specific_users', label: 'Specific Users' },
   ];
 
   return (
     <div style={{ marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
           <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-            <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--color-body)' }} />
+            <Search size={17} style={{ position: 'absolute', left: '0.875rem', color: 'var(--color-body)', pointerEvents: 'none' }} />
             <input
               type="text"
               value={search || ''}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              placeholder="Search announcements by title or message..."
+              placeholder="Search announcements..."
               className="form-control"
-              style={{ paddingLeft: '2.5rem', backgroundColor: 'var(--color-card)' }}
-              aria-label="Search announcements"
+              style={{ paddingLeft: '2.5rem', paddingRight: search ? '2.25rem' : '1rem', backgroundColor: 'var(--color-card)', height: '42px' }}
+              aria-label="Search announcements by title or message"
             />
             {search && (
-              <button
-                onClick={() => onSearchChange?.('')}
-                aria-label="Clear search"
-                style={{
-                  position: 'absolute',
-                  right: '1rem',
-                  color: 'var(--color-body)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={16} />
+              <button onClick={() => onSearchChange?.('')} aria-label="Clear search" style={{ position: 'absolute', right: '0.625rem', color: 'var(--color-body)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}>
+                <X size={15} />
               </button>
             )}
           </div>
 
           <button
             className="btn btn-secondary"
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            style={{ display: 'flex', padding: '0.75rem', gap: '0.5rem', alignItems: 'center' }}
+            onClick={() => setShowMobileFilters((p) => !p)}
+            style={{ display: 'flex', padding: '0 1rem', gap: '0.5rem', alignItems: 'center', height: '42px', position: 'relative' }}
             aria-expanded={showMobileFilters}
             aria-controls="announcement-filters-panel"
           >
-            <Filter size={18} />
+            <Filter size={17} />
             <span className="mobile-hidden">Filters</span>
             {hasActive && (
-              <span
-                aria-hidden="true"
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-primary)',
-                }}
-              />
+              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: 'var(--color-primary)', position: 'absolute', top: 8, right: 12 }} />
             )}
+            <motion.div animate={{ rotate: showMobileFilters ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: 'none' }} className="mobile-hidden">
+              <ChevronDown size={14} aria-hidden="true" />
+            </motion.div>
           </button>
         </div>
 
         <AnimatePresence>
-          {(showMobileFilters || window.innerWidth > 768) && (
-            <motion.div
-              id="announcement-filters-panel"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '1.5rem',
-                alignItems: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              <FilterSelect
-                label="Type"
-                value={type}
-                onChange={onTypeChange}
-                options={typeOptions}
-              />
-
-              <FilterSelect
-                label="Priority"
-                value={priority}
-                onChange={onPriorityChange}
-                options={priorityOptions}
-              />
-
-              {showAdminFilters && (
-                <FilterSelect
-                  label="Status"
-                  value={status}
-                  onChange={onStatusChange}
-                  options={statusOptions}
-                />
-              )}
-
-              {!showAdminFilters && (
-                <FilterSelect
-                  label="Audience"
-                  value={targetAudience}
-                  onChange={onTargetAudienceChange}
-                  options={audienceOptions}
-                />
-              )}
-
-              {hasActive && (
-                <button
-                  onClick={onClear}
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--color-body)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    padding: '0.5rem',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                  aria-label="Clear all filters"
-                >
-                  <X size={14} /> Clear all
-                </button>
-              )}
+          {showMobileFilters && (
+            <motion.div id="announcement-filters-panel" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', alignItems: 'flex-end', paddingTop: '0.5rem' }}>
+                <FilterSelect label="Type" value={type} onChange={onTypeChange} options={typeOptions} />
+                <FilterSelect label="Priority" value={priority} onChange={onPriorityChange} options={priorityOptions} />
+                {showAdminFilters && <FilterSelect label="Status" value={status} onChange={onStatusChange} options={statusOptions} />}
+                {!showAdminFilters && <FilterSelect label="Audience" value={targetAudience} onChange={onTargetAudienceChange} options={audienceOptions} />}
+                {hasActive && (
+                  <button onClick={onClear} style={{ fontSize: '0.82rem', color: 'var(--color-body)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', height: '38px' }} aria-label="Clear all filters">
+                    <X size={14} /> Clear all
+                  </button>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -207,10 +121,12 @@ const AnnouncementFilters = ({
 
       <style>{`
         @media (min-width: 769px) {
-          .mobile-hidden { display: inline; }
+          .mobile-hidden { display: inline-flex !important; }
+          .mobile-hidden-svg { display: none !important; }
         }
         @media (max-width: 768px) {
-          .mobile-hidden { display: none; }
+          .mobile-hidden { display: none !important; }
+          .mobile-hidden-svg { display: inline-flex !important; }
         }
       `}</style>
     </div>

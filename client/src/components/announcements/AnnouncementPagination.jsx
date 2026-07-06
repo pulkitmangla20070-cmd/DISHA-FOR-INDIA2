@@ -1,42 +1,41 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const AnnouncementPagination = ({ currentPage = 1, totalPages = 1, totalItems = 0, itemsPerPage = 9, onPageChange }) => {
+const AnnouncementPagination = ({ currentPage, totalPages, totalItems, itemsPerPage = 9, onPageChange }) => {
   if (totalPages <= 1) return null;
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   const getPageNumbers = () => {
-    const pages = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-      }
-    }
-    return pages;
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (currentPage <= 3) return [1, 2, 3, 4, '...', totalPages];
+    if (currentPage >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
   };
 
   return (
-    <nav aria-label="Announcement pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-      <div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>
-        Showing <span style={{ fontWeight: 600, color: 'var(--color-heading)' }}>{startItem}</span> to <span style={{ fontWeight: 600, color: 'var(--color-heading)' }}>{endItem}</span> of <span style={{ fontWeight: 600, color: 'var(--color-heading)' }}>{totalItems}</span> results
+    <motion.nav
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      aria-label="Announcement pagination"
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', padding: '0.5rem 0' }}
+    >
+      <div style={{ fontSize: '0.85rem', color: 'var(--color-body)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        Showing <strong style={{ color: 'var(--color-heading)', fontWeight: 600 }}>{startItem}</strong> to <strong style={{ color: 'var(--color-heading)', fontWeight: 600 }}>{endItem}</strong> of <strong style={{ color: 'var(--color-heading)', fontWeight: 600 }}>{totalItems}</strong> results
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-        <button
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        <motion.button
+          whileTap={{ scale: 0.94 }}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           aria-label="Previous page"
           style={{
-            padding: '0.5rem',
-            borderRadius: 'var(--radius-sm)',
+            padding: '0.5rem 0.625rem',
+            borderRadius: 'var(--radius-md)',
             backgroundColor: 'var(--color-card)',
             border: '1px solid var(--color-border)',
             color: currentPage === 1 ? 'var(--color-border)' : 'var(--color-heading)',
@@ -44,46 +43,53 @@ const AnnouncementPagination = ({ currentPage = 1, totalPages = 1, totalItems = 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'var(--transition-fast)',
           }}
         >
           <ChevronLeft size={16} aria-hidden="true" />
-        </button>
+        </motion.button>
 
         {getPageNumbers().map((page, index) => (
           <React.Fragment key={index}>
             {page === '...' ? (
-              <span style={{ padding: '0.5rem', color: 'var(--color-body)' }}>…</span>
+              <span style={{ padding: '0.5rem 0.25rem', color: 'var(--color-body)', fontWeight: 500 }}>…</span>
             ) : (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.94 }}
                 onClick={() => onPageChange(page)}
                 aria-label={`Page ${page}`}
                 aria-current={page === currentPage ? 'page' : undefined}
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 'var(--radius-sm)',
+                  minWidth: 34,
+                  height: 34,
+                  padding: '0 0.25rem',
+                  borderRadius: 'var(--radius-md)',
                   backgroundColor: page === currentPage ? 'var(--color-primary)' : 'var(--color-card)',
                   border: `1px solid ${page === currentPage ? 'var(--color-primary)' : 'var(--color-border)'}`,
                   color: page === currentPage ? '#fff' : 'var(--color-heading)',
                   fontSize: '0.85rem',
-                  fontWeight: page === currentPage ? 600 : 400,
+                  fontWeight: page === currentPage ? 700 : 500,
                   cursor: 'pointer',
                   transition: 'var(--transition-fast)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 {page}
-              </button>
+              </motion.button>
             )}
           </React.Fragment>
         ))}
 
-        <button
+        <motion.button
+          whileTap={{ scale: 0.94 }}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           aria-label="Next page"
           style={{
-            padding: '0.5rem',
-            borderRadius: 'var(--radius-sm)',
+            padding: '0.5rem 0.625rem',
+            borderRadius: 'var(--radius-md)',
             backgroundColor: 'var(--color-card)',
             border: '1px solid var(--color-border)',
             color: currentPage === totalPages ? 'var(--color-border)' : 'var(--color-heading)',
@@ -91,12 +97,13 @@ const AnnouncementPagination = ({ currentPage = 1, totalPages = 1, totalItems = 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'var(--transition-fast)',
           }}
         >
           <ChevronRight size={16} aria-hidden="true" />
-        </button>
+        </motion.button>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 
