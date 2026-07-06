@@ -1,0 +1,145 @@
+import React from 'react';
+import { Check, X, MessageSquare } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import {
+  saveRecommendation,
+  unsaveRecommendation,
+  submitRecommendationFeedback,
+} from '../services/recommendationService';
+
+/**
+ * RecommendationCard – displays a single recommendation with actions.
+ * Props:
+ *   recommendation: { id, title, description, reason, priority }
+ *   onSavedChange?: (id: string, saved: boolean) => void
+ */
+export default function RecommendationCard({ recommendation, onSavedChange }) {
+  const { id, title, description, reason, priority } = recommendation;
+
+  const handleSave = async () => {
+    try {
+      await saveRecommendation({ recommendationId: id });
+      toast.success('Saved');
+      onSavedChange?.(id, true);
+    } catch (e) {
+      toast.error('Save failed');
+    }
+  };
+
+  const handleDismiss = async () => {
+    try {
+      await unsaveRecommendation(id);
+      toast.success('Dismissed');
+      onSavedChange?.(id, false);
+    } catch (e) {
+      toast.error('Dismiss failed');
+    }
+  };
+
+  const handleFeedback = async (rating) => {
+    try {
+      await submitRecommendationFeedback({
+        recommendationId: id,
+        rating,
+        comments: '',
+      });
+      toast.success('Feedback recorded');
+    } catch (e) {
+      toast.error('Feedback failed');
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: 'white',
+        borderRadius: 12,
+        padding: '1rem 1.25rem',
+        border: '1px solid #F0EDE8',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h4 style={{ margin: 0, fontWeight: 600 }}>{title}</h4>
+        {priority && (
+          <span
+            style={{
+              background: '#E5E7EB',
+              borderRadius: 6,
+              padding: '2px 6px',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              color: '#374151',
+            }}
+          >
+            {priority}
+          </span>
+        )}
+      </div>
+      {description && (
+        <p style={{ margin: 0, fontSize: '0.9rem', color: '#4B5563' }}>{description}</p>
+      )}
+      {reason && (
+        <p style={{ margin: 0, fontSize: '0.78rem', color: '#6B7280' }}>
+          <strong>Why:</strong> {reason}
+        </p>
+      )}
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <button
+          onClick={handleSave}
+          style={{
+            flex: 1,
+            background: '#10B981',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            padding: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            cursor: 'pointer',
+          }}
+        >
+          <Check size={14} /> Save
+        </button>
+        <button
+          onClick={handleDismiss}
+          style={{
+            flex: 1,
+            background: '#EF4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            padding: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            cursor: 'pointer',
+          }}
+        >
+          <X size={14} /> Dismiss
+        </button>
+        <button
+          onClick={() => handleFeedback(5)}
+          style={{
+            flex: 1,
+            background: '#6366F1',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            padding: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            cursor: 'pointer',
+          }}
+        >
+          <MessageSquare size={14} /> 👍
+        </button>
+      </div>
+    </div>
+  );
+}

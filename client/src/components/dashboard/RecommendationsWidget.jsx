@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Sparkles, ChevronRight } from 'lucide-react';
+import RecommendationCard from './RecommendationCard';
 import { getProgramRecommendations } from '../../services/matchingService';
 import { useAuth } from '../../context/AuthContext';
 
