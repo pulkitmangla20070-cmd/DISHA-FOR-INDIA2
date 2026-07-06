@@ -35,6 +35,8 @@ const messageRoutes = require('./modules/message/message.routes');
 const supportTicketRoutes = require('./modules/support-ticket/support-ticket.routes');
 const announcementRoutes = require('./modules/announcement/announcement.routes');
 require('./modules/announcement/announcement.model');
+const collaborationRoutes = require('./modules/collaboration/collaboration.routes');
+require('./modules/collaboration/collaboration.model');
 const { successResponse } = require('./utils/response');
 
 const app = express();
@@ -121,6 +123,7 @@ app.get('/', (req, res) => {
       analytics: '/api/v1/analytics',
       reports: '/api/v1/reports',
       announcements: '/api/v1/announcements',
+      collaboration: '/api/v1/collaboration',
     },
   });
 });
@@ -147,6 +150,7 @@ app.use('/api/v1/conversations', messageRoutes);
 app.use('/api/v1/conversations', conversationRoutes);
 app.use('/api/v1/support-tickets', supportTicketRoutes);
 app.use('/api/v1/announcements', announcementRoutes);
+app.use('/api/v1/collaboration', collaborationRoutes);
 
 // ─────────────────────────────────────────────
 // 11. Swagger API Documentation

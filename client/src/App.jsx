@@ -54,6 +54,8 @@ import AdminAnnouncementEdit from './pages/admin/AdminAnnouncementEdit';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
+import CollaborationDashboard from './pages/collaboration/CollaborationDashboard';
+import WorkspaceDetails from './pages/collaboration/WorkspaceDetails';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -190,6 +192,8 @@ function App() {
                 <Route path="support" element={<Support />} />
                 <Route path="announcements" element={<Announcements />} />
                 <Route path="announcements/:id" element={<AnnouncementDetails />} />
+                <Route path="collaboration/workspaces" element={<CollaborationDashboard />} />
+                <Route path="collaboration/workspaces/:id" element={<WorkspaceDetails />} />
               </Route>
               {/* Protected Admin Routes */}
               <Route path="/admin" element={
