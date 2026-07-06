@@ -155,7 +155,13 @@ const Dashboard = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F7F4', fontFamily: 'var(--font-primary)' }}>
-      <main style={{ padding: '2rem 2rem 3rem', maxWidth: '100%', overflowX: 'hidden' }}>
+      <main style={{
+        padding: '2rem 2rem 3rem',
+        maxWidth: '100%',
+        overflowX: 'hidden',
+        // Ensure long dashboard content scrolls on 100% screen height
+        minHeight: 'calc(100vh - var(--navbar-height))',
+      }}>
         <div style={{ background: 'linear-gradient(135deg, #D35400, #E67E22)', borderRadius: 20, padding: '2rem 2.5rem', marginBottom: '2rem', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 30px rgba(211,84,0,0.25)' }}>
           <div style={{ position: 'relative', zIndex: 2 }}>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'white', fontWeight: 800, marginBottom: '0.5rem' }}>
