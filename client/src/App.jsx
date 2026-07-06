@@ -48,6 +48,7 @@ import Reports from './pages/admin/Reports';
 import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 import AdminAnnouncementDashboard from './pages/admin/AdminAnnouncementDashboard';
 import AdminCertificates from './pages/admin/AdminCertificates';
+import AdminAnnouncementCreate from './pages/admin/AdminAnnouncementCreate';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
@@ -199,6 +200,7 @@ function App() {
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="announcements" element={<AdminAnnouncementDashboard />} />
+               <Route path="announcements/create" element={<AdminAnnouncementCreate />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="reports" element={<Reports />} />
               <Route path="programs" element={<AdminPrograms />} />

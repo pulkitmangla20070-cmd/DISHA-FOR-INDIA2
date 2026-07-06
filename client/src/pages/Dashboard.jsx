@@ -2,11 +2,12 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { Award, Clock, Briefcase, Sparkles, AlertCircle, ArrowUpRight, ChevronRight } from 'lucide-react';
-import { getVolunteerDashboard, getMyRank, getLeaderboard } from '../services/analyticsService';
-import { getNotifications } from '../services/notificationsService';
-import { getMyLevel, getMyBadges, getMyRewards } from '../services/gamificationService';
 import { useAuth } from '../context/AuthContext';
+import { getVolunteerDashboard, getMyRank, getLeaderboard } from '../services/analyticsService';
+import { getMyLevel, getMyBadges, getMyRewards } from '../services/gamificationService';
 import { getMyPrograms } from '../services/programsService';
+import { getUserRecentActivity } from '../services/collaborationService';
+import { getNotifications } from '../services/notificationsService';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import LeaderboardWidget from '../components/LeaderboardWidget';
 import NotificationWidget from '../components/NotificationWidget';
@@ -268,7 +269,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '0.25rem' }}>
             <LeaderboardWidget
               topVolunteers={leaderboardData}
               loading={false}

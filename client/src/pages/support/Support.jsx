@@ -24,7 +24,7 @@ const Support = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { user, loading: authLoading } = useAuth();
 
-  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user?.role?.toUpperCase());
+  const isAdmin = ['COORDINATOR', 'ADMIN', 'SUPER_ADMIN'].includes(user?.role?.toUpperCase());
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['support-tickets', filter],

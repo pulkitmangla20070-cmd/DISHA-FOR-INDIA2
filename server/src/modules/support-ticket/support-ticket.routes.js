@@ -24,7 +24,7 @@ router.get('/my-tickets', authenticate, validateGetSupportTickets, supportTicket
 
 router.get('/search', authenticate, validateSearchTickets, supportTicketController.searchTickets);
 
-router.get('/', authenticate, authorize(['ADMIN', 'SUPER_ADMIN']), validateGetSupportTickets, supportTicketController.getAllTickets);
+router.get('/', authenticate, authorize(['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']), validateGetSupportTickets, supportTicketController.getAllTickets);
 
 router.get('/:id', authenticate, validateGetSupportTicket, supportTicketController.getTicket);
 
@@ -32,11 +32,11 @@ router.patch('/:id', authenticate, validateUpdateSupportTicket, supportTicketCon
 
 router.patch('/:id/status', authenticate, validateStatusUpdate, supportTicketController.updateTicketStatus);
 
-router.post('/:id/assign', authenticate, authorize(['ADMIN', 'SUPER_ADMIN']), validateAssignTicket, supportTicketController.assignTicket);
+router.post('/:id/assign', authenticate, authorize(['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']), validateAssignTicket, supportTicketController.assignTicket);
 
-router.post('/:id/resolve', authenticate, authorize(['ADMIN', 'SUPER_ADMIN']), validateAssignTicket, supportTicketController.resolveTicket);
+router.post('/:id/resolve', authenticate, authorize(['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']), validateAssignTicket, supportTicketController.resolveTicket);
 
-router.post('/:id/close', authenticate, authorize(['ADMIN', 'SUPER_ADMIN']), validateAssignTicket, supportTicketController.closeTicket);
+router.post('/:id/close', authenticate, authorize(['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']), validateAssignTicket, supportTicketController.closeTicket);
 
 router.post('/:id/reply', authenticate, validateCreateReply, ticketReplyController.createReply);
 
@@ -48,7 +48,7 @@ router.delete('/replies/:replyId', authenticate, ticketReplyController.deleteRep
 
 router.get('/:id/history', authenticate, supportTicketController.getTicketHistory);
 
-router.post('/:id/escalate', authenticate, authorize(['ADMIN', 'SUPER_ADMIN']), supportTicketController.escalateTicket);
+router.post('/:id/escalate', authenticate, authorize(['COORDINATOR', 'ADMIN', 'SUPER_ADMIN']), supportTicketController.escalateTicket);
 
 router.delete('/:id', authenticate, validateGetSupportTicket, supportTicketController.deleteTicket);
 
