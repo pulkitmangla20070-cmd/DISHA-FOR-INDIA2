@@ -10,6 +10,7 @@ import { getMyPrograms } from '../services/programsService';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import LeaderboardWidget from '../components/LeaderboardWidget';
 import NotificationWidget from '../components/NotificationWidget';
+import RecentAnnouncementsWidget from '../components/announcements/RecentAnnouncementsWidget';
 import { safeSlice } from '../utils/safeSlice';
 
 const Dashboard = () => {
@@ -267,6 +268,8 @@ const Dashboard = () => {
               loading={notificationsLoading}
               emptyMessage="No notifications at the moment."
             />
+
+            <RecentAnnouncementsWidget limit={4} />
           </div>
         </div>
       </main>

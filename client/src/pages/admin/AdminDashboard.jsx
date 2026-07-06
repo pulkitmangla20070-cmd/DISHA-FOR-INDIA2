@@ -7,6 +7,7 @@ import { getAllPrograms } from '../../services/programsService';
 import DashboardSkeleton from '../../components/DashboardSkeleton';
 import LeaderboardWidget from '../../components/LeaderboardWidget';
 import NotificationWidget from '../../components/NotificationWidget';
+import RecentAnnouncementsWidget from '../../components/announcements/RecentAnnouncementsWidget';
 
 const AdminDashboard = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
@@ -151,6 +152,8 @@ const AdminDashboard = () => {
             notifications={notificationsData}
             loading={notificationsLoading}
           />
+
+          <RecentAnnouncementsWidget limit={4} />
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ validateEnv();
 const app = require('./app');
 const connectDB = require('./config/db');
 const { initializeSocket } = require('./socket/socketServer');
+const { initializeAnnouncementAutomation } = require('./modules/announcement/announcement.automation');
 
 // ─────────────────────────────────────────────
 // Handle Uncaught Exceptions (synchronous errors not caught anywhere)
@@ -25,8 +26,10 @@ process.on('uncaughtException', (err) => {
 // Connect to Database
 // ─────────────────────────────────────────────
 connectDB().then(async () => {
-  // Temporary Seed Logic for Admin User
-  try {
+    initializeAnnouncementAutomation();
+
+    // Temporary Seed Logic for Admin User
+    try {
     const User = require('./modules/user/user.model');
     const email = 'induaggarwal@gmail.com';
     const password = 'dishaforindia';
