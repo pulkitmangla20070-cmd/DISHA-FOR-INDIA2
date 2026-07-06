@@ -37,6 +37,7 @@ const announcementRoutes = require('./modules/announcement/announcement.routes')
 require('./modules/announcement/announcement.model');
 const collaborationRoutes = require('./modules/collaboration/collaboration.routes');
 require('./modules/collaboration/collaboration.model');
+const matchingRoutes = require('./modules/matching/matching.routes');
 const { successResponse } = require('./utils/response');
 
 const app = express();
@@ -124,6 +125,7 @@ app.get('/', (req, res) => {
       reports: '/api/v1/reports',
       announcements: '/api/v1/announcements',
       collaboration: '/api/v1/collaboration',
+      matching: '/api/v1/matching',
     },
   });
 });
@@ -151,6 +153,7 @@ app.use('/api/v1/conversations', conversationRoutes);
 app.use('/api/v1/support-tickets', supportTicketRoutes);
 app.use('/api/v1/announcements', announcementRoutes);
 app.use('/api/v1/collaboration', collaborationRoutes);
+app.use('/api/v1/matching', matchingRoutes);
 
 // ─────────────────────────────────────────────
 // 11. Swagger API Documentation
