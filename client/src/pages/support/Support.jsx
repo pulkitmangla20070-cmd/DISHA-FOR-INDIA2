@@ -32,7 +32,7 @@ const Support = () => {
       const res = isAdmin
         ? await getAllTickets({ page: 1, limit: 50, status: filter === 'all' ? null : filter })
         : await getUserTickets({ page: 1, limit: 50, status: filter === 'all' ? null : filter });
-      return res.data || {};
+      return res || {};
     },
     enabled: !authLoading && !!user,
   });

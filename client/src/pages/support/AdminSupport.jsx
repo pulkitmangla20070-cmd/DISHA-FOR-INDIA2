@@ -24,7 +24,7 @@ const AdminSupport = () => {
     queryKey: ['admin-support-tickets', filter],
     queryFn: async () => {
       const res = await getAllTickets({ page: 1, limit: 100, status: filter === 'all' ? null : filter });
-      return res.data || {};
+      return res || {};
     },
   });
 
