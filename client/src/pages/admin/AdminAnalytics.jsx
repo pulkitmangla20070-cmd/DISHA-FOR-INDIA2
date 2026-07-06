@@ -1,6 +1,21 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Calendar, Clock, Award, TrendingUp, Target, Gift, Building2, Download } from 'lucide-react';
+import { 
+  Users, 
+  Calendar, 
+  Clock, 
+  Award, 
+  TrendingUp, 
+  Target, 
+  Gift, 
+  Building2, 
+  Download,
+  Search,
+  BarChart3,
+  PieChart,
+  LineChart,
+  RefreshCw
+} from 'lucide-react';
 import {
   getAdminDashboard,
   getVolunteerAnalytics,
@@ -13,6 +28,8 @@ import {
   getOrganizationAnalytics,
 } from '../../services/analyticsService';
 import SkeletonLoader from '../../components/volunteer/SkeletonLoader';
+import StatCard from '../../components/volunteer/StatCard';
+import { AreaChart, Area, BarChart, Bar, PieChart as RePieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const DATE_RANGES = [
   { value: '', label: 'All Time' },
@@ -43,149 +60,246 @@ const exportToCSV = (data, filename) => {
   document.body.removeChild(link);
 };
 
-const StatCard = ({ Icon, value, label, color = 'var(--color-primary)', trend }) => (
-  <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: `4px solid ${color}` }}>
-    <div style={{ padding: '0.75rem', backgroundColor: `${color}20`, color, borderRadius: '50%' }}>
-      <Icon size={24} />
-    </div>
-    <div>
-      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-heading)' }}>{value}</div>
-      <div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>{label}</div>
-      {trend !== undefined && (
-        <div style={{ fontSize: '0.75rem', color: trend >= 0 ? 'var(--color-success)' : 'var(--color-error)', marginTop: '0.25rem' }}>
-          {trend >= 0 ? '+' : ''}{trend}% from last period
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const ChartCard = ({ title, children, actions }) => (
-  <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+const ChartCard = ({ title, children, actions, loading = false }) => (
+  <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', minHeight: '300px' }}>
     <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-heading)' }}>{title}</h3>
+      <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-heading)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {title}
+      </h3>
       {actions && <div style={{ display: 'flex', gap: '0.5rem' }}>{actions}</div>}
     </div>
-    <div style={{ padding: '1rem', flex: 1 }}>{children}</div>
+    <div style={{ padding: '1rem', flex: 1 }}>
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <RefreshCw size={24} className="animate-spin" style={{ color: 'var(--color-primary)' }} />
+        </div>
+      ) : children}
+    </div>
   </div>
 );
 
-const VolunteerAnalyticsView = ({ data, dateRange, onExport }) => {
-  const analytics = data?.volunteerAnalytics;
-  if (!analytics) return null;
+const GrowthChart = ({ data, dataKey, title, color = 'var(--color-primary)' }) => {
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard title={title}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-body)' }}>
+          No data available
+        </div>
+      </ChartCard>
+    );
+  }
 
-  const monthlyData = (analytics.volunteersJoinedPerMonth || []).map(item => ({
+  const chartData = data.map(item => ({
     ...item,
     monthName: `${MONTH_NAMES[item.month] || ''} ${item.year}`,
+  })).slice(-12);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ backgroundColor: 'var(--color-card)', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+          <p style={{ margin: 0, fontWeight: 600 }}>{label}</p>
+          <p style={{ margin: 0, color: color }}>{payload[0].value}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <ChartCard title={<><LineChart size={18} />{title}</>}>
+      <ResponsiveContainer width="100%" height={250}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id={`gradient-${title}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+              <stop offset="95%" stopColor={color} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+          <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+          <Tooltip content={<CustomTooltip />} />
+          <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fillOpacity={1} fill={`url(#gradient-${title})`} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </ChartCard>
+  );
+};
+
+const PieChartComponent = ({ data, title, nameKey, valueKey, colors }) => {
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard title={<><PieChart size={18} />{title}</>}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-body)' }}>
+          No data available
+        </div>
+      </ChartCard>
+    );
+  }
+
+  const chartData = data.map((item) => ({
+    name: item[nameKey],
+    value: item[valueKey],
+    percentage: item.percentage,
   }));
 
+  const COLORS = colors || ['var(--color-primary)', 'var(--color-success)', 'var(--color-accent)', 'var(--color-warning)', 'var(--color-error)'];
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const entry = payload[0];
+      return (
+        <div style={{ backgroundColor: 'var(--color-card)', padding: '0.75rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+          <p style={{ margin: 0, fontWeight: 600 }}>{entry.name}</p>
+          <p style={{ margin: 0 }}>{entry.value} ({entry.payload.percentage}%)</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <ChartCard title={<><PieChart size={18} />{title}</>}>
+      <ResponsiveContainer width="100%" height={250}>
+        <RePieChart>
+          <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} label={({ percentage }) => `${percentage}%`}>
+            {chartData.map((_, i) => (
+              <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+        </RePieChart>
+      </ResponsiveContainer>
+    </ChartCard>
+  );
+};
+
+const BarChartComponent = ({ data, title, xAxisKey, bars, colors }) => {
+  if (!data || data.length === 0) {
+    return (
+      <ChartCard title={<><BarChart3 size={18} />{title}</>}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-body)' }}>
+          No data available
+        </div>
+      </ChartCard>
+    );
+  }
+
+  return (
+    <ChartCard title={<><BarChart3 size={18} />{title}</>}>
+      <ResponsiveContainer width="100%" height={250}>
+        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+          <XAxis dataKey={xAxisKey} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+          <Tooltip />
+          {bars.map((bar, i) => (
+            <Bar key={bar.key} dataKey={bar.key} fill={colors?.[i] || 'var(--color-primary)'} radius={[4, 4, 0, 0]} />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartCard>
+  );
+};
+
+const VolunteerAnalyticsView = ({ data, dateRange, onExport, searchQuery }) => {
+  const analytics = data?.volunteerAnalytics;
+  
+  const monthlyData = useMemo(() => (analytics?.volunteersJoinedPerMonth || []).map(item => ({
+    ...item,
+    monthName: `${MONTH_NAMES[item.month] || ''} ${item.year}`.trim(),
+  })), [analytics?.volunteersJoinedPerMonth]);
+
   const exportData = dateRange === 'all' || !dateRange
-    ? analytics.volunteersByState?.map(s => ({ State: s.state, Count: s.count, Percentage: `${s.percentage}%` })) || []
+    ? analytics?.volunteersByState?.map(s => ({ State: s.state, Count: s.count, Percentage: `${s.percentage}%` })) || []
     : [];
+
+  const filteredByState = useMemo(() => {
+    if (!searchQuery) return analytics?.volunteersByState || [];
+    return analytics?.volunteersByState?.filter(s => 
+      s.state.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+  }, [analytics?.volunteersByState, searchQuery]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
-        <StatCard Icon={Users} value={analytics.totalVolunteers || 0} label="Total Volunteers" color="var(--color-primary)" />
-        <StatCard Icon={Users} value={analytics.activeVolunteers || 0} label="Active Volunteers" color="var(--color-success)" />
-        <StatCard Icon={Users} value={analytics.inactiveVolunteers || 0} label="Inactive" color="var(--color-error)" />
-        <StatCard Icon={TrendingUp} value={`${analytics.growthRate?.rate || 0}%`} label="Growth Rate" color="var(--color-accent)" />
+        <StatCard icon={<Users size={24} />} value={analytics?.totalVolunteers || 0} label="Total Volunteers" color="primary" />
+        <StatCard icon={<Users size={24} />} value={analytics?.activeVolunteers || 0} label="Active Volunteers" color="secondary" />
+        <StatCard icon={<Users size={24} />} value={analytics?.inactiveVolunteers || 0} label="Inactive" color="error" />
+        <StatCard icon={<TrendingUp size={24} />} value={`${analytics?.growthRate?.rate || 0}%`} label="Growth Rate" color="accent" trend={{ value: `${analytics?.growthRate?.rate || 0}%`, direction: analytics?.growthRate?.rate >= 0 ? 'up' : 'down' }} />
       </div>
 
-      <ChartCard title="Volunteers by State" actions={exportData.length > 0 && <button onClick={() => onExport(exportData, 'volunteers-state')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
-        <Download size={14} /> Export
-      </button>}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-          {analytics.volunteersByState?.slice(0, 8).map((item, i) => (
-            <div key={i} style={{ flex: '1 1 120px', padding: '0.5rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.state}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--color-body)' }}>{item.count} ({item.percentage}%)</div>
-            </div>
-          ))}
-        </div>
-      </ChartCard>
+      <GrowthChart data={monthlyData} dataKey="count" title="Volunteer Growth" color="var(--color-primary)" />
 
-      <ChartCard title="Volunteers by City">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', maxHeight: '200px', overflowY: 'auto' }}>
-          {analytics.volunteersByCity?.slice(0, 15).map((item, i) => (
-            <div key={i} style={{ flex: '1 1 150px', padding: '0.5rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.city}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--color-body)' }}>{item.count} ({item.percentage}%)</div>
-            </div>
-          ))}
-        </div>
-      </ChartCard>
+      <div className="grid grid-cols-2" style={{ gap: '1rem' }}>
+        <ChartCard title="Volunteers by State" actions={exportData.length > 0 && <button onClick={() => onExport(exportData, 'volunteers-state')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
+          <Download size={14} /> Export
+        </button>}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto' }}>
+            {filteredByState?.slice(0, 16).map((item, i) => (
+              <div key={i} style={{ flex: '1 1 120px', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.state}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-body)' }}>{item.count} ({item.percentage}%)</div>
+              </div>
+            ))}
+            {filteredByState?.length === 0 && <p style={{ color: 'var(--color-body)' }}>No states match your search</p>}
+          </div>
+        </ChartCard>
 
-      <ChartCard title="Monthly Growth">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {monthlyData.slice(-6).map((item, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: 'var(--color-bg)', borderRadius: '4px' }}>
-              <span>{item.monthName}</span>
-              <span style={{ fontWeight: 600 }}>{item.count} volunteers</span>
-            </div>
-          ))}
-        </div>
-      </ChartCard>
+        <ChartCard title="Volunteers by City" actions={exportData.length > 0 && <button onClick={() => onExport(exportData, 'volunteers-state')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
+          <Download size={14} /> Export
+        </button>}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto' }}>
+            {analytics?.volunteersByCity?.slice(0, 16).map((item, i) => (
+              <div key={i} style={{ flex: '1 1 120px', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.city}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-body)' }}>{item.count} ({item.percentage}%)</div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+      </div>
     </div>
   );
 };
 
-const ProgramAnalyticsView = ({ data, onExport }) => {
+const ProgramAnalyticsView = ({ data, onExport, searchQuery }) => {
   const analytics = data?.programAnalytics;
-  if (!analytics) return null;
 
-  const categoryExport = analytics.programsByCategory?.map(c => ({ Category: c.category, Count: c.count })) || [];
+  const categoryExport = analytics?.programsByCategory?.map(c => ({ Category: c.category, Count: c.count })) || [];
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery) return analytics?.programsByCategory || [];
+    return analytics?.programsByCategory?.filter(c => 
+      c.category.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+  }, [analytics?.programsByCategory, searchQuery]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
-        <StatCard Icon={Calendar} value={analytics.totalPrograms || 0} label="Total Programs" color="var(--color-primary)" />
-        <StatCard Icon={Calendar} value={analytics.activePrograms || 0} label="Active Programs" color="var(--color-success)" />
-        <StatCard Icon={Calendar} value={analytics.completedPrograms || 0} label="Completed" color="var(--color-info)" />
-        <StatCard Icon={Calendar} value={analytics.cancelledPrograms || 0} label="Cancelled" color="var(--color-error)" />
+        <StatCard icon={<Calendar size={24} />} value={analytics?.totalPrograms || 0} label="Total Programs" color="primary" />
+        <StatCard icon={<Calendar size={24} />} value={analytics?.activePrograms || 0} label="Active Programs" color="secondary" />
+        <StatCard icon={<Calendar size={24} />} value={analytics?.completedPrograms || 0} label="Completed" color="accent" />
+        <StatCard icon={<Calendar size={24} />} value={analytics?.cancelledPrograms || 0} label="Cancelled" color="error" />
       </div>
+
+      <GrowthChart data={analytics?.programsCreatedPerMonth || []} dataKey="count" title="Program Growth" color="var(--color-success)" />
 
       <ChartCard title="Programs by Category" actions={categoryExport.length > 0 && <button onClick={() => onExport(categoryExport, 'programs-category')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
         <Download size={14} /> Export
       </button>}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-          {analytics.programsByCategory?.map((item, i) => (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {filteredCategories?.map((item, i) => (
             <div key={i} style={{ flex: '1 1 150px', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontWeight: 600, fontSize: '1rem' }}>{item.category}</div>
               <div style={{ fontSize: '1.5rem', color: 'var(--color-primary)', marginTop: '0.5rem' }}>{item.count}</div>
             </div>
           ))}
-        </div>
-      </ChartCard>
-    </div>
-  );
-};
-
-const ApplicationAnalyticsView = ({ data, onExport }) => {
-  const analytics = data?.applicationAnalytics;
-  if (!analytics) return null;
-
-  const statusExport = analytics.statusDistribution?.map(s => ({ Status: s.status, Count: s.count })) || [];
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
-        <StatCard Icon={Target} value={analytics.totalApplications || 0} label="Total Applications" color="var(--color-primary)" />
-        <StatCard Icon={Target} value={`${analytics.approvalRate || 0}%`} label="Approval Rate" color="var(--color-success)" />
-        <StatCard Icon={Target} value={`${analytics.rejectionRate || 0}%`} label="Rejection Rate" color="var(--color-error)" />
-        <StatCard Icon={Target} value={`${analytics.pendingRate || 0}%`} label="Pending Rate" color="var(--color-warning)" />
-      </div>
-
-      <ChartCard title="Application Status Distribution" actions={statusExport.length > 0 && <button onClick={() => onExport(statusExport, 'applications-status')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
-        <Download size={14} /> Export
-      </button>}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {analytics.statusDistribution?.map((item, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', backgroundColor: 'var(--color-bg)', borderRadius: '4px' }}>
-              <span style={{ textTransform: 'capitalize' }}>{item.status.replace('_', ' ')}</span>
-              <span style={{ fontWeight: 600 }}>{item.count}</span>
-            </div>
-          ))}
+          {filteredCategories?.length === 0 && <p style={{ color: 'var(--color-body)' }}>No categories match your search</p>}
         </div>
       </ChartCard>
     </div>
@@ -194,80 +308,142 @@ const ApplicationAnalyticsView = ({ data, onExport }) => {
 
 const AttendanceAnalyticsView = ({ data }) => {
   const analytics = data?.attendanceAnalytics;
-  if (!analytics) return null;
+
+  const monthlyData = useMemo(() => (analytics?.monthlyAttendance || []).map(item => ({
+    ...item,
+    monthName: `${MONTH_NAMES[item.month] || ''} ${item.year}`.trim(),
+  })), [analytics?.monthlyAttendance]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div className="grid grid-cols-2" style={{ gap: '1rem' }}>
-        <StatCard Icon={Clock} value={analytics.totalHours || 0} label="Total Hours Contributed" color="var(--color-primary)" />
-        <StatCard Icon={TrendingUp} value={`${analytics.attendanceRate || 0}%`} label="Attendance Rate" color="var(--color-success)" />
+      <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
+        <StatCard icon={<Clock size={24} />} value={analytics?.totalHours || 0} label="Total Hours Contributed" color="primary" />
+        <StatCard icon={<Users size={24} />} value={analytics?.totalSessions || 0} label="Total Sessions" color="secondary" />
+        <StatCard icon={<TrendingUp size={24} />} value={`${analytics?.attendanceRate || 0}%`} label="Attendance Rate" color="success" />
+        <StatCard icon={<TrendingUp size={24} />} value={`${analytics?.averageHoursPerSession || 0}h`} label="Avg Hours/Session" color="accent" />
       </div>
 
-      <div className="card">
-        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>Monthly Attendance</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {analytics.monthlyAttendance?.slice(-6).map((item, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px' }}>
-              <span>{MONTH_NAMES[item.month] || ''} {item.year}</span>
-              <span>{item.count} sessions, {item.totalHours || 0} hours</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <BarChartComponent 
+        data={monthlyData} 
+        title="Monthly Attendance Trend"
+        xAxisKey="monthName"
+        bars={[{ key: 'count', name: 'Sessions' }, { key: 'totalHours', name: 'Hours' }]}
+        colors={['var(--color-primary)', 'var(--color-success)']}
+      />
     </div>
   );
 };
 
-const CertificateAnalyticsView = ({ data }) => {
+const CertificateAnalyticsView = ({ data, onExport, searchQuery }) => {
   const analytics = data?.certificateAnalytics;
-  if (!analytics) return null;
+
+  const programExport = analytics?.certificatesByProgram?.map(c => ({ Program: c.program || 'Unknown', Count: c.count })) || [];
+
+  const filteredPrograms = useMemo(() => {
+    if (!searchQuery) return analytics?.certificatesByProgram || [];
+    return analytics?.certificatesByProgram?.filter(c => 
+      (c.program || '').toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+  }, [analytics?.certificatesByProgram, searchQuery]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <StatCard Icon={Award} value={analytics.certificatesGenerated || 0} label="Certificates Generated" color="var(--color-primary)" />
+      <div className="grid grid-cols-3" style={{ gap: '1rem' }}>
+        <StatCard icon={<Award size={24} />} value={analytics?.certificatesGenerated || 0} label="Certificates Generated" color="primary" />
+        <StatCard icon={<Award size={24} />} value={analytics?.pendingCertificates || 0} label="Pending" color="warning" />
+        <StatCard icon={<Award size={24} />} value={analytics?.verifiedCertificates || 0} label="Verified" color="success" />
+      </div>
 
-      <div className="card">
-        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>Certificates by Program</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-          {analytics.certificatesByProgram?.map((item, i) => (
-            <div key={i} style={{ flex: '1 1 150px', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', textAlign: 'center' }}>
+      <BarChartComponent 
+        data={analytics?.certificatesByMonth?.map(m => ({
+          ...m,
+          monthName: `${MONTH_NAMES[m.month] || ''} ${m.year}`.trim(),
+        })) || []}
+        title="Certificates Trend"
+        xAxisKey="monthName"
+        bars={[{ key: 'count', name: 'Certificates' }]}
+        colors={['var(--color-primary)']}
+      />
+
+      <ChartCard title="Certificates by Program" actions={programExport.length > 0 && <button onClick={() => onExport(programExport, 'certificates-program')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
+        <Download size={14} /> Export
+      </button>}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {filteredPrograms?.map((item, i) => (
+            <div key={i} style={{ flex: '1 1 180px', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.program || 'Unknown'}</div>
               <div style={{ fontSize: '1.25rem', color: 'var(--color-primary)', marginTop: '0.25rem' }}>{item.count}</div>
             </div>
           ))}
+          {filteredPrograms?.length === 0 && <p style={{ color: 'var(--color-body)' }}>No programs match your search</p>}
         </div>
-      </div>
+      </ChartCard>
     </div>
   );
 };
 
 const RewardAnalyticsView = ({ data }) => {
   const analytics = data?.rewardAnalytics;
-  if (!analytics) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div className="grid grid-cols-3" style={{ gap: '1rem' }}>
-        <StatCard Icon={Gift} value={analytics.coinsDistributed || 0} label="Coins Distributed" color="var(--color-primary)" />
-        <StatCard Icon={Award} value={analytics.badgesAwarded || 0} label="Badges Awarded" color="var(--color-success)" />
-        <StatCard Icon={TrendingUp} value={analytics.achievementsAwarded || 0} label="Achievements" color="var(--color-accent)" />
+      <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
+        <StatCard icon={<Gift size={24} />} value={analytics?.coinsDistributed || 0} label="Coins Distributed" color="primary" />
+        <StatCard icon={<Award size={24} />} value={analytics?.badgesAwarded || 0} label="Badges Awarded" color="secondary" />
+        <StatCard icon={<Gift size={24} />} value={analytics?.totalRewardsGiven || 0} label="Total Rewards" color="accent" />
+        <StatCard icon={<TrendingUp size={24} />} value={analytics?.rewardsRedeemed || 0} label="Rewards Redeemed" color="success" />
       </div>
+
+      <PieChartComponent 
+        data={analytics?.rewardsByType || []}
+        title="Rewards Distribution"
+        nameKey="type"
+        valueKey="count"
+      />
+
+      <BarChartComponent 
+        data={analytics?.rewardsByMonth?.map(m => ({
+          ...m,
+          monthName: `${MONTH_NAMES[m.month] || ''} ${m.year}`.trim(),
+        })) || []}
+        title="Monthly Rewards"
+        xAxisKey="monthName"
+        bars={[{ key: 'count', name: 'Rewards' }]}
+        colors={['var(--color-warning)']}
+      />
     </div>
   );
 };
 
-const LeaderboardAnalyticsView = ({ data, onExport }) => {
+const LeaderboardAnalyticsView = ({ data, onExport, searchQuery }) => {
   const analytics = data?.leaderboardAnalytics;
-  if (!analytics) return null;
 
-  const hoursExport = analytics.topVolunteers?.map(v => ({ Name: v.name, Email: v.email, Hours: v.totalHours || 0 })) || [];
-  const coinsExport = analytics.highestCoinEarners?.map(v => ({ Name: v.name, Email: v.email, Coins: v.coins || 0 })) || [];
+  const topVolunteers = useMemo(() => {
+    if (!searchQuery) return analytics?.topVolunteers || [];
+    return analytics?.topVolunteers?.filter(v => 
+      v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.email.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+  }, [analytics?.topVolunteers, searchQuery]);
+
+  const topCoinEarners = useMemo(() => {
+    if (!searchQuery) return analytics?.highestCoinEarners || [];
+    return analytics?.highestCoinEarners?.filter(v => 
+      v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.email.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+  }, [analytics?.highestCoinEarners, searchQuery]);
+
+  const hoursExport = topVolunteers?.map(v => ({ Name: v.name, Email: v.email, Hours: v.totalHours || 0 })) || [];
+  const coinsExport = topCoinEarners?.map(v => ({ Name: v.name, Email: v.email, Coins: v.coins || 0 })) || [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ margin: 0 }}>Top Volunteers by Hours</h3>
+          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <TrendingUp size={18} /> Top Volunteers by Hours
+          </h3>
           {hoursExport.length > 0 && (
             <button onClick={() => onExport(hoursExport, 'leaderboard-hours')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
               <Download size={14} /> Export
@@ -275,10 +451,12 @@ const LeaderboardAnalyticsView = ({ data, onExport }) => {
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {analytics.topVolunteers?.map((vol, i) => (
-            <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {topVolunteers?.length === 0 ? (
+            <p style={{ color: 'var(--color-body)' }}>No volunteers match your search</p>
+          ) : topVolunteers?.map((vol, i) => (
+            <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem' }}>
               <span style={{ fontWeight: 500 }}>{i + 1}. {vol.name}</span>
-              <span>{vol.totalHours} hours</span>
+              <span>{vol.totalHours || 0} hours</span>
             </div>
           ))}
         </div>
@@ -286,7 +464,9 @@ const LeaderboardAnalyticsView = ({ data, onExport }) => {
 
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ margin: 0 }}>Highest Coin Earners</h3>
+          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Award size={18} /> Highest Coin Earners
+          </h3>
           {coinsExport.length > 0 && (
             <button onClick={() => onExport(coinsExport, 'leaderboard-coins')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
               <Download size={14} /> Export
@@ -294,10 +474,12 @@ const LeaderboardAnalyticsView = ({ data, onExport }) => {
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {analytics.highestCoinEarners?.map((vol, i) => (
-            <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {topCoinEarners?.length === 0 ? (
+            <p style={{ color: 'var(--color-body)' }}>No volunteers match your search</p>
+          ) : topCoinEarners?.map((vol, i) => (
+            <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem' }}>
               <span style={{ fontWeight: 500 }}>{i + 1}. {vol.name}</span>
-              <span>{vol.coins} coins</span>
+              <span>{vol.coins || 0} coins</span>
             </div>
           ))}
         </div>
@@ -306,15 +488,72 @@ const LeaderboardAnalyticsView = ({ data, onExport }) => {
   );
 };
 
+const ApplicationAnalyticsView = ({ data, onExport, searchQuery }) => {
+  const analytics = data?.applicationAnalytics;
+
+  const statusExport = analytics?.statusDistribution?.map(s => ({ Status: s.status, Count: s.count })) || [];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
+        <StatCard icon={<Target size={24} />} value={analytics?.totalApplications || 0} label="Total Applications" color="primary" />
+        <StatCard icon={<Target size={24} />} value={`${analytics?.approvalRate || 0}%`} label="Approval Rate" color="secondary" />
+        <StatCard icon={<Target size={24} />} value={`${analytics?.rejectionRate || 0}%`} label="Rejection Rate" color="error" />
+        <StatCard icon={<Target size={24} />} value={`${analytics?.pendingRate || 0}%`} label="Pending Rate" color="warning" />
+      </div>
+
+      <BarChartComponent 
+        data={analytics?.applicationsByMonth?.map(m => ({
+          ...m,
+          monthName: `${MONTH_NAMES[m.month] || ''} ${m.year}`.trim(),
+        })) || []}
+        title="Applications Trend"
+        xAxisKey="monthName"
+        bars={[{ key: 'count', name: 'Applications' }]}
+        colors={['var(--color-primary)']}
+      />
+
+      <div className="grid grid-cols-2" style={{ gap: '1rem' }}>
+        <ChartCard title="Application Status Distribution" actions={statusExport.length > 0 && <button onClick={() => onExport(statusExport, 'applications-status')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
+          <Download size={14} /> Export
+        </button>}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {analytics?.statusDistribution?.map((item, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', backgroundColor: 'var(--color-bg)', borderRadius: '4px' }}>
+                <span style={{ textTransform: 'capitalize' }}>{item.status.replace('_', ' ')}</span>
+                <span style={{ fontWeight: 600 }}>{item.count}</span>
+              </div>
+            ))}
+            {analytics?.statusDistribution?.length === 0 && <p style={{ color: 'var(--color-body)' }}>No applications found</p>}
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Applications by Program" actions={statusExport.length > 0 && <button onClick={() => onExport(statusExport, 'applications-status')} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}>
+          <Download size={14} /> Export
+        </button>}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto' }}>
+            {analytics?.applicationsByProgram?.map((item, i) => (
+              <div key={i} style={{ flex: '1 1 150px', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.program || 'Unknown'}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-body)' }}>{item.count} applications</div>
+              </div>
+            ))}
+            {analytics?.applicationsByProgram?.length === 0 && <p style={{ color: 'var(--color-body)' }}>No applications found</p>}
+          </div>
+        </ChartCard>
+      </div>
+    </div>
+  );
+};
+
 const OrganizationAnalyticsView = ({ data }) => {
   const analytics = data?.organizationAnalytics;
-  if (!analytics) return null;
 
   return (
     <div className="grid grid-cols-3" style={{ gap: '1rem' }}>
-      <StatCard Icon={Building2} value={analytics.organizationsCreated || 0} label="Organizations Created" color="var(--color-primary)" />
-      <StatCard Icon={Building2} value={analytics.verifiedOrganizations || 0} label="Verified Organizations" color="var(--color-success)" />
-      <StatCard Icon={Building2} value={analytics.activeOrganizations || 0} label="Active Organizations" color="var(--color-info)" />
+      <StatCard icon={<Building2 size={24} />} value={analytics?.organizationsCreated || 0} label="Organizations Created" color="primary" />
+      <StatCard icon={<Building2 size={24} />} value={analytics?.verifiedOrganizations || 0} label="Verified Organizations" color="secondary" />
+      <StatCard icon={<Building2 size={24} />} value={analytics?.activeOrganizations || 0} label="Active Organizations" color="accent" />
     </div>
   );
 };
@@ -322,8 +561,9 @@ const OrganizationAnalyticsView = ({ data }) => {
 const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dateRange, setDateRange] = useState('this_month');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => {
       const res = await getAdminDashboard();
@@ -335,7 +575,7 @@ const AdminAnalytics = () => {
     refetchOnWindowFocus: false,
   });
 
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useQuery({
     queryKey: ['admin-analytics', activeTab, dateRange],
     queryFn: async () => {
       let res;
@@ -393,23 +633,21 @@ const AdminAnalytics = () => {
   ];
 
   const renderAnalyticsView = () => {
-    if (analyticsLoading) return <SkeletonLoader type="dashboard" />;
-
     switch (activeTab) {
       case 'volunteers':
-        return <VolunteerAnalyticsView data={analytics} dateRange={dateRange} onExport={handleExport} />;
+        return <VolunteerAnalyticsView data={analytics} dateRange={dateRange} onExport={handleExport} searchQuery={searchQuery} />;
       case 'programs':
-        return <ProgramAnalyticsView data={analytics} onExport={handleExport} />;
+        return <ProgramAnalyticsView data={analytics} onExport={handleExport} searchQuery={searchQuery} />;
       case 'applications':
-        return <ApplicationAnalyticsView data={analytics} onExport={handleExport} />;
+        return <ApplicationAnalyticsView data={analytics} onExport={handleExport} searchQuery={searchQuery} />;
       case 'attendance':
         return <AttendanceAnalyticsView data={analytics} />;
       case 'certificates':
-        return <CertificateAnalyticsView data={analytics} />;
+        return <CertificateAnalyticsView data={analytics} onExport={handleExport} searchQuery={searchQuery} />;
       case 'rewards':
         return <RewardAnalyticsView data={analytics} />;
       case 'leaderboard':
-        return <LeaderboardAnalyticsView data={analytics} onExport={handleExport} />;
+        return <LeaderboardAnalyticsView data={analytics} onExport={handleExport} searchQuery={searchQuery} />;
       case 'organizations':
         return <OrganizationAnalyticsView data={analytics} />;
       default:
@@ -417,7 +655,15 @@ const AdminAnalytics = () => {
     }
   };
 
-  if (dashboardLoading) return <div className="page-container" style={{ padding: '2rem' }}><SkeletonLoader type="dashboard" /></div>;
+  const hasError = dashboardError || analyticsError;
+
+  if (dashboardLoading || analyticsLoading) {
+    return <div className="page-container" style={{ padding: '2rem' }}><SkeletonLoader type="dashboard" /></div>;
+  }
+
+  if (hasError && activeTab !== 'dashboard') {
+    return <div className="page-container" style={{ padding: '2rem', color: 'var(--color-error)' }}>{analyticsError?.message || dashboardError?.message}</div>;
+  }
 
   return (
     <div className="page-container" style={{ padding: '2rem' }}>
@@ -443,43 +689,88 @@ const AdminAnalytics = () => {
       {activeTab === 'dashboard' && dashboardData && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
-            <StatCard Icon={Users} value={dashboardData?.users?.totalVolunteers || 0} label="Total Volunteers" color="var(--color-primary)" />
-            <StatCard Icon={Users} value={dashboardData?.users?.activeVolunteers || 0} label="Active Volunteers" color="var(--color-success)" />
-            <StatCard Icon={Calendar} value={dashboardData?.programs?.activePrograms || 0} label="Active Programs" color="var(--color-accent)" />
-            <StatCard Icon={Clock} value={dashboardData?.attendance?.totalAttendance || 0} label="Total Attendance" color="var(--color-info)" />
+            <StatCard icon={<Users size={24} />} value={dashboardData?.users?.totalVolunteers || 0} label="Total Volunteers" color="primary" />
+            <StatCard icon={<Users size={24} />} value={dashboardData?.users?.activeVolunteers || 0} label="Active Volunteers" color="secondary" />
+            <StatCard icon={<Calendar size={24} />} value={dashboardData?.programs?.activePrograms || 0} label="Active Programs" color="accent" />
+            <StatCard icon={<Clock size={24} />} value={dashboardData?.attendance?.totalAttendance || 0} label="Total Attendance" color="primary" />
           </div>
 
           <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
-            <StatCard Icon={Target} value={dashboardData?.applications?.pending || 0} label="Pending Applications" color="#8B5CF6" />
-            <StatCard Icon={Award} value={dashboardData?.certificates?.generated || 0} label="Certificates Issued" color="var(--color-warning)" />
-            <StatCard Icon={Gift} value={dashboardData?.rewards?.badgesAwarded || 0} label="Badges Awarded" color="#EC4899" />
-            <StatCard Icon={TrendingUp} value={`${dashboardData?.attendance?.attendanceRate || 0}%`} label="Attendance Rate" color="var(--color-primary)" />
+            <StatCard icon={<Target size={24} />} value={dashboardData?.applications?.pending || 0} label="Pending Applications" color="purple" />
+            <StatCard icon={<Award size={24} />} value={dashboardData?.certificates?.generated || 0} label="Certificates Issued" color="warning" />
+            <StatCard icon={<Gift size={24} />} value={dashboardData?.rewards?.badgesAwarded || 0} label="Badges Awarded" color="secondary" />
+            <StatCard icon={<TrendingUp size={24} />} value={`${dashboardData?.attendance?.attendanceRate || 0}%`} label="Attendance Rate" color="success" />
           </div>
 
           <div className="grid grid-cols-3" style={{ gap: '1rem' }}>
-            <StatCard Icon={Building2} value={dashboardData?.organizations?.totalOrganizations || 0} label="Organizations" color="#10B981" />
-            <StatCard Icon={Building2} value={dashboardData?.organizations?.verifiedOrganizations || 0} label="Verified Orgs" color="var(--color-success)" />
-            <StatCard Icon={TrendingUp} value={dashboardData?.users?.newVolunteersThisMonth || 0} label="New This Month" color="var(--color-primary)" />
+            <StatCard icon={<Gift size={24} />} value={dashboardData?.rewards?.coinsIssued || 0} label="Coins Issued" color="primary" />
+            <StatCard icon={<Clock size={24} />} value={dashboardData?.attendance?.hoursServed || 0} label="Hours Served" color="secondary" />
+            <StatCard icon={<Users size={24} />} value={dashboardData?.users?.newVolunteersThisMonth || 0} label="New This Month" color="success" />
+          </div>
+
+          <div className="grid grid-cols-2" style={{ gap: '1rem' }}>
+            <ChartCard title="Volunteer Growth">
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={dashboardData?.volunteersJoinedPerMonth?.map(m => ({
+                  ...m,
+                  monthName: `${MONTH_NAMES[m.month] || ''} ${m.year}`.trim(),
+                })) || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="volunteerGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                  <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={2} fillOpacity={1} fill="url(#volunteerGradient)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <PieChartComponent 
+              data={dashboardData?.stateDistribution || []}
+              title="State Distribution"
+              nameKey="state"
+              valueKey="count"
+            />
           </div>
         </div>
       )}
 
       {activeTab !== 'dashboard' && (
         <div>
-          {activeTab !== 'leaderboard' && (
-            <div style={{ marginBottom: '1rem' }}>
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="form-input"
-                style={{ maxWidth: '200px' }}
-              >
-                {DATE_RANGES.map(r => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            {activeTab !== 'leaderboard' && (
+              <div style={{ flex: '1 1 200px', minWidth: '150px' }}>
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="form-input"
+                >
+                  {DATE_RANGES.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            {['volunteers', 'programs', 'certificates', 'leaderboard'].includes(activeTab) && (
+              <div style={{ flex: '2 1 300px', minWidth: '250px', position: 'relative' }}>
+                <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-body)' }} />
+                <input
+                  type="text"
+                  placeholder={`Search ${activeTab}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="form-input"
+                  style={{ paddingLeft: '2.5rem' }}
+                />
+              </div>
+            )}
+          </div>
 
           {renderAnalyticsView()}
         </div>

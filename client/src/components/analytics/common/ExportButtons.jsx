@@ -1,37 +1,56 @@
 import React from 'react';
+import { FileText, FileSpreadsheet, FileDown } from 'lucide-react';
 import { exportCSV, exportExcel, exportPDF } from '../../utils/export';
 
-/**
- * ExportButtons – renders three export triggers (CSV, Excel, PDF).
- * `data` is the array of objects to export, `fileName` is the base name without extension.
- */
-const ExportButtons = ({ data, fileName }) => {
-  const handleCSV = () => exportCSV(data, `${fileName}.csv`);
-  const handleExcel = () => exportExcel(data, `${fileName}.xlsx`);
-  const handlePDF = () => exportPDF(data, `${fileName}.pdf`);
+const ExportButtons = ({ data, fileName, onExport }) => {
+  const handleCSV = () => {
+    const csvData = onExport ? onExport('csv') : data;
+    if (csvData?.length) exportCSV(csvData, `${fileName}.csv`);
+  };
+  
+  const handleExcel = () => {
+    const excelData = onExport ? onExport('excel') : data;
+    if (excelData?.length) exportExcel(excelData, `${fileName}.xlsx`);
+  };
+  
+  const handlePDF = () => {
+    const pdfData = onExport ? onExport('pdf') : data;
+    if (pdfData?.length) exportPDF(pdfData, `${fileName}.pdf`);
+  };
+
+  if (!data?.length && !onExport) return null;
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex gap-2" role="group" aria-label="Export options">
       <button
         onClick={handleCSV}
-        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-        aria-label="Export CSV"
+        className="btn btn-secondary"
+        style={{ fontSize: '0.8rem', padding: '0.4rem 0.875rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+        aria-label="Export as CSV"
+        title="Export as CSV"
       >
-        CSV
+        <FileText size={14} />
+        <span className="hidden sm:inline">CSV</span>
       </button>
       <button
         onClick={handleExcel}
-        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-        aria-label="Export Excel"
+        className="btn btn-secondary"
+        style={{ fontSize: '0.8rem', padding: '0.4rem 0.875rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+        aria-label="Export as Excel"
+        title="Export as Excel"
       >
-        Excel
+        <FileSpreadsheet size={14} />
+        <span className="hidden sm:inline">Excel</span>
       </button>
       <button
         onClick={handlePDF}
-        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-        aria-label="Export PDF"
+        className="btn btn-secondary"
+        style={{ fontSize: '0.8rem', padding: '0.4rem 0.875rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+        aria-label="Export as PDF"
+        title="Export as PDF"
       >
-        PDF
+        <FileDown size={14} />
+        <span className="hidden sm:inline">PDF</span>
       </button>
     </div>
   );

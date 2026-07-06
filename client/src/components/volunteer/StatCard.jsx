@@ -2,60 +2,90 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
-const StatCard = ({ icon: Icon, value, label, trend, color = 'primary', suffix = '' }) => {
+const StatCard = ({ icon, value, label, trend, color = 'primary', suffix = '' }) => {
   const getColorValue = () => {
-    switch (color) {
-      case 'primary': return 'rgba(37, 99, 235, 0.1)';
-      case 'secondary': return 'rgba(16, 185, 129, 0.1)';
-      case 'accent': return 'rgba(245, 158, 11, 0.1)';
-      case 'purple': return 'rgba(139, 92, 246, 0.1)';
-      case 'error': return 'rgba(239, 68, 68, 0.1)';
-      default: return 'rgba(37, 99, 235, 0.1)';
-    }
+    const colors = {
+      primary: 'rgba(211, 84, 0, 0.12)',
+      secondary: 'rgba(5, 150, 105, 0.12)',
+      accent: 'rgba(217, 119, 17, 0.12)',
+      purple: 'rgba(124, 58, 246, 0.12)',
+      error: 'rgba(220, 38, 38, 0.1)',
+      success: 'rgba(5, 150, 105, 0.12)',
+      warning: 'rgba(217, 119, 17, 0.12)',
+      info: 'rgba(37, 99, 235, 0.12)',
+    };
+    return colors[color] || colors.primary;
   };
 
   const getTextColorValue = () => {
-    switch (color) {
-      case 'primary': return 'var(--color-primary)';
-      case 'secondary': return 'var(--color-secondary)';
-      case 'accent': return 'var(--color-accent)';
-      case 'purple': return 'var(--color-purple)';
-      case 'error': return 'var(--color-error)';
-      default: return 'var(--color-primary)';
-    }
+    const colors = {
+      primary: 'var(--color-primary)',
+      secondary: 'var(--color-secondary)',
+      accent: 'var(--color-accent)',
+      purple: 'var(--color-purple)',
+      error: 'var(--color-error)',
+      success: 'var(--color-success)',
+      warning: 'var(--color-warning)',
+      info: 'var(--color-info)',
+    };
+    return colors[color] || colors.primary;
   };
 
   return (
-    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-      <div style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: getColorValue(), color: getTextColorValue() }}>
-        {Icon}
+    <motion.div
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="card"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '1.25rem',
+      }}
+    >
+      <div style={{
+        padding: '0.75rem',
+        borderRadius: 'var(--radius-lg)',
+        backgroundColor: getColorValue(),
+        color: getTextColorValue(),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        {icon}
       </div>
-      <div style={{ flex: 1 }}>
-        <span style={{ fontSize: '0.8rem', color: 'var(--color-body)', fontWeight: 600 }}>{label}</span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-          <motion.h3 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ fontSize: '1.75rem', color: 'var(--color-heading)', margin: '0.1rem 0' }}
-          >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: '0.75rem', color: 'var(--color-body)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {label}
+        </span>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.25rem' }}
+        >
+          <span style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-heading)', margin: 0 }}>
             {value}{suffix}
-          </motion.h3>
-          
+          </span>
+
           {trend && (
-            <span style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              fontSize: '0.75rem', 
-              fontWeight: 600,
-              color: trend.direction === 'up' ? 'var(--color-success)' : 'var(--color-error)'
-            }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: trend.direction === 'up' ? 'var(--color-success)' : 'var(--color-error)',
+              }}
+              aria-label={`${trend.value} ${trend.direction === 'up' ? 'increase' : 'decrease'}`}
+            >
               {trend.direction === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
               {trend.value}
             </span>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

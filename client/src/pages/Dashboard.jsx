@@ -155,8 +155,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F8F7F4', fontFamily: 'var(--font-primary)', paddingTop: '64px' }}>
-      <main style={{ flex: 1, padding: '2rem 2rem 3rem', maxWidth: '100%', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#F8F7F4', fontFamily: 'var(--font-primary)' }}>
+      <main style={{ padding: '2rem 2rem 3rem', maxWidth: '100%', overflowX: 'hidden' }}>
         <div style={{ background: 'linear-gradient(135deg, #D35400, #E67E22)', borderRadius: 20, padding: '2rem 2.5rem', marginBottom: '2rem', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 30px rgba(211,84,0,0.25)' }}>
           <div style={{ position: 'relative', zIndex: 2 }}>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'white', fontWeight: 800, marginBottom: '0.5rem' }}>
@@ -197,7 +197,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ background: 'white', borderRadius: 16, padding: '1.5rem', border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -269,7 +269,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '0.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <LeaderboardWidget
               topVolunteers={leaderboardData}
               loading={false}

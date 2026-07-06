@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
-import { format, subMonths, startOfWeek, startOfMonth, endOfMonth, subYears } from 'date-fns';
+import React, { useState, useMemo } from 'react';
+import { Calendar, Filter, ChevronDown } from 'lucide-react';
 
-/**
- * FilterBar – reusable date range filter.
- * Emits the selected period string (e.g., 'today', 'this_week') and optional custom range.
- */
-const periods = [
+const PERIODS = [
+  { label: 'All Time', value: '' },
   { label: 'Today', value: 'today' },
   { label: 'This Week', value: 'this_week' },
   { label: 'This Month', value: 'this_month' },
@@ -13,67 +10,34 @@ const periods = [
   { label: 'Last 3 Months', value: 'last_3_months' },
   { label: 'Last 6 Months', value: 'last_6_months' },
   { label: 'Last Year', value: 'last_year' },
-  { label: 'Custom Range', value: 'custom' },
 ];
 
 const FilterBar = ({ onChange }) => {
   const [selected, setSelected] = useState('this_month');
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
 
   const handleSelect = (e) => {
     const value = e.target.value;
     setSelected(value);
-    if (value !== 'custom') {
-      onChange({ period: value });
-    }
-  };
-
-  const applyCustom = () => {
-    if (customStart && customEnd) {
-      onChange({ period: 'custom', start: customStart, end: customEnd });
-    }
+    onChange({ period: value });
   };
 
   return (
-    <div className="flex items-center space-x-4 mb-4">
-      <select
-        value={selected}
-        onChange={handleSelect}
-        className="border rounded p-2"
-        aria-label="Select date period"
-      >
-        {periods.map((p) => (
-          <option key={p.value} value={p.value}>
-            {p.label}
-          </option>
-        ))}
-      </select>
-      {selected === 'custom' && (
-        <div className="flex items-center space-x-2">
-          <input
-            type="date"
-            value={customStart}
-            onChange={(e) => setCustomStart(e.target.value)}
-            className="border rounded p-1"
-            aria-label="Custom start date"
-          />
-          <span>to</span>
-          <input
-            type="date"
-            value={customEnd}
-            onChange={(e) => setCustomEnd(e.target.value)}
-            className="border rounded p-1"
-            aria-label="Custom end date"
-          />
-          <button
-            onClick={applyCustom}
-            className="bg-primary text-white px-3 py-1 rounded"
-          >
-            Apply
-          </button>
-        </div>
-      )}
+    <div className="flex items-center gap-3 mb-4" style={{ flexWrap: 'wrap' }}>
+      <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
+        <Calendar size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-body)', pointerEvents: 'none', zIndex: 1 }} />
+        <select
+          value={selected}
+          onChange={handleSelect}
+          className="form-control"
+          style={{ paddingLeft: '2.75rem', appearance: 'none', cursor: 'pointer' }}
+          aria-label="Select date period for analytics"
+        >
+          {PERIODS.map(p => (
+            <option key={p.value} value={p.value}>{p.label}</option>
+          ))}
+        </select>
+        <ChevronDown size={16} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-body)', pointerEvents: 'none' }} />
+      </div>
     </div>
   );
 };

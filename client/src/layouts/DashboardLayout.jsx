@@ -262,8 +262,8 @@ const DashboardLayout = () => {
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main style={{ padding: '2rem 1.5rem', flex: 1 }}>
+{/* Main Content Area */}
+         <main style={{ padding: '2rem 1.5rem', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           <Outlet />
         </main>
       </div>

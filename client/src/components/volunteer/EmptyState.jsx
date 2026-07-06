@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const EmptyState = ({ type = 'search', title, description, action }) => {
-  // Simple geometric SVGs for different empty states
   const getIllustration = () => {
     switch (type) {
       case 'applications':
