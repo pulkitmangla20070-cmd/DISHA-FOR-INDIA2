@@ -85,26 +85,28 @@ const RecommendationHistory = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
             {history.map((item, idx) => (
               <div key={item._id || idx} style={{ background: 'white', borderRadius: 16, padding: '1.25rem 1.5rem', border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-heading)', margin: 0 }}>
-                      {item.programTitle || item.volunteerName || 'Recommendation'}
-                    </h4>
-                    <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: item.programId ? 'rgba(37,99,235,0.08)' : 'rgba(124,58,237,0.08)', color: item.programId ? 'var(--color-primary)' : '#7c3aed', fontWeight: 600 }}>
-                      {item.programId ? 'Program' : 'Volunteer'}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--color-body)', margin: '0 0 0.35rem 0', lineHeight: 1.5 }}>{item.reasonForRecommendation}</p>
-                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-body)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Calendar size={12} /> {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
-                    </span>
-                    <span style={{ fontWeight: 700, color: '#059669' }}>{item.score}% match</span>
-                  </div>
-                </div>
-                <span style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-md)', background: '#F0FDF4', color: '#059669', fontWeight: 600, border: '1px solid #D1FAE5' }}>
-                  Saved
-                </span>
+                 <div style={{ flex: 1, minWidth: 0 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                     <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-heading)', margin: 0 }}>
+                       {item.programTitle || item.volunteerName || 'Recommendation'}
+                     </h4>
+                     <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: item.isDeleted ? 'rgba(239,68,68,0.08)' : (item.programId ? 'rgba(37,99,235,0.08)' : 'rgba(124,58,237,0.08)'), color: item.isDeleted ? '#DC2626' : (item.programId ? 'var(--color-primary)' : '#7c3aed'), fontWeight: 600 }}>
+                       {item.isDeleted ? 'Dismissed' : (item.programId ? 'Program' : 'Volunteer')}
+                     </span>
+                   </div>
+                   <p style={{ fontSize: '0.8rem', color: 'var(--color-body)', margin: '0 0 0.35rem 0', lineHeight: 1.5 }}>{item.reasonForRecommendation}</p>
+                   <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', fontSize: '0.75rem', color: 'var(--color-body)' }}>
+                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                       <Calendar size={12} /> {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+                     </span>
+                     <span style={{ fontWeight: 700, color: '#059669' }}>{item.score}% match</span>
+                   </div>
+                 </div>
+                 {!item.isDeleted && (
+                   <span style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-md)', background: '#F0FDF4', color: '#059669', fontWeight: 600, border: '1px solid #D1FAE5' }}>
+                     Saved
+                   </span>
+                 )}
               </div>
             ))}
           </div>

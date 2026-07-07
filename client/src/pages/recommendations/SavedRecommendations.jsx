@@ -7,12 +7,11 @@ import recommendationService from '../../services/recommendationService';
 const SavedRecommendations = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [filterType, setFilterType] = useState('');
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['saved-recommendations', page, filterType],
+    queryKey: ['saved-recommendations', page],
     queryFn: async () => {
-      const res = await recommendationService.getSavedRecommendations({ page, limit: 12, ...(filterType && { type: filterType }) });
+      const res = await recommendationService.getSavedRecommendations({ page, limit: 12 });
       if (res.success) return res.data;
       throw new Error(res.message || 'Failed to load saved recommendations');
     },
@@ -75,22 +74,11 @@ const SavedRecommendations = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          {filterType && (
-            <button onClick={() => setFilterType('')} style={{ padding: '0.45rem 0.875rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', background: 'white', color: 'var(--color-heading)', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}>
-              Clear Filter
-            </button>
-          )}
           <button onClick={() => refetch()} style={{ padding: '0.45rem 0.875rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', background: 'white', color: 'var(--color-heading)', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <RefreshCw size={14} /> Refresh
           </button>
         </div>
       </div>
-
-      {filterType && (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(37,99,235,0.08)', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--color-primary)', fontWeight: 600 }}>
-          <span>Filter: {filterType === 'program' ? 'Programs' : filterType === 'volunteer' ? 'Volunteers' : filterType}</span>
-        </div>
-      )}
 
       {saved.length === 0 ? (
         <div style={{ background: 'white', borderRadius: 16, padding: '3rem 2rem', border: '1px solid #F0EDE8', textAlign: 'center' }}>

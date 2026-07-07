@@ -8,6 +8,8 @@ const MESSAGES = {
   RECOMMENDATION_HISTORY_FETCHED: 'Recommendation history retrieved successfully',
   RECOMMENDATIONS_REFRESHED: 'Recommendations refreshed successfully',
   RECOMMENDATIONS_NOTIFICATION_SENT: 'Recommendation notification sent',
+  FEEDBACK_SUBMITTED: 'Recommendation feedback submitted successfully',
+  RECOMMENDATION_DISMISSED: 'Recommendation dismissed successfully',
 };
 
 const MATCHING_WEIGHTS = {

@@ -75,6 +75,24 @@ class MatchingController {
       return next(error);
     }
   };
+
+  submitFeedback = async (req, res, next) => {
+    try {
+      const result = await matchingService.submitFeedback(req.user, req.body);
+      return successResponse(res, 200, MESSAGES.FEEDBACK_SUBMITTED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  dismissRecommendation = async (req, res, next) => {
+    try {
+      const result = await matchingService.dismissRecommendation(req.user, req.body);
+      return successResponse(res, 200, MESSAGES.RECOMMENDATION_DISMISSED, result);
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
 
 module.exports = new MatchingController();

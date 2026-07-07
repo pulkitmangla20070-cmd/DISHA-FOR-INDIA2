@@ -3,7 +3,7 @@ const Program = require('../program/program.model');
 const Application = require('../application/application.model');
 const SavedRecommendation = require('./recommendation.model');
 const { PROGRAM_STATUS } = require('../program/program.constants');
-const { MATCHING_WEIGHTS, MESSAGES } = require('./matching.constants');
+const { MATCHING_WEIGHTS } = require('./matching.constants');
 const NotFoundError = require('../../utils/errors/NotFoundError');
 const ValidationError = require('../../utils/errors/ValidationError');
 const Notification = require('../notification/notification.model');
@@ -196,7 +196,19 @@ class MatchingService {
       metadata: metadata || {},
     });
 
-    return { ...saved.toJSON(), alreadySaved: false };
+    const savedRecord = saved.toJSON();
+    const programTitle = programId ? (await Program.findById(programId).lean())?.title : null;
+    const volunteerName = volunteerId ? (await User.findById(volunteerId).lean())?.name : null;
+
+    this.sendSavedRecommendationNotification(user, {
+      programId: saved.program,
+      volunteerId: saved.volunteer,
+      programTitle: programTitle || 'Program',
+      volunteerName: volunteerName || 'Volunteer',
+      score: saved.score,
+    });
+
+    return { ...savedRecord, alreadySaved: false };
   }
 
   async unsaveRecommendation(user, recommendationId) {
@@ -209,6 +221,25 @@ class MatchingService {
     saved.deletedAt = new Date();
     saved.deletedBy = user.id;
     await saved.save();
+
+    const isProgram = !!saved.program;
+    const title = isProgram ? 'Recommendation Dismissed' : 'Volunteer Match Dismissed';
+    const message = isProgram
+      ? 'A program recommendation was dismissed from your list.'
+      : 'A volunteer match was dismissed from your list.';
+
+    await Notification.create({
+      recipient: user.id,
+      sender: null,
+      title,
+      message,
+      type: NOTIFICATION_TYPES.RECOMMENDATION_SAVED,
+      category: 'recommendation',
+      priority: PRIORITY.LOW,
+      channel: 'in-app',
+      relatedEntityType: isProgram ? 'program' : 'volunteer',
+      relatedEntityId: isProgram ? saved.program : saved.volunteer,
+    });
 
     return { success: true };
   }
@@ -243,7 +274,13 @@ class MatchingService {
   }
 
   async getRecommendationHistory(user, query) {
-    const filter = { user: user.id, isDeleted: false };
+    const targetUserId = query.userId || user.id;
+
+    if (targetUserId !== user.id && user.role !== 'admin' && user.role !== 'superadmin' && user.role !== 'coordinator') {
+      throw new NotFoundError('User not found');
+    }
+
+    const filter = { user: targetUserId };
 
     const page = Math.max(1, parseInt(query.page, 10) || 1);
     const limit = Math.min(Math.max(1, parseInt(query.limit, 10) || 10), 50);
@@ -283,6 +320,109 @@ class MatchingService {
     }
 
     throw new ValidationError('Invalid recommendation type');
+  }
+
+  async submitFeedback(user, payload) {
+    const { programId, volunteerId, rating, comments, dismissed } = payload;
+
+    if (!programId && !volunteerId) {
+      throw new ValidationError('Either programId or volunteerId is required');
+    }
+
+    const filter = { user: user.id, isDeleted: false };
+    if (programId) filter.program = programId;
+    if (volunteerId) filter.volunteer = volunteerId;
+
+    let saved = await SavedRecommendation.findOne(filter);
+    if (!saved) {
+      saved = await SavedRecommendation.create({
+        user: user.id,
+        program: programId || null,
+        volunteer: volunteerId || null,
+        score: 0,
+        metadata: { feedback: { rating, comments, dismissed, submittedAt: new Date() } },
+      });
+    } else {
+      saved.metadata = {
+        ...saved.metadata,
+        feedback: { rating, comments, dismissed, submittedAt: new Date() },
+      };
+      await saved.save();
+    }
+
+    if (dismissed) {
+      saved.isDeleted = true;
+      saved.deletedAt = new Date();
+      saved.deletedBy = user.id;
+      await saved.save();
+    }
+
+    const isProgram = !!programId;
+    const title = isProgram ? 'Recommendation Feedback' : 'Volunteer Match Feedback';
+    const message = isProgram
+      ? `You rated a program recommendation ${rating}/5`
+      : `You rated a volunteer match ${rating}/5`;
+
+    await Notification.create({
+      recipient: user.id,
+      sender: null,
+      title,
+      message,
+      type: NOTIFICATION_TYPES.RECOMMENDATION_SAVED,
+      category: 'recommendation',
+      priority: PRIORITY.LOW,
+      channel: 'in-app',
+      relatedEntityType: isProgram ? 'program' : 'volunteer',
+      relatedEntityId: isProgram ? programId : volunteerId,
+      metadata: { rating, comments, dismissed },
+    });
+
+    return { success: true, feedback: { rating, comments, dismissed } };
+  }
+
+  async dismissRecommendation(user, payload) {
+    const { programId, volunteerId } = payload;
+
+    if (!programId && !volunteerId) {
+      throw new ValidationError('Either programId or volunteerId is required');
+    }
+
+    const filter = { user: user.id, isDeleted: false };
+    if (programId) filter.program = programId;
+    if (volunteerId) filter.volunteer = volunteerId;
+
+    const saved = await SavedRecommendation.findOne(filter);
+    if (saved) {
+      saved.isDeleted = true;
+      saved.deletedAt = new Date();
+      saved.deletedBy = user.id;
+      saved.metadata = {
+        ...saved.metadata,
+        dismissedAt: new Date(),
+      };
+      await saved.save();
+    }
+
+    const isProgram = !!programId;
+    const title = isProgram ? 'Recommendation Dismissed' : 'Volunteer Match Dismissed';
+    const message = isProgram
+      ? 'A program recommendation was dismissed from your list.'
+      : 'A volunteer match was dismissed from your list.';
+
+    await Notification.create({
+      recipient: user.id,
+      sender: null,
+      title,
+      message,
+      type: NOTIFICATION_TYPES.RECOMMENDATION_SAVED,
+      category: 'recommendation',
+      priority: PRIORITY.LOW,
+      channel: 'in-app',
+      relatedEntityType: isProgram ? 'program' : 'volunteer',
+      relatedEntityId: isProgram ? programId : volunteerId,
+    });
+
+    return { success: true };
   }
 
   async sendRecommendationNotification(user, recommendation) {
@@ -343,7 +483,7 @@ class MatchingService {
       .filter(Boolean);
   }
 
-  _calculateMatchScore(volunteer, program, relatedPastProgramCount = 0, includeMeta = false) {
+  _calculateMatchScore(volunteer, program, relatedPastProgramCount = 0, _includeMeta = false) {
     const volunteerSkills = this._normalize(volunteer.skills);
     const volunteerInterests = this._normalize(volunteer.interests);
     const volunteerLanguages = this._normalize(volunteer.languages);

@@ -27,4 +27,8 @@ router.get('/history', authenticate, matchingController.getRecommendationHistory
 
 router.get('/refresh', authenticate, matchingController.refreshRecommendations);
 
+router.post('/feedback', authenticate, matchingController.submitFeedback);
+
+router.post('/dismiss', authenticate, matchingController.dismissRecommendation);
+
 module.exports = router;

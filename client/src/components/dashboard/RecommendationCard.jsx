@@ -1,21 +1,27 @@
 import React from 'react';
-import { Check, X, MessageSquare } from 'lucide-react';
+import { Check, X, MessageSquare, ThumbsUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { saveRecommendation, unsaveRecommendation, submitRecommendationFeedback } from '../../services/recommendationService';
+import {
+  saveRecommendation,
+  unsaveRecommendation,
+  dismissRecommendation,
+  submitRecommendationFeedback,
+} from '../../services/recommendationService';
 
 /**
  * RecommendationCard – displays a single recommendation with actions.
  * Props:
- *   recommendation: { id, title, description, reason, priority }
+ *   recommendation: { id, title, description, reason, priority, score }
  *   onSavedChange?: (id: string, saved: boolean) => void
+ *   onDismissed?: (id: string) => void
  */
-export default function RecommendationCard({ recommendation, onSavedChange }) {
-  const { id, title, description, reason, priority } = recommendation;
+export default function RecommendationCard({ recommendation, onSavedChange, onDismissed }) {
+  const { id, title, description, reason, priority, score } = recommendation;
 
   const handleSave = async () => {
     try {
-      await saveRecommendation({ recommendationId: id });
-      toast.success('Saved');
+      await saveRecommendation({ programId: id, score: score || 0, reasonForRecommendation: reason });
+      toast.success('Recommendation saved');
       onSavedChange?.(id, true);
     } catch (e) {
       toast.error('Save failed');
@@ -24,9 +30,9 @@ export default function RecommendationCard({ recommendation, onSavedChange }) {
 
   const handleDismiss = async () => {
     try {
-      await unsaveRecommendation(id);
+      await dismissRecommendation({ programId: id });
       toast.success('Dismissed');
-      onSavedChange?.(id, false);
+      onDismissed?.(id);
     } catch (e) {
       toast.error('Dismiss failed');
     }
@@ -35,11 +41,12 @@ export default function RecommendationCard({ recommendation, onSavedChange }) {
   const handleFeedback = async (rating) => {
     try {
       await submitRecommendationFeedback({
-        recommendationId: id,
+        programId: id,
         rating,
         comments: '',
+        dismissed: false,
       });
-      toast.success('Feedback recorded');
+      toast.success(`Feedback recorded: ${rating}/5`);
     } catch (e) {
       toast.error('Feedback failed');
     }
@@ -133,7 +140,7 @@ export default function RecommendationCard({ recommendation, onSavedChange }) {
             cursor: 'pointer',
           }}
         >
-          <MessageSquare size={14} /> 👍
+          <ThumbsUp size={14} /> Helpful
         </button>
       </div>
     </div>

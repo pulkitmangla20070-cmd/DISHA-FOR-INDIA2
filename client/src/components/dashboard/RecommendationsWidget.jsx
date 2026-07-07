@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Sparkles, ChevronRight } from 'lucide-react';
@@ -6,8 +6,9 @@ import RecommendationCard from './RecommendationCard';
 import { getProgramRecommendations } from '../../services/matchingService';
 import { useAuth } from '../../context/AuthContext';
 
-const RecommendationsWidget = ({ compact = false }) => {
+const RecommendationsWidget = ({ compact = false, autoRefreshInterval = 0 }) => {
   const { user } = useAuth();
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefreshInterval > 0);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard-program-recommendations', user?.id],
@@ -19,6 +20,14 @@ const RecommendationsWidget = ({ compact = false }) => {
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (!autoRefreshEnabled || autoRefreshInterval <= 0) return;
+    const timer = setInterval(() => {
+      refetch();
+    }, autoRefreshInterval * 1000);
+    return () => clearInterval(timer);
+  }, [autoRefreshEnabled, autoRefreshInterval, refetch]);
 
   const recommendations = data?.recommendations || [];
 
@@ -88,6 +97,26 @@ const RecommendationsWidget = ({ compact = false }) => {
           </h3>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+           {autoRefreshInterval > 0 && (
+             <button
+               onClick={() => setAutoRefreshEnabled((prev) => !prev)}
+               style={{
+                 padding: '0.35rem 0.625rem',
+                 borderRadius: 'var(--radius-md)',
+                 border: '1px solid var(--color-border)',
+                 background: autoRefreshEnabled ? '#DCFCE7' : 'white',
+                 color: autoRefreshEnabled ? '#059669' : 'var(--color-heading)',
+                 fontWeight: 600,
+                 cursor: 'pointer',
+                 fontSize: '0.75rem',
+                 display: 'inline-flex',
+                 alignItems: 'center',
+                 gap: '0.25rem',
+               }}
+             >
+               <RefreshCw size={12} /> Auto
+             </button>
+           )}
           <button onClick={() => refetch()} style={{ padding: '0.35rem 0.625rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', background: 'white', color: 'var(--color-heading)', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
             <RefreshCw size={12} /> Refresh
           </button>
@@ -120,9 +149,12 @@ const RecommendationsWidget = ({ compact = false }) => {
               description: rec.reasonForRecommendation,
               reason: rec.reasonForRecommendation,
               priority: rec.priority || 'Medium',
+              score: rec.score,
             }}
             onSavedChange={(id, saved) => {
-              // Simple optimistic UI: refetch after any action
+              refetch();
+            }}
+            onDismissed={(id) => {
               refetch();
             }}
           />
