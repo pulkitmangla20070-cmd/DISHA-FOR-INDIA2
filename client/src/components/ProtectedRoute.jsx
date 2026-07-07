@@ -6,38 +6,52 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  try {
+    if (loading) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'var(--color-bg)',
+          color: 'var(--color-heading)',
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid var(--color-primary)',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+          }} />
+          <p style={{ marginTop: '1rem', fontWeight: 500 }}>Loading session...</p>
+        </div>
+      );
+    }
+
+    if (!user) {
+      return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    }
+
+    if (allowedRoles && !allowedRoles.includes(user?.role?.toUpperCase())) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+
+    return <>{children}</>;
+  } catch (error) {
+    console.error('[ProtectedRoute] render error:', error);
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        backgroundColor: 'var(--color-bg)' 
-      }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
-          border: '3px solid var(--color-primary)', 
-          borderTopColor: 'transparent', 
-          borderRadius: '50%', 
-          animation: 'spin 1s linear infinite' 
-        }}></div>
-        <p style={{ marginTop: '1rem', color: 'var(--color-heading)', fontWeight: 500 }}>Loading session...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)', padding: '2rem' }}>
+        <div style={{ maxWidth: 400, width: '100%', textAlign: 'center', background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-error)', marginBottom: '0.5rem' }}>Something went wrong</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-body)', marginBottom: '1rem' }}>This page encountered an unexpected error while loading.</p>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>Refresh Page</button>
+        </div>
       </div>
     );
   }
-
-  if (!user) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user?.role?.toUpperCase())) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  return children;
 };
 
 export default ProtectedRoute;

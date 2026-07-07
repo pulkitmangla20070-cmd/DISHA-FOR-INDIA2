@@ -16,6 +16,15 @@ const queryClient = new QueryClient({
   },
 });
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    console.error('[GlobalError]', event.error);
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('[UnhandledRejection]', event.reason);
+  });
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
