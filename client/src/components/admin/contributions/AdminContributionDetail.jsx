@@ -4,8 +4,8 @@ import { useAdminContributionDetail } from '../../../hooks/useAdminContributions
 import VolunteerInfoCard from './VolunteerInfoCard';
 import ContributionInfoCard from './ContributionInfoCard';
 import ContributionFiles from './ContributionFiles';
-import ReviewHistory from '../../components/contributions/ReviewHistory';
-import VersionHistory from '../../components/contributions/VersionHistory';
+import ReviewHistory from '../../contributions/ReviewHistory';
+import VersionHistory from '../../contributions/VersionHistory';
 import ActivityTimeline from './ActivityTimeline';
 import ReviewPanel from './ReviewPanel';
 

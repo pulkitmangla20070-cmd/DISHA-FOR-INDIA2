@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import ContributionQueueCard from './ContributionQueueCard';
-import ContributionSkeleton from '../../components/contributions/ContributionSkeleton';
-import ContributionEmptyState from '../../components/contributions/ContributionEmptyState';
+import ContributionSkeleton from '../../contributions/ContributionSkeleton';
+import ContributionEmptyState from '../../contributions/ContributionEmptyState';
 import ReviewStats from './ReviewStats';
 
 const ContributionQueue = ({ contributions, loading, onSelect }) => {
