@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Send, Paperclip, X, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
