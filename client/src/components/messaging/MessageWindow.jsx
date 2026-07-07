@@ -36,6 +36,7 @@ const MessageWindow = ({ conversationId, onBack, currentUserId }) => {
     onMessageDelivered,
     offMessageDelivered,
     markMessageAsDelivered,
+    markMessageAsRead,
   } = useSocket();
 
   const { data: conversationData, isLoading: conversationLoading, isError: conversationError, refetch: refetchConversation } = useQuery({

@@ -51,6 +51,7 @@ import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 import AdminAnnouncementDashboard from './pages/admin/AdminAnnouncementDashboard';
 import AdminCertificates from './pages/admin/AdminCertificates';
 import AdminAnnouncementCreate from './pages/admin/AdminAnnouncementCreate';
+import AdminReviewDashboard from './pages/admin/AdminReviewDashboard';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
@@ -188,6 +189,7 @@ function App() {
               <Route path="admin/certificates" element={<AdminCertificates />} />
               <Route path="admin/messages" element={<Messages />} />
               <Route path="admin/support" element={<Support />} />
+              <Route path="admin/contributions" element={<AdminReviewDashboard />} />
               <Route path="matching/volunteers" element={<RecommendedVolunteers />} />
             </Route>
 
