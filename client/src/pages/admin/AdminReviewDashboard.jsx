@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Shield } from 'lucide-react';
-import { useAdminContributions } from '../../../hooks/useAdminContributions';
-import ContributionQueue from '../../../components/admin/contributions/ContributionQueue';
-import AdminContributionDetail from '../../../components/admin/contributions/AdminContributionDetail';
+import { useAdminContributions } from '../../hooks/useAdminContributions';
+import ContributionQueue from '../../components/admin/contributions/ContributionQueue';
+import AdminContributionDetail from '../../components/admin/contributions/AdminContributionDetail';
 
 const AdminReviewDashboard = () => {
   const [selectedId, setSelectedId] = useState(null);
