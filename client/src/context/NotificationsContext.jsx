@@ -26,6 +26,7 @@ export const NotificationsProvider = ({ children }) => {
     staleTime: 30_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
+    retry: false,
   });
 
   const unreadCount = unreadCountData || 0;

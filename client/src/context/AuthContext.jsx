@@ -25,20 +25,33 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      setUser(null);
+      setLoading(false);
+    }, 10000);
+
     try {
       const res = await api.get('/auth/me');
+      clearTimeout(timer);
+      if (timedOut) return;
       if (res.success && res.data?.user) {
         setUser(res.data.user);
       } else {
         setUser(null);
       }
     } catch (err) {
+      clearTimeout(timer);
+      if (timedOut) return;
       if (err.status !== 401) {
         console.error('Auth check error:', err);
       }
       setUser(null);
     } finally {
-      setLoading(false);
+      if (!timedOut) {
+        setLoading(false);
+      }
     }
   };
 
