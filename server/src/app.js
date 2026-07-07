@@ -191,15 +191,44 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // 12. Serve React static build + SPA fallback
 // ─────────────────────────────────────────────
 const clientBuildPath = path.join(__dirname, '../../client/dist');
-app.use(express.static(clientBuildPath));
+
+// Serve static files with fine-grained cache control:
+// - index.html: never cache (always serve fresh so stale chunk references can't occur after deployments)
+// - hashed JS/CSS assets: cache for 1 year (safe — Vite embeds a content hash in the filename)
+app.use(
+  express.static(clientBuildPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      } else if (/\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$/i.test(filePath)) {
+        // Hashed filenames — safe to cache aggressively
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  })
+);
 
 // SPA fallback middleware: any non-API, non-static GET returns index.html
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/api-docs')) return next();
-  if (req.path.includes('.')) return next();
+
+  // If the request is for a static asset (contains a dot) but wasn't served by express.static,
+  // the file doesn't exist (e.g., a stale JS chunk from a previous deployment).
+  // Return a plain-text 404 — NOT JSON — so the browser shows a proper error instead of
+  // crashing the React runtime with an unexpected token error (which causes the white screen).
+  if (req.path.includes('.')) {
+    return res.status(404).type('text').send('Not Found');
+  }
+
   const indexPath = path.join(clientBuildPath, 'index.html');
   if (fs.existsSync(indexPath)) {
+    // Always serve index.html with no-cache headers to prevent stale chunk references
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.sendFile(indexPath);
   }
   return next();
