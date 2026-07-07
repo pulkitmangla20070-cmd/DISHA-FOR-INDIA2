@@ -36,6 +36,14 @@ class AnnouncementService {
       publishedAt: statusValue === STATUS.PUBLISHED ? new Date() : null,
     });
 
+    if (statusValue === STATUS.PUBLISHED) {
+      const { announcementAutomation } = require('./announcement.automation');
+      announcementAutomation._notifyAudience(announcement).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to notify audience for new announcement:', err.message);
+      });
+    }
+
     return {
       announcement: announcementFormatter(announcement),
       message: MESSAGES.ANNOUNCEMENT_CREATED,
@@ -132,6 +140,14 @@ class AnnouncementService {
 
     const updated = await announcementRepository.update(announcementId, updatePayload);
 
+    if (updatePayload.status === STATUS.PUBLISHED && announcement.status !== STATUS.PUBLISHED) {
+      const { announcementAutomation } = require('./announcement.automation');
+      announcementAutomation._notifyAudience(updated).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to notify audience for updated announcement:', err.message);
+      });
+    }
+
     return {
       announcement: announcementFormatter(updated),
       message: MESSAGES.ANNOUNCEMENT_UPDATED,
@@ -159,6 +175,12 @@ class AnnouncementService {
     const updated = await announcementRepository.update(announcementId, {
       status: STATUS.PUBLISHED,
       publishedAt: new Date(),
+    });
+
+    const { announcementAutomation } = require('./announcement.automation');
+    announcementAutomation._notifyAudience(updated).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('Failed to notify audience for published announcement:', err.message);
     });
 
     return {

@@ -170,6 +170,26 @@ const Dashboard = () => {
             <p style={{ opacity: 0.9, maxWidth: 560, fontSize: '0.95rem', lineHeight: 1.65, marginBottom: '1.5rem' }}>
               Welcome back to your dashboard. You are at the <strong style={{ color: '#FEF3C7' }}>{level}</strong> level. Keep up the amazing work!
             </p>
+            <div style={{ background: 'rgba(255, 255, 255, 0.2)', padding: '0.75rem 1rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', opacity: 0.9, display: 'block', marginBottom: '0.2rem' }}>Your Volunteer ID</span>
+                <code style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace', background: 'transparent', color: 'white', padding: 0 }}>{user?._id}</code>
+              </div>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(user?._id || '');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.innerText = 'Copy';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.innerText = 'Copied!';
+                }}
+                style={{ background: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: 6, color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', minWidth: '60px' }}
+              >
+                Copy
+              </button>
+            </div>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <Link to="/programs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.575rem 1.125rem', borderRadius: 8, background: 'white', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', transition: 'all 0.2s' }}>
                 Explore Programs

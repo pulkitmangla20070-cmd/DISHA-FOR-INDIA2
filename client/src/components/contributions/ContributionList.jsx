@@ -1,0 +1,39 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import ContributionCard from './ContributionCard';
+import ContributionEmptyState from './ContributionEmptyState';
+import ContributionSkeleton from './ContributionSkeleton';
+
+const ContributionList = ({ contributions, loading, emptyTitle, emptyDescription, onStartContributing }) => {
+  if (loading) {
+    return <ContributionSkeleton type="card" count={6} />;
+  }
+
+  if (!contributions || contributions.length === 0) {
+    return (
+      <ContributionEmptyState
+        title={emptyTitle}
+        description={emptyDescription}
+        onStartContributing={onStartContributing}
+      />
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-3" style={{ gap: '1.5rem' }}>
+      {contributions.map((contrib, index) => (
+        <motion.div
+          key={contrib._id || contrib.id || index}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
+        >
+          <ContributionCard contribution={contrib} />
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+export default ContributionList;

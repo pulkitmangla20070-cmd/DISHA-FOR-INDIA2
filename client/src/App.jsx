@@ -54,6 +54,8 @@ import AdminAnnouncementCreate from './pages/admin/AdminAnnouncementCreate';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
+import Contributions from './pages/contributions/Contributions';
+import ContributionWizard from './components/contributions/ContributionWizard';
 
 // Matching Pages
 import RecommendedPrograms from './pages/matching/RecommendedPrograms';
@@ -142,6 +144,7 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="opportunities" element={<Programs />} />
               <Route path="notifications" element={<NotificationCenter />} />
               <Route path="announcements" element={<Announcements />} />
               <Route path="certificates" element={<Certificates />} />
@@ -205,7 +208,9 @@ function App() {
                 </NotificationsProvider>
               </ProtectedRoute>
             }>
-              <Route path="volunteer/analytics" element={<VolunteerAnalytics />} />
+               <Route path="volunteer/analytics" element={<VolunteerAnalytics />} />
+               <Route path="contributions" element={<Contributions />} />
+               <Route path="contributions/new" element={<ContributionWizard />} />
             </Route>
 
             {/* Global 404 - placed last so it only matches when nothing else does */}
