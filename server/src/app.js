@@ -167,6 +167,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const clientBuildPath = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientBuildPath));
 
+// SPA fallback middleware: any non-API, non-static GET returns index.html
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/api-docs')) return next();
