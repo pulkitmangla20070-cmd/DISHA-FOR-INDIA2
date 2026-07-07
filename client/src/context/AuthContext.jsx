@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import api, { setAuthToken } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
+  const checkAuthRef = useRef(false);
 
   // ─── Ensure stored Bearer token is in every axios request ───────────────────
   useEffect(() => {
@@ -18,10 +19,14 @@ export const AuthProvider = ({ children }) => {
 
   // ─── Check existing session on mount ────────────────────────────────────────
   const checkAuth = async () => {
+    if (checkAuthRef.current) return;
+    checkAuthRef.current = true;
+
     const token = localStorage.getItem('authToken');
     if (!token) {
       setUser(null);
       setLoading(false);
+      checkAuthRef.current = false;
       return;
     }
 
@@ -30,6 +35,7 @@ export const AuthProvider = ({ children }) => {
       timedOut = true;
       setUser(null);
       setLoading(false);
+      checkAuthRef.current = false;
     }, 10000);
 
     try {
@@ -52,6 +58,7 @@ export const AuthProvider = ({ children }) => {
       if (!timedOut) {
         setLoading(false);
       }
+      checkAuthRef.current = false;
     }
   };
 
@@ -60,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Login ───────────────────────────────────────────────────────────────────
+  // Login
   const login = async (email, password) => {
     setError(null);
     setLoading(true);

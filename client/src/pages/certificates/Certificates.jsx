@@ -37,6 +37,7 @@ const Certificates = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const downloadMutation = useMutation({

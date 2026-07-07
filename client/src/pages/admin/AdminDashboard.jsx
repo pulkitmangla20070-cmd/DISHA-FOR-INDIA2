@@ -9,8 +9,11 @@ import LeaderboardWidget from '../../components/LeaderboardWidget';
 import NotificationWidget from '../../components/NotificationWidget';
 import RecentAnnouncementsWidget from '../../components/announcements/RecentAnnouncementsWidget';
 import RecommendationsWidget from '../../components/dashboard/RecommendationsWidget';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
+
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => {
@@ -19,8 +22,9 @@ const AdminDashboard = () => {
       throw new Error(res?.message || 'Failed to load dashboard');
     },
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: programsData } = useQuery({
@@ -32,6 +36,7 @@ const AdminDashboard = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery({
@@ -43,6 +48,7 @@ const AdminDashboard = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: notificationsData, isLoading: notificationsLoading } = useQuery({
@@ -54,6 +60,7 @@ const AdminDashboard = () => {
     },
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const stats = useMemo(() => {
@@ -77,17 +84,17 @@ const AdminDashboard = () => {
   }
 
   if (dashboardError) {
-    return <div className="page-container" style={{ padding: '2rem', color: 'var(--color-error)' }}>{dashboardError.message}</div>;
+    return <div className="page-container" style={{ padding: '2rem', color: '#dc2626' }}>{dashboardError.message}</div>;
   }
 
-  const StatCard = ({ Icon, value, label, color = 'var(--color-primary)' }) => (
+  const StatCard = ({ Icon, value, label, color = '#2563eb' }) => (
     <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: `4px solid ${color}` }}>
       <div style={{ padding: '0.75rem', backgroundColor: `${color}20`, color, borderRadius: '50%' }}>
         <Icon size={24} />
       </div>
       <div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-heading)' }}>{value}</div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--color-body)' }}>{label}</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937' }}>{value}</div>
+        <div style={{ fontSize: '0.85rem', color: '#4b5563' }}>{label}</div>
       </div>
     </div>
   );
@@ -95,14 +102,14 @@ const AdminDashboard = () => {
   return (
     <div className="page-container" style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'var(--color-heading)' }}>Admin Dashboard</h1>
-        <p style={{ color: 'var(--color-body)', margin: 0 }}>Platform overview and volunteer engagement analytics.</p>
+        <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: '#1f2937' }}>Admin Dashboard</h1>
+        <p style={{ color: '#4b5563', margin: 0 }}>Platform overview and volunteer engagement analytics.</p>
       </div>
 
       <div className="grid grid-cols-4" style={{ marginBottom: '2rem', gap: '1.5rem' }}>
-        <StatCard Icon={Users} value={stats?.totalVolunteers || 0} label="Total Volunteers" color="var(--color-primary)" />
-        <StatCard Icon={Calendar} value={stats?.activePrograms || 0} label="Active Programs" color="var(--color-success)" />
-        <StatCard Icon={Clock} value={stats?.totalHours || 0} label="Hours Volunteered" color="var(--color-accent)" />
+        <StatCard Icon={Users} value={stats?.totalVolunteers || 0} label="Total Volunteers" color="#2563eb" />
+        <StatCard Icon={Calendar} value={stats?.activePrograms || 0} label="Active Programs" color="#059669" />
+        <StatCard Icon={Clock} value={stats?.totalHours || 0} label="Hours Volunteered" color="#d97706" />
         <StatCard Icon={TrendingUp} value={stats?.newThisMonth || 0} label="Signups This Month" color="#8B5CF6" />
       </div>
 
@@ -111,21 +118,21 @@ const AdminDashboard = () => {
           <RecommendationsWidget />
           <div className="card">
             <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Activity size={18} className="text-primary" /> Platform Health
+              <Activity size={18} style={{ color: '#2563eb' }} /> Platform Health
             </h3>
-            <div style={{ padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-              <p style={{ color: 'var(--color-success)', fontWeight: 600, marginBottom: '0.5rem' }}>System is running smoothly. All services operational.</p>
+            <div style={{ padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
+              <p style={{ color: '#059669', fontWeight: 600, marginBottom: '0.5rem' }}>System is running smoothly. All services operational.</p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1rem', fontSize: '0.85rem' }}>
-                <div><strong style={{ color: 'var(--color-success)' }}>●</strong> Database: Connected</div>
-                <div><strong style={{ color: 'var(--color-success)' }}>●</strong> API: Online</div>
-                <div><strong style={{ color: 'var(--color-success)' }}>●</strong> Cache: Active</div>
+                <div><strong style={{ color: '#059669' }}>●</strong> Database: Connected</div>
+                <div><strong style={{ color: '#059669' }}>●</strong> API: Online</div>
+                <div><strong style={{ color: '#059669' }}>●</strong> Cache: Active</div>
               </div>
             </div>
           </div>
 
           <div className="card">
             <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Target size={18} className="text-primary" /> Quick Actions
+              <Target size={18} style={{ color: '#2563eb' }} /> Quick Actions
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={() => window.location.href = '/admin/programs'}>

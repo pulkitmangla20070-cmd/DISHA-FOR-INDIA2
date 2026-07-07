@@ -31,6 +31,7 @@ import ApplicationForm from './pages/applications/ApplicationForm';
 import MyApplications from './pages/applications/MyApplications';
 import ApplicationDetails from './pages/applications/ApplicationDetails';
 import MyPrograms from './pages/programs/MyPrograms';
+import ProgramDetail from './pages/programs/ProgramDetail';
 import AttendanceDashboard from './pages/attendance/AttendanceDashboard';
 import CheckIn from './pages/attendance/CheckIn';
 import CheckOut from './pages/attendance/CheckOut';
@@ -122,6 +123,7 @@ function App() {
             <Route element={<PublicLayout />}>
               <Route index element={<Home />} />
               <Route path="programs" element={<Programs />} />
+              <Route path="programs/:id" element={<ProgramDetail />} />
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="about" element={<About />} />
               <Route path="login" element={
@@ -148,6 +150,8 @@ function App() {
             }>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="opportunities" element={<Programs />} />
+              <Route path="opportunities/:id" element={<ProgramDetail />} />
+              <Route path="programs/:id" element={<ProgramDetail />} />
               <Route path="notifications" element={<NotificationCenter />} />
               <Route path="announcements" element={<Announcements />} />
               <Route path="certificates" element={<Certificates />} />

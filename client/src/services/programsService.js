@@ -10,8 +10,8 @@ export const getPrograms = async (params = {}) => {
 /**
  * Get all programs for admin (requires admin role).
  */
-export const getAllPrograms = async () => {
-  return await api.get('/programs');
+export const getAllPrograms = async (params = {}) => {
+  return await api.get('/programs', { params });
 };
 
 /**
@@ -44,9 +44,9 @@ export const getJoinedPrograms = async () => {
 };
 
 /**
- * Get program by ID.
+ * Get program by ID or slug.
  */
-export const getJoinedProgramById = async (id) => {
+export const getProgramById = async (id) => {
   return await api.get(`/programs/${id}`);
 };
 
@@ -55,6 +55,22 @@ export const getJoinedProgramById = async (id) => {
  */
 export const getMyPrograms = async () => {
   return await api.get('/programs/me');
+};
+
+/**
+ * Publish a program (admin only).
+ * Backend route: PATCH /api/v1/programs/:id/publish
+ */
+export const publishProgram = async (id) => {
+  return await api.patch(`/programs/${id}/publish`);
+};
+
+/**
+ * Change a program's status via the dedicated status endpoint.
+ * Backend route: PATCH /api/v1/programs/:id/status
+ */
+export const changeProgramStatus = async (id, status) => {
+  return await api.patch(`/programs/${id}/status`, { status });
 };
 
 /**
@@ -78,6 +94,9 @@ export default {
   updateProgram,
   deleteProgram,
   getJoinedPrograms,
-  getJoinedProgramById,
+  getProgramById,
+  getMyPrograms,
+  publishProgram,
+  changeProgramStatus,
   getVolunteerHours,
 };

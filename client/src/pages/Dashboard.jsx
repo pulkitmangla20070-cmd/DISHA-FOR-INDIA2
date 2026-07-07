@@ -27,8 +27,9 @@ const Dashboard = () => {
       throw new Error(res.message || 'Failed to load dashboard');
     },
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: rankData } = useQuery({
@@ -40,6 +41,7 @@ const Dashboard = () => {
     },
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: leaderboardData } = useQuery({
@@ -51,6 +53,7 @@ const Dashboard = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: notificationsData, isLoading: notificationsLoading } = useQuery({
@@ -62,6 +65,7 @@ const Dashboard = () => {
     },
     staleTime: 1 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: gamificationData } = useQuery({
@@ -80,6 +84,7 @@ const Dashboard = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: programsData } = useQuery({
@@ -91,6 +96,7 @@ const Dashboard = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: recentActivityData, isLoading: recentActivityLoading } = useQuery({
@@ -102,6 +108,7 @@ const Dashboard = () => {
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const displayName = user?.name || 'Volunteer';

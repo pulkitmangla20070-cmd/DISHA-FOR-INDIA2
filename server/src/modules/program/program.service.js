@@ -217,8 +217,8 @@ class ProgramService {
     if (!program.endDate) {
       validationErrors.push({ field: 'endDate', message: 'End date is required for publishing' });
     }
-    if (!program.city || program.city.trim() === '') {
-      validationErrors.push({ field: 'city', message: 'City is required for publishing' });
+    if (program.mode !== 'online' && (!program.city || program.city.trim() === '')) {
+      validationErrors.push({ field: 'city', message: 'City is required for offline/hybrid programs' });
     }
 
     if (validationErrors.length > 0) {
@@ -227,20 +227,31 @@ class ProgramService {
 
     const publishedProgram = await programRepository.publish(programId);
 
+    // ── Broadcast to ALL active volunteers ──────────────────────────────────
     try {
-      await notificationService.sendInAppNotification('buildProgramPublished', {
-        recipientId: program.createdBy.toString(),
-        programName: publishedProgram.title,
-        programId: publishedProgram._id.toString(),
-      });
+      const User = require('../user/user.model');
+      const volunteers = await User.find(
+        { role: 'volunteer', isDeleted: false, status: 'active' },
+        '_id'
+      ).lean();
+
+      if (volunteers.length > 0) {
+        const recipientIds = volunteers.map((v) => v._id.toString());
+        await notificationService.sendBulkInAppNotification(recipientIds, 'buildProgramCreated', {
+          programName: publishedProgram.title,
+          programId: publishedProgram._id.toString(),
+          createdBy: userId,
+        });
+      }
     } catch (_error) {
-      // Notification failure is non-blocking
+      // Broadcast failure is non-blocking
     }
 
     return { program: publishedProgram };
   }
 
   async archiveProgram(userId, programId) {
+
     const program = await programRepository.findById(programId);
 
     if (!program) {

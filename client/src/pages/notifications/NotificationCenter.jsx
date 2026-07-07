@@ -51,6 +51,7 @@ const NotificationCenter = () => {
     },
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const notifications = data || [];

@@ -19,8 +19,8 @@ export default class ErrorBoundary extends React.Component {
       return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F4F1EA', padding: '2rem' }}>
           <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-error)' }}>Something went wrong</h1>
-            <p style={{ color: 'var(--color-body)', marginBottom: '1.5rem' }}>
+            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '1.75rem', marginBottom: '1rem', color: '#dc2626' }}>Something went wrong</h1>
+            <p style={{ color: '#374151', marginBottom: '1.5rem' }}>
               We hit an unexpected error while loading this page. Please refresh or go back to the dashboard.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -28,9 +28,9 @@ export default class ErrorBoundary extends React.Component {
               <button className="btn btn-secondary" onClick={() => (window.location.href = '/dashboard')}>Go to Dashboard</button>
             </div>
             {this.state.error && (
-              <details style={{ marginTop: '1.5rem', textAlign: 'left', background: 'white', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+              <details style={{ marginTop: '1.5rem', textAlign: 'left', background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 600, marginBottom: '0.5rem' }}>Error details</summary>
-                <pre style={{ fontSize: '0.8rem', color: 'var(--color-error)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <pre style={{ fontSize: '0.8rem', color: '#dc2626', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {this.state.error?.message}
                   {this.state.error?.stack}
                 </pre>
