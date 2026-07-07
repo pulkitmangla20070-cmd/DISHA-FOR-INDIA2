@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 import {
   Shield, Home, Calendar, Award, Trophy, LogOut, Menu, X,
-  LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, FileText, MessageSquare, HelpCircle, Bell, Megaphone
+  LayoutDashboard, Users, ClipboardList, BarChart2, UserCheck, FileText, MessageSquare, HelpCircle, Bell, Megaphone, LineChart
 } from 'lucide-react';
 import NotificationBell from '../components/notifications/NotificationBell';
 import NotificationDrawer from '../components/notifications/NotificationDrawer';
@@ -59,6 +59,7 @@ const DashboardLayout = () => {
     { name: 'Attendance',    path: '/admin/attendance',   icon: <UserCheck size={18} /> },
     { name: 'Certificates',  path: '/admin/certificates',  icon: <Award size={18} /> },
     { name: 'Analytics',     path: '/admin/analytics',    icon: <BarChart2 size={18} /> },
+    { name: 'Forecast',      path: '/admin/forecast',     icon: <LineChart size={18} /> },
     { name: 'Reports',       path: '/admin/reports',      icon: <FileText size={18} /> },
     { name: 'Volunteers',    path: '/admin/users',        icon: <Users size={18} /> },
   ];
