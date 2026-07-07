@@ -1,48 +1,20 @@
 import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const ContributionSearch = ({ value, onChange, placeholder = 'Search contributions...' }) => {
   return (
-    <div style={{
-      position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      maxWidth: '480px',
-      width: '100%',
-    }}>
-      <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--color-body)', pointerEvents: 'none' }} />
+    <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+      <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-body)', pointerEvents: 'none' }}>
+        <Search size={18} />
+      </div>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        aria-label="Search contributions"
         className="form-control"
-        style={{
-          paddingLeft: '2.75rem',
-          paddingRight: value ? '2.5rem' : '1rem',
-          width: '100%',
-        }}
+        style={{ paddingLeft: '2.5rem', width: '100%' }}
       />
-      {value && (
-        <button
-          onClick={() => onChange('')}
-          style={{
-            position: 'absolute',
-            right: '0.75rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            color: 'var(--color-body)',
-          }}
-          aria-label="Clear search"
-        >
-          <X size={16} />
-        </button>
-      )}
     </div>
   );
 };
