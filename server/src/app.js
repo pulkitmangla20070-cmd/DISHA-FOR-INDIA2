@@ -167,12 +167,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const clientBuildPath = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientBuildPath));
 
-app.get('*', (req, res, next) => {
-  // Skip API and docs routes
-  if (req.path.startsWith('/api') || req.path.startsWith('/api-docs')) {
-    return next();
-  }
-  // Skip static asset requests (contain a dot)
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/api') || req.path.startsWith('/api-docs')) return next();
   if (req.path.includes('.')) return next();
   const indexPath = path.join(clientBuildPath, 'index.html');
   if (fs.existsSync(indexPath)) {
