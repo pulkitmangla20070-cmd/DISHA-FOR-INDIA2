@@ -1,10 +1,15 @@
 services:
-  - type: static
-    name: disha-frontend
-    env: static
+  # Single Web Service: builds client, serves it via Express
+  - type: web
+    name: disha-for-india
+    runtime: node
+    plan: free
     buildCommand: npm run build
-    staticPublishPath: client/dist
-    redirects:
-      - source: "/*"
-        destination: /index.html
-        type: rewrite
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.11.0
+    healthCheckPath: /api/v1/health
+    autoDeploy: true

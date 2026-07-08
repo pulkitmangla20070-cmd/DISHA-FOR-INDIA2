@@ -1,13 +1,20 @@
 {
-  "name": "disha-for-india-root",
+  "name": "disha-for-india",
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "cd client && npm run build",
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "install:all": "npm run install:server && npm run install:client",
+    "build:client": "cd client && npm run build",
+    "build": "npm run install:all && npm run build:client",
+    "start": "cd server && npm start",
+    "dev": "start npm run dev:server && npm run dev:client",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
     "lint": "cd server && npm run lint"
   },
-  "dependencies": {
-    "swagger-jsdoc": "^6.3.0",
-    "swagger-ui-express": "^5.0.1"
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   }
 }
