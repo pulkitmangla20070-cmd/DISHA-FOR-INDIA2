@@ -381,7 +381,7 @@ export const VolunteerProvider = ({ children }) => {
    */
   const fetchJoinedProgramById = useCallback(async (id) => {
     try {
-      const res = await programsService.getJoinedProgramById(id);
+      const res = await programsService.getProgramById(id);
       if (res?.success) {
         dispatch({ type: AT.JP_DETAIL_SUCCESS, payload: res.data?.program ?? null });
       }
