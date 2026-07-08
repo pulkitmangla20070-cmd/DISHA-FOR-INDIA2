@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Clock, Users, CalendarCheck, Search, Download } from 'lucide-react';
-import { adminGetAttendance } from "../../services/attendanceService";
 import toast from 'react-hot-toast';
 import StatusBadge from "../../components/volunteer/StatusBadge";
 import SkeletonLoader from "../../components/volunteer/SkeletonLoader";
+import { useAdminData } from "../../context/AdminDataContext";
 
 const AdminAttendance = () => {
   const [stats, setStats] = useState(null);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { attendance: contextAttendance, programs } = useAdminData();
+
   useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const listRes = await adminGetAttendance();
-        if (listRes.success) {
-          setStats(listRes.data?.stats || null);
-          setRecords(listRes.data?.records || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, []);
+    setLoading(true);
+    // Mimic the processing
+    const todayPresent = contextAttendance.filter(a => a.status === 'present').length;
+    const todayAbsent = contextAttendance.filter(a => a.status === 'absent').length;
+    const totalHoursToday = contextAttendance.reduce((acc, curr) => acc + (Number(curr.hours) || curr.hoursWorked || 0), 0);
+    const activeProgramsCount = (programs || []).filter(p => ['published', 'active', 'ongoing'].includes((p.status || '').toLowerCase())).length;
+    
+    setStats({
+      todayPresent,
+      todayAbsent,
+      totalHoursToday,
+      programsRunning: activeProgramsCount
+    });
+
+    setRecords(contextAttendance);
+    setLoading(false);
+  }, [contextAttendance, programs]);
 
 
 
@@ -97,13 +100,13 @@ const AdminAttendance = () => {
                 </thead>
                 <tbody>
                   {records.map((record, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <tr key={record.id || i} style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{record.volunteerName}</td>
                       <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem' }}>{record.programTitle}</td>
                       <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', color: 'var(--color-body)' }}>{record.checkInTime || '-'}</td>
                       <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', color: 'var(--color-body)' }}>{record.checkOutTime || '-'}</td>
                       <td style={{ padding: '1rem 1.5rem' }}><StatusBadge status={record.status} /></td>
-                      <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{record.hoursWorked || '-'}</td>
+                      <td style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>{record.hours || record.hoursWorked || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

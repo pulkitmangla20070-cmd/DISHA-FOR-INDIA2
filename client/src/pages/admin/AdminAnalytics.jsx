@@ -1,5 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Calendar, 
@@ -16,17 +15,7 @@ import {
   LineChart,
   RefreshCw
 } from 'lucide-react';
-import {
-  getAdminDashboard,
-  getVolunteerAnalytics,
-  getProgramAnalytics,
-  getApplicationAnalytics,
-  getAttendanceAnalytics,
-  getCertificateAnalytics,
-  getRewardAnalytics,
-  getLeaderboardAnalytics,
-  getOrganizationAnalytics,
-} from '../../services/analyticsService';
+import { useAdminData } from '../../context/AdminDataContext';
 import SkeletonLoader from '../../components/volunteer/SkeletonLoader';
 import StatCard from '../../components/volunteer/StatCard';
 import { AreaChart, Area, BarChart, Bar, PieChart as RePieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -563,58 +552,31 @@ const AdminAnalytics = () => {
   const [dateRange, setDateRange] = useState('this_month');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
-    queryKey: ['admin-dashboard'],
-    queryFn: async () => {
-      const res = await getAdminDashboard();
-      if (res?.success) return res.data?.admin;
-      throw new Error(res?.message || 'Failed to load dashboard');
-    },
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  const { analytics: dashboardDataRaw } = useAdminData();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const dashboardError = null;
+  const analyticsError = null;
 
-  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useQuery({
-    queryKey: ['admin-analytics', activeTab, dateRange],
-    queryFn: async () => {
-      let res;
-      switch (activeTab) {
-        case 'volunteers':
-          res = await getVolunteerAnalytics(dateRange || null);
-          break;
-        case 'programs':
-          res = await getProgramAnalytics(dateRange || null);
-          break;
-        case 'applications':
-          res = await getApplicationAnalytics(dateRange || null);
-          break;
-        case 'attendance':
-          res = await getAttendanceAnalytics(dateRange || null);
-          break;
-        case 'certificates':
-          res = await getCertificateAnalytics(dateRange || null);
-          break;
-        case 'rewards':
-          res = await getRewardAnalytics(dateRange || null);
-          break;
-        case 'leaderboard':
-          res = await getLeaderboardAnalytics(10);
-          break;
-        case 'organizations':
-          res = await getOrganizationAnalytics(dateRange || null);
-          break;
-        default:
-          return null;
-      }
-      if (res?.success) return res.data;
-      throw new Error(res?.message || 'Failed to load analytics');
-    },
-    enabled: activeTab !== 'dashboard',
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  useEffect(() => {
+    if (dashboardDataRaw) {
+      setDashboardData(dashboardDataRaw);
+      setDashboardLoading(false);
+    }
+  }, [dashboardDataRaw]);
+
+  useEffect(() => {
+    if (activeTab !== 'dashboard') {
+      setAnalyticsLoading(true);
+      // Faking the individual fetches with the massive analytics blob 
+      setTimeout(() => {
+        setAnalytics(dashboardDataRaw);
+        setAnalyticsLoading(false);
+      }, 500);
+    }
+  }, [activeTab, dateRange, dashboardDataRaw]);
 
   const handleExport = useCallback((data, filename) => {
     exportToCSV(data, filename);

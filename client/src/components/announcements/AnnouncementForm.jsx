@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, Calendar, Users, Tag, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { createAnnouncement, updateAnnouncement, getAnnouncementById } from '../../services/announcementsService';
+import { useAdminData } from '../../context/AdminDataContext';
 
 const ANNOUNCEMENT_TYPES = [
   { value: 'general', label: 'General', icon: '📢' },
@@ -64,7 +63,7 @@ const inputStyle = (field, errors) => ({
 });
 
 const AnnouncementForm = ({ announcementId, onSuccess, onCancel }) => {
-  const queryClient = useQueryClient();
+  const { announcements, addAnnouncement, updateAnnouncement } = useAdminData();
   const [uploading, setUploading] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const isEdit = Boolean(announcementId);
@@ -80,16 +79,15 @@ const AnnouncementForm = ({ announcementId, onSuccess, onCancel }) => {
     if (!isEdit) return;
     const fetchAnnouncement = async () => {
       try {
-        const res = await getAnnouncementById(announcementId);
-        if (res.success) {
-          const a = res.data?.announcement || res.data;
+        const a = announcements.find(ann => ann._id === announcementId || ann.id === announcementId);
+        if (a) {
           reset({ title: a.title || '', message: a.message || '', type: a.type || 'general', priority: a.priority || 'medium', targetAudience: a.targetAudience || 'all_users', scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString().slice(0, 16) : '', expiresAt: a.expiresAt ? new Date(a.expiresAt).toISOString().slice(0, 16) : '', status: a.status || 'draft' });
           if (a.attachments) setAttachments(Array.isArray(a.attachments) ? a.attachments : []);
         }
       } catch (err) { console.error(err); toast.error('Failed to load announcement details'); }
     };
     fetchAnnouncement();
-  }, [announcementId, isEdit, reset]);
+  }, [announcementId, isEdit, reset, announcements]);
 
   const onSubmit = async (data) => {
     try {
@@ -97,9 +95,8 @@ const AnnouncementForm = ({ announcementId, onSuccess, onCancel }) => {
       const payload = { ...data, attachments: attachments.length > 0 ? attachments : [] };
       if (data.scheduledAt === '') payload.scheduledAt = undefined;
       if (data.expiresAt === '') payload.expiresAt = undefined;
-      if (isEdit) { await updateAnnouncement(announcementId, payload); toast.success('Announcement updated successfully'); }
-      else { await createAnnouncement(payload); toast.success('Announcement created successfully'); }
-      queryClient.invalidateQueries(['announcements', 'admin-announcements']);
+      if (isEdit) { updateAnnouncement(announcementId, payload); toast.success('Announcement updated successfully'); }
+      else { addAnnouncement(payload); toast.success('Announcement created successfully'); }
       onSuccess?.();
     } catch (err) {
       toast.error(err.message || (isEdit ? 'Failed to update announcement' : 'Failed to create announcement'));

@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileCheck, Search, Filter, Shield } from "lucide-react";
 import ConfirmModal from "../../components/admin/ConfirmModal";
-import { softDeleteUser } from "../../services/adminService";
-
-import {
-  getAdminApplicationStats,
-  getAdminApplications,
-  bulkUpdateApplications
-} from "../../services/applicationsService";
+import { useAdminData } from '../../context/AdminDataContext';
 import toast from 'react-hot-toast';
 
 import StatusBadge from "../../components/volunteer/StatusBadge";
@@ -22,66 +16,28 @@ const AdminApplications = () => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [statsRes, appsRes] = await Promise.all([
-          getAdminApplicationStats(),
-          getAdminApplications(),
-        ]);
-        if (statsRes.success) {
-          const raw = statsRes.data || {};
-          setStats({
-            pending: raw.pending || 0,
-            today: raw.applicationsThisMonth || 0,
-            newVolunteers: raw.total || 0,
-            total: raw.total || 0,
-            joined: raw.joined || 0,
-            withdrawn: raw.withdrawn || 0,
-            completed: raw.completed || 0,
-            cancelled: raw.cancelled || 0,
-          });
-        }
-        if (appsRes.success) {
-          setApplications(Array.isArray(appsRes.data?.applications) ? appsRes.data.applications : Array.isArray(appsRes.data) ? appsRes.data : []);
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error('Failed to load applications');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { applications: contextApps, updateApplicationStatus, volunteers } = useAdminData();
 
-  const handleStatusUpdate = async (id, status) => {
-    try {
-      const res = await bulkUpdateApplications([id], status);
-      if (res.success) {
-        toast.success(`Application ${status === 'joined' ? 'approved' : 'rejected'} successfully`);
-        setApplications(apps => apps.map(app => (app.id === id || app._id === id) ? { ...app, status } : app));
-        
-        // Refresh stats
-        const statsRes = await getAdminApplicationStats();
-        if (statsRes.success) {
-          const raw = statsRes.data || {};
-          setStats({
-            pending: raw.pending || 0,
-            today: raw.applicationsThisMonth || 0,
-            newVolunteers: raw.total || 0,
-            total: raw.total || 0,
-            joined: raw.joined || 0,
-            withdrawn: raw.withdrawn || 0,
-            completed: raw.completed || 0,
-            cancelled: raw.cancelled || 0,
-          });
-        }
-      }
-    } catch (err) {
-      toast.error('Failed to update application status');
-    }
+  useEffect(() => {
+    setApplications(contextApps);
+    const today = new Date().toDateString();
+    
+    setStats({
+      pending: contextApps.filter(a => (a.status || 'pending').toLowerCase() === 'pending').length,
+      today: contextApps.filter(a => new Date(a.createdAt || a.appliedDate || Date.now()).toDateString() === today).length,
+      newVolunteers: (volunteers || []).length, 
+      total: contextApps.length,
+      joined: contextApps.filter(a => ['approved', 'joined', 'accepted'].includes((a.status || '').toLowerCase())).length,
+      withdrawn: contextApps.filter(a => (a.status || '').toLowerCase() === 'withdrawn').length,
+      completed: contextApps.filter(a => (a.status || '').toLowerCase() === 'completed').length,
+      cancelled: contextApps.filter(a => ['cancelled', 'rejected'].includes((a.status || '').toLowerCase())).length,
+    });
+    setLoading(false);
+  }, [contextApps, volunteers]);
+
+  const handleStatusUpdate = (id, status) => {
+    updateApplicationStatus(id, status);
+    toast.success(`Application ${status === 'joined' ? 'approved' : 'rejected'} successfully`);
   };
 
   return (
@@ -205,28 +161,22 @@ const AdminApplications = () => {
                 <ConfirmModal
                   isOpen={showConfirm}
                   title="Confirm Delete"
-                  message="Are you sure you want to permanently delete this user? This action cannot be undone."
+                  message="Are you sure you want to permanently delete this application? This action cannot be undone."
                   onCancel={() => setShowConfirm(false)}
                   onConfirm={async () => {
                     if (!deleteTargetId) return;
                     setDeleting(true);
+                    
                     try {
-                      const res = await softDeleteUser(deleteTargetId);
-if (res.success) {
-                         toast.success('User deleted successfully');
-                         // Refresh applications list
-                         const appsRes = await getAdminApplications();
-                         if (appsRes.success) {
-                           setApplications(Array.isArray(appsRes.data?.applications) ? appsRes.data.applications : Array.isArray(appsRes.data) ? appsRes.data : []);
-                         }
-                       }
-                    } catch (err) {
-                      toast.error(err.message || 'Error deleting user');
-                    } finally {
-                      setDeleting(false);
-                      setShowConfirm(false);
-                      setDeleteTargetId(null);
+                      await updateApplicationStatus(deleteTargetId, 'deleted'); 
+                      toast.success('Application deleted successfully');
+                    } catch (e) {
+                      toast.error('Failed to delete application');
                     }
+                    
+                    setDeleting(false);
+                    setShowConfirm(false);
+                    setDeleteTargetId(null);
                   }}
                 />
               </table>

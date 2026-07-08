@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerProvider } from './context/VolunteerContext';
 import { NotificationsProvider } from './context/NotificationsContext';
+import { AdminDataProvider } from './context/AdminDataContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Layouts
@@ -53,6 +54,9 @@ import AdminAnnouncementDashboard from './pages/admin/AdminAnnouncementDashboard
 import AdminCertificates from './pages/admin/AdminCertificates';
 import AdminAnnouncementCreate from './pages/admin/AdminAnnouncementCreate';
 import AdminReviewDashboard from './pages/admin/AdminReviewDashboard';
+import AdminVolunteers from './pages/admin/AdminVolunteers';
+import AdminContributions from './pages/admin/AdminContributions';
+import AdminNotifications from './pages/admin/AdminNotifications';
 
 // Volunteer Pages
 import VolunteerAnalytics from './pages/volunteer/VolunteerAnalytics';
@@ -115,8 +119,9 @@ const AuthExpiredHandler = () => {
 function App() {
   return (
     <AuthProvider>
-      <VolunteerProvider>
-        <BrowserRouter>
+      <AdminDataProvider>
+        <VolunteerProvider>
+          <BrowserRouter>
           <AuthExpiredHandler />
           <Routes>
             {/* Public Routes */}
@@ -193,7 +198,9 @@ function App() {
               <Route path="admin/certificates" element={<AdminCertificates />} />
               <Route path="admin/messages" element={<Messages />} />
               <Route path="admin/support" element={<Support />} />
-              <Route path="admin/contributions" element={<AdminReviewDashboard />} />
+              <Route path="admin/contributions" element={<AdminContributions />} />
+              <Route path="admin/volunteers" element={<AdminVolunteers />} />
+              <Route path="admin/notifications" element={<AdminNotifications />} />
               <Route path="matching/volunteers" element={<RecommendedVolunteers />} />
             </Route>
 
@@ -227,7 +234,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </VolunteerProvider>
+        </VolunteerProvider>
+      </AdminDataProvider>
     </AuthProvider>
   );
 }

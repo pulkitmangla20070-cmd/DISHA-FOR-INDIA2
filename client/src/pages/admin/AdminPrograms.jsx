@@ -1,45 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, Calendar, MapPin } from 'lucide-react';
-import { getAllPrograms, deleteProgram } from '../../services/programsService';
 import SkeletonLoader from '../../components/volunteer/SkeletonLoader';
 import StatusBadge from '../../components/volunteer/StatusBadge';
 import ProgramModal from '../../components/admin/ProgramModal';
 import toast from 'react-hot-toast';
+import { useAdminData } from '../../context/AdminDataContext';
 
 const AdminPrograms = () => {
+  const { programs: contextPrograms, deleteProgram: deleteContextProgram } = useAdminData();
   const [programs, setPrograms] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProgram, setEditProgram] = useState(null);
 
-  const fetchPrograms = async () => {
-    try {
-      setLoading(true);
-      const res = await getAllPrograms();
-      if (res.success && res.data) {
-        setPrograms(res.data.programs || []);
-      }
-    } catch (err) {
-      toast.error('Failed to load programs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchPrograms();
-  }, []);
+    setPrograms(contextPrograms);
+  }, [contextPrograms]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this program?')) return;
     try {
-      const res = await deleteProgram(id);
-      if (res.success) {
-        toast.success('Program deleted successfully');
-        setPrograms((prev) => prev.filter((p) => p.id !== id && p._id !== id));
-      }
+      await deleteContextProgram(id);
+      toast.success('Program deleted successfully');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error deleting program');
+      toast.error('Failed to delete program');
     }
   };
 
@@ -55,7 +38,6 @@ const AdminPrograms = () => {
 
   const handleModalSuccess = () => {
     setIsModalOpen(false);
-    fetchPrograms();
   };
 
   return (
@@ -79,7 +61,7 @@ const AdminPrograms = () => {
           </div>
         </div>
 
-        {loading ? (
+        {false ? (
           <div style={{ padding: '2rem' }}><SkeletonLoader count={3} /></div>
         ) : (
           <div style={{ overflowX: 'auto' }}>

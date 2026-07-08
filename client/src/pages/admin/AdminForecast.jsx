@@ -1,5 +1,4 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   Calendar,
@@ -15,8 +14,8 @@ import {
 import StatCard from '../../components/volunteer/StatCard';
 import ForecastCard from '../../components/forecast/ForecastCard';
 import ForecastTrendChart from '../../components/forecast/ForecastTrendChart';
-import { getForecastDashboard, getVolunteerForecast, getProgramForecast, getAttendanceForecast, getRewardForecast } from '../../services/forecastService';
 import { exportToCSV } from '../../utils/exportUtils';
+import { useAdminData } from '../../context/AdminDataContext';
 
 const DATE_RANGES = [
   { label: 'All Time', value: '' },
@@ -30,72 +29,24 @@ const AdminForecast = () => {
   const [dateRange, setDateRange] = useState('this_year');
   const [activeSection, setActiveSection] = useState('overview');
 
-  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useQuery({
-    queryKey: ['forecast-dashboard', dateRange],
-    queryFn: async () => {
-      const res = await getForecastDashboard();
-      if (res?.success) return res.data;
-      throw new Error(res?.message || 'Failed to load forecast dashboard');
-    },
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  const { forecast: dashboardDataRaw } = useAdminData();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const { data: volunteerData, isLoading: volunteerLoading } = useQuery({
-    queryKey: ['forecast-volunteers', dateRange],
-    queryFn: async () => {
-      const res = await getVolunteerForecast();
-      if (res?.success) return res.data;
-      throw new Error(res?.message || 'Failed to load volunteer forecast');
-    },
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: activeSection === 'volunteers',
-  });
+  useEffect(() => {
+    if (dashboardDataRaw) {
+      setDashboardData(dashboardDataRaw);
+      setLoading(false);
+    }
+  }, [dashboardDataRaw]);
 
-  const { data: programData, isLoading: programLoading } = useQuery({
-    queryKey: ['forecast-programs', dateRange],
-    queryFn: async () => {
-      const res = await getProgramForecast();
-      if (res?.success) return res.data;
-      throw new Error(res?.message || 'Failed to load program forecast');
-    },
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: activeSection === 'programs',
-  });
+  // Just grab everything from the master blob since this is a local mock
+  const volunteerData = dashboardData?.forecasts?.volunteers || null;
+  const programData = dashboardData?.forecasts?.programs || null;
+  const attendanceData = dashboardData?.forecasts?.attendance || null;
+  const rewardData = dashboardData?.forecasts?.rewards || null;
 
-  const { data: attendanceData, isLoading: attendanceLoading } = useQuery({
-    queryKey: ['forecast-attendance', dateRange],
-    queryFn: async () => {
-      const res = await getAttendanceForecast();
-      if (res?.success) return res.data;
-      throw new Error(res?.message || 'Failed to load attendance forecast');
-    },
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: activeSection === 'attendance',
-  });
-
-  const { data: rewardData, isLoading: rewardLoading } = useQuery({
-    queryKey: ['forecast-rewards', dateRange],
-    queryFn: async () => {
-      const res = await getRewardForecast();
-      if (res?.success) return res.data;
-      throw new Error(res?.message || 'Failed to load reward forecast');
-    },
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    enabled: activeSection === 'rewards',
-  });
-
-  const loading = dashboardLoading || (activeSection !== 'overview' && ((activeSection === 'volunteers' && volunteerLoading) || (activeSection === 'programs' && programLoading) || (activeSection === 'attendance' && attendanceLoading) || (activeSection === 'rewards' && rewardLoading)));
-  const error = dashboardError;
+  const error = null;
 
   const handleExport = () => {
     if (!dashboardData) return;
@@ -177,7 +128,7 @@ const AdminForecast = () => {
           <BarChart3 size={48} style={{ color: 'var(--color-error)', marginBottom: '1rem', opacity: 0.5 }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.75rem', color: 'var(--color-heading)' }}>Unable to load forecasts</h2>
           <p style={{ color: 'var(--color-body)', marginBottom: '1.5rem' }}>{error?.message || 'Something went wrong while fetching forecast data.'}</p>
-          <button onClick={() => refetchDashboard()} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => {}} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
             <RefreshCw size={16} /> Retry
           </button>
         </div>

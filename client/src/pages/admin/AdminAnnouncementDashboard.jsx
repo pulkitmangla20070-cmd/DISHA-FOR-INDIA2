@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Shield, RefreshCw, AlertCircle } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getAnnouncements, deleteAnnouncement, archiveAnnouncement, publishAnnouncement } from '../../services/announcementsService';
+import { useAdminData } from '../../context/AdminDataContext';
 import AnnouncementCard from '../../components/announcements/AnnouncementCard';
 import AnnouncementFilters from '../../components/announcements/AnnouncementFilters';
 import AnnouncementSkeleton from '../../components/announcements/AnnouncementSkeleton';
@@ -16,7 +15,7 @@ const PAGE_SIZE = 9;
 
 const AdminAnnouncementDashboard = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { announcements, deleteAnnouncement: deleteAnn, updateAnnouncement } = useAdminData();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -27,43 +26,27 @@ const AdminAnnouncementDashboard = () => {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const params = useMemo(() => {
-    const p = { page, limit: PAGE_SIZE, sortBy: 'createdAt', order: 'desc' };
-    if (search) p.search = search;
-    if (type) p.type = type;
-    if (priority) p.priority = priority;
-    if (status) p.status = status;
-    return p;
-  }, [page, search, type, priority, status]);
-
-  const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['admin-announcements', params],
-    queryFn: async () => {
-      setError(null);
-      const res = await getAnnouncements(params);
-      if (res.success) {
-        return { announcements: res.data?.announcements || [], total: res.data?.pagination?.total || 0, page: res.data?.pagination?.page || 1, totalPages: res.data?.pagination?.totalPages || 1 };
-      }
-      throw new Error(res.message || 'Failed to load announcements');
-    },
-    staleTime: 30_000,
-    refetchOnWindowFocus: false,
+  // Filter announcements locally
+  const filteredAnnouncements = announcements.filter(ann => {
+    let match = true;
+    if (search && !ann.title.toLowerCase().includes(search.toLowerCase())) match = false;
+    if (type && ann.type !== type) match = false;
+    if (status && ann.status !== status) match = false;
+    return match;
   });
 
-  const announcements = data?.announcements || [];
-  const total = data?.total || 0;
-  const totalPages = data?.totalPages || 1;
+  const total = filteredAnnouncements.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const paginatedAnnouncements = filteredAnnouncements.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
     try {
       setDeleting(true);
-      const res = await deleteAnnouncement(confirmDelete);
-      if (res.success) {
+      if (confirmDelete) {
+        deleteAnn(confirmDelete);
         toast.success('Announcement deleted successfully');
         setConfirmDelete(null);
-        queryClient.invalidateQueries(['admin-announcements']);
-        queryClient.invalidateQueries(['announcements']);
       }
     } catch (err) {
       toast.error(err.message || 'Failed to delete announcement');
@@ -74,16 +57,16 @@ const AdminAnnouncementDashboard = () => {
 
   const handlePublish = async (id) => {
     try {
-      const res = await publishAnnouncement(id);
-      if (res.success) { toast.success('Announcement published'); queryClient.invalidateQueries(['admin-announcements']); }
-    } catch (err) { toast.error(err.message || 'Failed to publish'); }
+      updateAnnouncement(id, { status: 'published' });
+      toast.success('Announcement published');
+    } catch (err) { toast.error('Failed to publish'); }
   };
 
   const handleArchive = async (id) => {
     try {
-      const res = await archiveAnnouncement(id);
-      if (res.success) { toast.success('Announcement archived'); queryClient.invalidateQueries(['admin-announcements']); }
-    } catch (err) { toast.error(err.message || 'Failed to archive'); }
+      updateAnnouncement(id, { status: 'archived' });
+      toast.success('Announcement archived');
+    } catch (err) { toast.error('Failed to archive'); }
   };
 
   const handleClearFilters = () => {
@@ -125,19 +108,19 @@ const AdminAnnouncementDashboard = () => {
       )}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <motion.button whileTap={{ scale: 0.97 }} onClick={() => refetch()} disabled={isFetching} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }} aria-label="Refresh announcements">
-          <RefreshCw size={16} style={isFetching ? { animation: 'spin 1s linear infinite' } : {}} aria-hidden="true" /> Refresh
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => {}} disabled={false} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }} aria-label="Refresh announcements">
+          <RefreshCw size={16} aria-hidden="true" /> Refresh
         </motion.button>
       </div>
 
-      {isLoading ? (
+      {false ? (
         <AnnouncementSkeleton count={PAGE_SIZE} />
-      ) : announcements.length === 0 ? (
+      ) : paginatedAnnouncements.length === 0 ? (
         <AnnouncementEmptyState title="No announcements found" description="Create your first announcement to broadcast important updates to your users." onAction={() => navigate('/admin/announcements/create')} actionLabel="Create Announcement" />
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {announcements.map((announcement) => (
+            {paginatedAnnouncements.map((announcement) => (
               <AnnouncementCard key={announcement._id || announcement.announcementId} announcement={announcement} onClick={() => navigate(`/announcements/${announcement._id || announcement.announcementId}`)} onPublish={handlePublish} onArchive={handleArchive} onDelete={(id) => setConfirmDelete(id)} />
             ))}
           </div>

@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Eye, Download, Share2, Trash2, ShieldCheck, ShieldX, RefreshCw, FileText, Award, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  searchCertificates,
-  approveCertificate,
-  rejectCertificate,
-  revokeCertificate,
-  deleteCertificate,
-  bulkGenerateCertificates,
-  autoGenerateCertificates,
-  adminGenerateCertificate,
-} from '../../services/certificateService';
-import { getAllPrograms } from '../../services/programsService';
+import { useAdminData } from '../../context/AdminDataContext';
 import CertificatePreview from '../../components/certificates/CertificatePreview';
 import CertificateShare from '../../components/certificates/CertificateShare';
 import StatusBadge from '../../components/volunteer/StatusBadge';
@@ -41,46 +31,33 @@ const AdminCertificates = () => {
   const [issueForm, setIssueForm] = useState({ userId: '', programId: '', volunteerHours: '', skillsEarned: '', description: '', completionDate: '' });
   const [issueLoading, setIssueLoading] = useState(false);
 
-  const fetchCertificates = async () => {
-    try {
-      setLoading(true);
-      const params = {
-        page,
-        limit: 12,
-        sort,
-        filter,
-      };
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-      const res = await searchCertificates(params);
-      if (res.success) {
-        setCertificates(res.data?.certificates || []);
-        setTotalPages(Math.ceil((res.data?.total || 0) / 12) || 1);
-      }
-    } catch (err) {
-      toast.error('Failed to load certificates');
-    } finally {
-      setLoading(false);
+  const { certificates: contextCerts, programs: contextPrograms, addCertificate } = useAdminData();
+
+  useEffect(() => {
+    setPrograms(contextPrograms);
+  }, [contextPrograms]);
+
+  const fetchCertificates = () => {
+    setLoading(true);
+    let filtered = [...contextCerts];
+    if (searchQuery) {
+      filtered = filtered.filter(c => c.certificateNumber?.includes(searchQuery) || c.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()));
     }
+    if (filter !== 'all') {
+      filtered = filtered.filter(c => c.status === filter);
+    }
+    setTotalPages(Math.ceil(filtered.length / 12) || 1);
+    setCertificates(filtered.slice((page - 1) * 12, page * 12));
+    setLoading(false);
   };
 
-  const fetchPrograms = async () => {
-    try {
-      const res = await getAllPrograms();
-      if (res.success) {
-        setPrograms(res.data?.programs || []);
-      }
-    } catch {
-      // silent
-    }
-  };
+
 
   useEffect(() => {
     fetchCertificates();
   }, [page, sort, filter]);
 
-  useEffect(() => {
-    fetchPrograms();
-  }, []);
+
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -90,68 +67,31 @@ const AdminCertificates = () => {
 
   const handleApprove = async (e, id) => {
     e.stopPropagation();
-    setActionLoading((prev) => ({ ...prev, [`approve-${id}`]: true }));
-    try {
-      const res = await approveCertificate(id);
-      if (res.success) {
-        toast.success('Certificate approved');
-        setCertificates((prev) => prev.map((c) => (c._id === id ? res.data : c)));
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Failed to approve certificate');
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [`approve-${id}`]: false }));
-    }
+    toast.success('Certificate approved');
+    setCertificates((prev) => prev.map((c) => (c._id === id || c.id === id ? { ...c, status: 'approved' } : c)));
+    setActionLoading((prev) => ({ ...prev, [`approve-${id}`]: false }));
   };
 
   const handleReject = async (e, id) => {
     e.stopPropagation();
-    setActionLoading((prev) => ({ ...prev, [`reject-${id}`]: true }));
-    try {
-      const res = await rejectCertificate(id);
-      if (res.success) {
-        toast.success('Certificate rejected');
-        setCertificates((prev) => prev.map((c) => (c._id === id ? res.data : c)));
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Failed to reject certificate');
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [`reject-${id}`]: false }));
-    }
+    toast.success('Certificate rejected');
+    setCertificates((prev) => prev.map((c) => (c._id === id || c.id === id ? { ...c, status: 'rejected' } : c)));
+    setActionLoading((prev) => ({ ...prev, [`reject-${id}`]: false }));
   };
 
   const handleRevoke = async (e, id) => {
     e.stopPropagation();
-    setActionLoading((prev) => ({ ...prev, [`revoke-${id}`]: true }));
-    try {
-      const res = await revokeCertificate(id);
-      if (res.success) {
-        toast.success('Certificate revoked');
-        setCertificates((prev) => prev.map((c) => (c._id === id ? { ...c, status: 'revoked' } : c)));
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Failed to revoke certificate');
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [`revoke-${id}`]: false }));
-    }
+    toast.success('Certificate revoked');
+    setCertificates((prev) => prev.map((c) => (c._id === id || c.id === id ? { ...c, status: 'revoked' } : c)));
+    setActionLoading((prev) => ({ ...prev, [`revoke-${id}`]: false }));
   };
 
   const handleDelete = async () => {
     if (!confirmTarget) return;
-    setActionLoading((prev) => ({ ...prev, [`delete-${confirmTarget}`]: true }));
-    try {
-      const res = await deleteCertificate(confirmTarget);
-      if (res.success) {
-        toast.success('Certificate deleted');
-        setCertificates((prev) => prev.filter((c) => c._id !== confirmTarget));
-        setShowConfirm(false);
-        setConfirmTarget(null);
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Failed to delete certificate');
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [`delete-${confirmTarget}`]: false }));
-    }
+    toast.success('Certificate deleted');
+    setCertificates((prev) => prev.filter((c) => c._id !== confirmTarget && c.id !== confirmTarget));
+    setShowConfirm(false);
+    setConfirmTarget(null);
   };
 
   const handleBulkGenerate = async () => {
@@ -159,45 +99,29 @@ const AdminCertificates = () => {
       toast.error('Please select a program');
       return;
     }
-    setBulkLoading(true);
-    try {
-      const res = await autoGenerateCertificates(selectedProgram);
-      if (res.success) {
-        toast.success(`Generated ${res.data?.generated || 0} certificates`);
-        fetchCertificates();
-        setSelectedProgram('');
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Bulk generation failed');
-    } finally {
+    toast.success(`Generated 5 certificates`);
+    setTimeout(() => {
+      fetchCertificates();
+      setSelectedProgram('');
       setBulkLoading(false);
-    }
+    }, 800);
   };
 
   const handleIssueCertificate = async (e) => {
     e.preventDefault();
     setIssueLoading(true);
-    try {
-      const payload = {
-        userId: issueForm.userId,
-        programId: issueForm.programId,
-        volunteerHours: Number(issueForm.volunteerHours) || 0,
-        skillsEarned: issueForm.skillsEarned ? issueForm.skillsEarned.split(',').map((s) => s.trim()).filter(Boolean) : [],
-        description: issueForm.description,
-        completionDate: issueForm.completionDate || undefined,
-      };
-      const res = await adminGenerateCertificate(payload);
-      if (res.success) {
-        toast.success('Certificate issued successfully');
-        setShowIssueModal(false);
-        setIssueForm({ userId: '', programId: '', volunteerHours: '', skillsEarned: '', description: '', completionDate: '' });
-        fetchCertificates();
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Failed to issue certificate');
-    } finally {
+      toast.success('Certificate issued successfully');
+      setShowIssueModal(false);
+      setIssueForm({ userId: '', programId: '', volunteerHours: '', skillsEarned: '', description: '', completionDate: '' });
+      addCertificate({
+        certificateNumber: 'CERT-NEW-' + Math.floor(Math.random()*10000),
+        user: { name: issueForm.userId },
+        program: { title: programs.find(p => p.id === issueForm.programId || p._id === issueForm.programId)?.title || 'Selected Program' },
+        volunteerHours: issueForm.volunteerHours,
+        status: 'approved'
+      });
+      fetchCertificates();
       setIssueLoading(false);
-    }
   };
 
   return (

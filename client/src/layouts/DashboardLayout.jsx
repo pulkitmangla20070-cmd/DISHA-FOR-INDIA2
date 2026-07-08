@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import NotificationBell from '../components/notifications/NotificationBell';
 import NotificationDrawer from '../components/notifications/NotificationDrawer';
+import PageTransitionOverlay from '../components/common/PageTransitionOverlay';
 
 const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN', 'COORDINATOR'];
 
@@ -50,7 +51,7 @@ const DashboardLayout = () => {
 
   const adminNavItems = [
     { name: 'Dashboard',     path: '/admin/dashboard',    icon: <LayoutDashboard size={18} /> },
-    { name: 'Notifications', path: '/notifications',      icon: <Bell size={18} /> },
+    { name: 'Notifications', path: '/admin/notifications', icon: <Bell size={18} /> },
     { name: 'Announcements', path: '/admin/announcements', icon: <Megaphone size={18} /> },
     { name: 'Messages',      path: '/admin/messages',     icon: <MessageSquare size={18} /> },
     { name: 'Support',       path: '/admin/support',      icon: <HelpCircle size={18} /> },
@@ -61,7 +62,8 @@ const DashboardLayout = () => {
     { name: 'Analytics',     path: '/admin/analytics',    icon: <BarChart2 size={18} /> },
     { name: 'Forecast',      path: '/admin/forecast',     icon: <LineChart size={18} /> },
     { name: 'Reports',       path: '/admin/reports',      icon: <FileText size={18} /> },
-    { name: 'Volunteers',    path: '/admin/users',        icon: <Users size={18} /> },
+    { name: 'Volunteers',    path: '/admin/volunteers',   icon: <Users size={18} /> },
+    { name: 'Contributions', path: '/admin/contributions', icon: <FileText size={18} /> },
   ];
 
   const navItems = isAdmin ? adminNavItems : volunteerNavItems;
@@ -142,7 +144,7 @@ const DashboardLayout = () => {
       </div>
 
       {/* Nav Links */}
-      <nav style={{ flex: 1, padding: '1.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <nav style={{ flex: 1, padding: '1.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto' }}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           return (
@@ -264,7 +266,8 @@ const DashboardLayout = () => {
         </header>
 
 {/* Main Content Area */}
-         <main style={{ padding: '2rem 1.5rem', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+         <main style={{ padding: '2rem 1.5rem', flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
+          <PageTransitionOverlay />
           <Outlet />
         </main>
       </div>
